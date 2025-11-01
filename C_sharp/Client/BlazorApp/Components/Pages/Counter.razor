@@ -1,0 +1,34 @@
+﻿@page "/counter"
+@using ApiContracts
+@rendermode InteractiveServer
+@inject BlazorApp.Services.ICustomerServices CustomerServices
+<PageTitle>Add Customer</PageTitle>
+
+<h1>Create Account</h1>
+
+
+
+<button class="btn btn-primary" @onclick="CreateCustomer">Click me</button>
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <p class="mt-2">@message</p>
+}
+
+@code {
+    private string? message;
+
+    private async Task CreateCustomer()
+    {
+        try
+        {
+            var dto = new CreateCustomerDto { UserName = "TestUser", Password = "1234" };
+            var created = await CustomerServices.AddCustomerAsync(dto);
+            message = $" Customer '{created.UserName}' created successfully!";
+        }
+        catch (Exception ex)
+        {
+            message = $" Error: {ex.Message}";
+        }
+    }
+}
