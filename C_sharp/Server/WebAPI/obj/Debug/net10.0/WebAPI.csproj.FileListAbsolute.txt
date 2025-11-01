@@ -37,3 +37,5 @@ C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\W
 C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\WebAPI\obj\Debug\net10.0\WebAPI.pdb
 C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\WebAPI\obj\Debug\net10.0\WebAPI.genruntimeconfig.cache
 C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\WebAPI\obj\Debug\net10.0\ref\WebAPI.dll
+C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\WebAPI\bin\Debug\net10.0\FileRepository.dll
+C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\WebAPI\bin\Debug\net10.0\FileRepository.pdb

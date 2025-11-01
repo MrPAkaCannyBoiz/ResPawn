@@ -1,3 +1,4 @@
+using FileRepository;
 using RepositoryContracts;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,7 +9,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.AddScoped<CustomerInterface>();
+builder.Services.AddScoped<CustomerInterface, CustomerFileRespository>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
