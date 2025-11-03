@@ -1,9 +1,14 @@
 {
   "version": 2,
-  "dgSpecHash": "1RFnejtGXNU=",
+  "dgSpecHash": "691q0Zm6fmw=",
   "success": true,
   "projectFilePath": "C:\\VIA_uni_stuffs\\Semester3_hetero_system\\SEP3\\GitHub_Repo\\ResPawnMarket\\ResPawnMarket\\C_sharp\\Client\\BlazorApp\\BlazorApp.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\pongs\\.nuget\\packages\\google.protobuf\\3.33.0\\google.protobuf.3.33.0.nupkg.sha512",
+    "C:\\Users\\pongs\\.nuget\\packages\\grpc.core.api\\2.71.0\\grpc.core.api.2.71.0.nupkg.sha512",
+    "C:\\Users\\pongs\\.nuget\\packages\\grpc.net.client\\2.71.0\\grpc.net.client.2.71.0.nupkg.sha512",
+    "C:\\Users\\pongs\\.nuget\\packages\\grpc.net.clientfactory\\2.71.0\\grpc.net.clientfactory.2.71.0.nupkg.sha512",
+    "C:\\Users\\pongs\\.nuget\\packages\\grpc.net.common\\2.71.0\\grpc.net.common.2.71.0.nupkg.sha512",
     "C:\\Users\\pongs\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.0-preview.7.25380.108\\microsoft.aspnetcore.app.internal.assets.10.0.0-preview.7.25380.108.nupkg.sha512"
   ],
   "logs": []

@@ -66,9 +66,28 @@ message GetCustomerResponse
   repeated Address addresses = 2;
 }
 
+message Empty { }
+
+message GetAllCustomersRequest
+{
+  Empty empty = 1;
+}
+
+message GetAllCustomersResponse
+{
+  repeated Customer customers = 1;
+}
 
 // use case for "Register" (only customer)
 service CustomerRegisterService
 {
   rpc RegisterCustomer (RegisterCustomerRequest) returns (RegisterCustomerResponse);
 }
+
+// use case for "Get Customer Details"
+service GetCustomerService
+{
+  rpc GetCustomer (GetCustomerRequest) returns (GetCustomerResponse);
+  rpc GetAllCustomers (GetAllCustomersRequest) returns (GetAllCustomersResponse);
+}
+

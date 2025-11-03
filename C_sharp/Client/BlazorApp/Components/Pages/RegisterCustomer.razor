@@ -1,11 +1,10 @@
-﻿@page "/counter"
+﻿@page "/register"
 @using ApiContracts
 @rendermode InteractiveServer
 @inject BlazorApp.Services.ICustomerServices CustomerServices
 <PageTitle>Add Customer</PageTitle>
 
 <h1>Create Account</h1>
-
 
 
 <button class="btn btn-primary" @onclick="CreateCustomer">Click me</button>
@@ -17,14 +16,15 @@
 
 @code {
     private string? message;
+	private string newCustomerName;
 
     private async Task CreateCustomer()
     {
         try
         {
-            var dto = new CreateCustomerDto { UserName = "TestUser", Password = "1234" };
-            var created = await CustomerServices.AddCustomerAsync(dto);
-            message = $" Customer '{created.UserName}' created successfully!";
+            //var dto = new CreateCustomerDto { UserName = "TestUser", Password = "1234" };
+            //var created = await CustomerServices.AddCustomerAsync(dto);
+            //message = $" Customer '{created.UserName}' created successfully!";
         }
         catch (Exception ex)
         {

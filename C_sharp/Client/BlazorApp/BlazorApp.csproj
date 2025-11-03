@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\ReSpawnMarket.SDK\ReSpawnMarket.SDK.csproj" />
     <ProjectReference Include="..\..\Shared\ApiContracts\ApiContracts.csproj" />
   </ItemGroup>
 
