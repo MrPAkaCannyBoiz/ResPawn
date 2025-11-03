@@ -1,10 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "t1mVi2OhcfU=",
+  "dgSpecHash": "1RFnejtGXNU=",
   "success": true,
-  "projectFilePath": "C:\\Users\\geanc\\OneDrive\\Área de Trabalho\\SEP3PoC\\ResPawnMarket\\C_sharp\\Client\\BlazorApp\\BlazorApp.csproj",
+  "projectFilePath": "C:\\VIA_uni_stuffs\\Semester3_hetero_system\\SEP3\\GitHub_Repo\\ResPawnMarket\\ResPawnMarket\\C_sharp\\Client\\BlazorApp\\BlazorApp.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\geanc\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.0-preview.7.25380.108\\microsoft.aspnetcore.app.internal.assets.10.0.0-preview.7.25380.108.nupkg.sha512"
+    "C:\\Users\\pongs\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.0-preview.7.25380.108\\microsoft.aspnetcore.app.internal.assets.10.0.0-preview.7.25380.108.nupkg.sha512"
   ],
   "logs": []
 }

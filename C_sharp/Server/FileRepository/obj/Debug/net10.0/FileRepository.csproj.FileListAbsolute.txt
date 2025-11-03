@@ -16,3 +16,21 @@ C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\F
 C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\FileRepository\obj\Debug\net10.0\refint\FileRepository.dll
 C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\FileRepository\obj\Debug\net10.0\FileRepository.pdb
 C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\FileRepository\obj\Debug\net10.0\ref\FileRepository.dll
+C:\VIA_uni_stuffs\Semester3_hetero_system\SEP3\GitHub_Repo\ResPawnMarket\ResPawnMarket\C_sharp\Server\FileRepository\bin\Debug\net10.0\FileRepository.deps.json
+C:\VIA_uni_stuffs\Semester3_hetero_system\SEP3\GitHub_Repo\ResPawnMarket\ResPawnMarket\C_sharp\Server\FileRepository\bin\Debug\net10.0\FileRepository.dll
+C:\VIA_uni_stuffs\Semester3_hetero_system\SEP3\GitHub_Repo\ResPawnMarket\ResPawnMarket\C_sharp\Server\FileRepository\bin\Debug\net10.0\FileRepository.pdb
+C:\VIA_uni_stuffs\Semester3_hetero_system\SEP3\GitHub_Repo\ResPawnMarket\ResPawnMarket\C_sharp\Server\FileRepository\bin\Debug\net10.0\Entities.dll
+C:\VIA_uni_stuffs\Semester3_hetero_system\SEP3\GitHub_Repo\ResPawnMarket\ResPawnMarket\C_sharp\Server\FileRepository\bin\Debug\net10.0\RepositoryContracts.dll
+C:\VIA_uni_stuffs\Semester3_hetero_system\SEP3\GitHub_Repo\ResPawnMarket\ResPawnMarket\C_sharp\Server\FileRepository\bin\Debug\net10.0\Entities.pdb
+C:\VIA_uni_stuffs\Semester3_hetero_system\SEP3\GitHub_Repo\ResPawnMarket\ResPawnMarket\C_sharp\Server\FileRepository\bin\Debug\net10.0\RepositoryContracts.pdb
+C:\VIA_uni_stuffs\Semester3_hetero_system\SEP3\GitHub_Repo\ResPawnMarket\ResPawnMarket\C_sharp\Server\FileRepository\obj\Debug\net10.0\FileRepository.csproj.AssemblyReference.cache
+C:\VIA_uni_stuffs\Semester3_hetero_system\SEP3\GitHub_Repo\ResPawnMarket\ResPawnMarket\C_sharp\Server\FileRepository\obj\Debug\net10.0\FileRepository.GeneratedMSBuildEditorConfig.editorconfig
+C:\VIA_uni_stuffs\Semester3_hetero_system\SEP3\GitHub_Repo\ResPawnMarket\ResPawnMarket\C_sharp\Server\FileRepository\obj\Debug\net10.0\FileRepository.AssemblyInfoInputs.cache
+C:\VIA_uni_stuffs\Semester3_hetero_system\SEP3\GitHub_Repo\ResPawnMarket\ResPawnMarket\C_sharp\Server\FileRepository\obj\Debug\net10.0\FileRepository.AssemblyInfo.cs
+C:\VIA_uni_stuffs\Semester3_hetero_system\SEP3\GitHub_Repo\ResPawnMarket\ResPawnMarket\C_sharp\Server\FileRepository\obj\Debug\net10.0\FileRepository.csproj.CoreCompileInputs.cache
+C:\VIA_uni_stuffs\Semester3_hetero_system\SEP3\GitHub_Repo\ResPawnMarket\ResPawnMarket\C_sharp\Server\FileRepository\obj\Debug\net10.0\FileRepository.sourcelink.json
+C:\VIA_uni_stuffs\Semester3_hetero_system\SEP3\GitHub_Repo\ResPawnMarket\ResPawnMarket\C_sharp\Server\FileRepository\obj\Debug\net10.0\FileRepo.357C023F.Up2Date
+C:\VIA_uni_stuffs\Semester3_hetero_system\SEP3\GitHub_Repo\ResPawnMarket\ResPawnMarket\C_sharp\Server\FileRepository\obj\Debug\net10.0\FileRepository.dll
+C:\VIA_uni_stuffs\Semester3_hetero_system\SEP3\GitHub_Repo\ResPawnMarket\ResPawnMarket\C_sharp\Server\FileRepository\obj\Debug\net10.0\refint\FileRepository.dll
+C:\VIA_uni_stuffs\Semester3_hetero_system\SEP3\GitHub_Repo\ResPawnMarket\ResPawnMarket\C_sharp\Server\FileRepository\obj\Debug\net10.0\FileRepository.pdb
+C:\VIA_uni_stuffs\Semester3_hetero_system\SEP3\GitHub_Repo\ResPawnMarket\ResPawnMarket\C_sharp\Server\FileRepository\obj\Debug\net10.0\ref\FileRepository.dll
