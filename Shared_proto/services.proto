@@ -64,6 +64,7 @@ message GetCustomerResponse
 {
   Customer customer = 1;
   repeated Address addresses = 2;
+  repeated Postal postals = 3;
 }
 
 message Empty { }
@@ -84,7 +85,7 @@ service CustomerRegisterService
   rpc RegisterCustomer (RegisterCustomerRequest) returns (RegisterCustomerResponse);
 }
 
-// use case for "Get Customer Details"
+// use case for "Show Customer Details"
 service GetCustomerService
 {
   rpc GetCustomer (GetCustomerRequest) returns (GetCustomerResponse);
