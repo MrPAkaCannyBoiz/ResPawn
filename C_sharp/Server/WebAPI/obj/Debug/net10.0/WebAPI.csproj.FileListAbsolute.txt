@@ -6,7 +6,6 @@ C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\W
 C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\WebAPI\bin\Debug\net10.0\WebAPI.runtimeconfig.json
 C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\WebAPI\bin\Debug\net10.0\WebAPI.dll
 C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\WebAPI\bin\Debug\net10.0\WebAPI.pdb
-C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\WebAPI\bin\Debug\net10.0\Microsoft.AspNetCore.OpenApi.dll
 C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\WebAPI\bin\Debug\net10.0\Microsoft.OpenApi.dll
 C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\WebAPI\bin\Debug\net10.0\ApiContracts.dll
 C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\WebAPI\bin\Debug\net10.0\Entities.dll
@@ -92,3 +91,13 @@ C:\VIA_uni_stuffs\Semester3_hetero_system\SEP3\GitHub_Repo\ResPawnMarket\ResPawn
 C:\VIA_uni_stuffs\Semester3_hetero_system\SEP3\GitHub_Repo\ResPawnMarket\ResPawnMarket\C_sharp\Server\WebAPI\obj\Debug\net10.0\WebAPI.pdb
 C:\VIA_uni_stuffs\Semester3_hetero_system\SEP3\GitHub_Repo\ResPawnMarket\ResPawnMarket\C_sharp\Server\WebAPI\obj\Debug\net10.0\WebAPI.genruntimeconfig.cache
 C:\VIA_uni_stuffs\Semester3_hetero_system\SEP3\GitHub_Repo\ResPawnMarket\ResPawnMarket\C_sharp\Server\WebAPI\obj\Debug\net10.0\ref\WebAPI.dll
+C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\WebAPI\bin\Debug\net10.0\Google.Protobuf.dll
+C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\WebAPI\bin\Debug\net10.0\Grpc.Core.Api.dll
+C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\WebAPI\bin\Debug\net10.0\Grpc.Net.Client.dll
+C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\WebAPI\bin\Debug\net10.0\Grpc.Net.ClientFactory.dll
+C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\WebAPI\bin\Debug\net10.0\Grpc.Net.Common.dll
+C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\WebAPI\bin\Debug\net10.0\Swashbuckle.AspNetCore.Swagger.dll
+C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\WebAPI\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\WebAPI\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\WebAPI\bin\Debug\net10.0\ReSpawnMarket.SDK.dll
+C:\Users\geanc\OneDrive\Área de Trabalho\SEP3PoC\ResPawnMarket\C_sharp\Server\WebAPI\bin\Debug\net10.0\ReSpawnMarket.SDK.pdb

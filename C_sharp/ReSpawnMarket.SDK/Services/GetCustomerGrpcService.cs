@@ -26,7 +26,7 @@ public class GetCustomerGrpcService : IGetCustomerService
         }
         catch (RpcException ex)
         {
-            throw;
+            throw new ApplicationException($"gRPC {ex.StatusCode}: {ex.Status.Detail}", ex);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using ApiContracts;
+using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI.Controllers;
 
@@ -12,21 +13,33 @@ public class GetCustomerServiceController : ControllerBase
         _getCustomerService = getCustomerService;
     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetCustomerAsync([FromRoute] int id, CancellationToken cancellationToken)
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> GetCustomerAsync([FromRoute] int id, CancellationToken ct)
     {
-        try
+   var grpcRequest = new Com.Respawnmarket.GetCustomerRequest { CustomerId = id };
+
+        var grpcResponse = await _getCustomerService.GetCustomerAsync(grpcRequest, ct);
+       if (grpcResponse == null || grpcResponse.Customer == null)
+            return NotFound();
+
+        var c = grpcResponse.Customer;
+
+        var addr = grpcResponse.Addresses.Count > 0 ? grpcResponse.Addresses[0] : null;
+        var post = grpcResponse.Postals.Count   > 0 ? grpcResponse.Postals[0]   : null;
+
+        var dto = new CustomerDto
         {
-            var request = new Com.Respawnmarket.GetCustomerRequest
-            {
-                CustomerId = id
-            };
-            var response = await _getCustomerService.GetCustomerAsync(request, cancellationToken);
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ex.Message);
-        }
+            Id            = c.Id,
+            FirstName     = c.FirstName,
+            LastName      = c.LastName,
+            Email         = c.Email,
+            PhoneNumber   = c.PhoneNumber,
+            StreetName    = addr?.StreetName ?? string.Empty,
+            SecondaryUnit = addr?.SecondaryUnit,
+            PostalCode    = post?.PostalCode ?? 0,
+            City          = post?.City ?? string.Empty
+        };
+
+        return Ok(dto);
     }
 }

@@ -1,34 +1,146 @@
 ﻿@page "/register"
-@using ApiContracts
 @rendermode InteractiveServer
+@using ApiContracts
+@using Microsoft.AspNetCore.Components.Forms
 @inject BlazorApp.Services.ICustomerServices CustomerServices
-<PageTitle>Add Customer</PageTitle>
 
-<h1>Create Account</h1>
+<PageTitle>Create Account</PageTitle>
 
+<h3>Create Account</h3>
 
-<button class="btn btn-primary" @onclick="CreateCustomer">Click me</button>
+<EditForm EditContext="editContext" OnValidSubmit="CreateCustomer">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">First name</label>
+            <InputText class="form-control" @bind-Value="form.FirstName" />
+            <ValidationMessage For="@(() => form.FirstName)" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Last name</label>
+            <InputText class="form-control" @bind-Value="form.LastName" />
+            <ValidationMessage For="@(() => form.LastName)" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Email</label>
+            <InputText class="form-control" type="email" @bind-Value="form.Email" />
+            <ValidationMessage For="@(() => form.Email)" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Phone number</label>
+            <InputText class="form-control" @bind-Value="form.PhoneNumber" />
+            <ValidationMessage For="@(() => form.PhoneNumber)" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Password</label>
+            <InputText class="form-control" type="password" @bind-Value="form.Password" />
+            <ValidationMessage For="@(() => form.Password)" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Street</label>
+            <InputText class="form-control" @bind-Value="form.StreetName" />
+            <ValidationMessage For="@(() => form.StreetName)" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Secondary unit</label>
+            <InputText class="form-control" @bind-Value="form.SecondaryUnit" />
+            <ValidationMessage For="@(() => form.SecondaryUnit)" />
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Postal code</label>
+            <InputNumber class="form-control" @bind-Value="form.PostalCode" />
+            <ValidationMessage For="@(() => form.PostalCode)" />
+        </div>
+
+        <div class="col-md-9">
+            <label class="form-label">City</label>
+            <InputText class="form-control" @bind-Value="form.City" />
+            <ValidationMessage For="@(() => form.City)" />
+        </div>
+    </div>
+
+    <div class="mt-3 d-flex gap-2">
+        <button class="btn btn-primary" type="submit" disabled="@busy">
+            @(busy ? "Creating..." : "Create")
+        </button>
+        <button type="button" class="btn btn-outline-secondary" @onclick="ResetForm" disabled="@busy">Reset</button>
+    </div>
+</EditForm>
 
 @if (!string.IsNullOrEmpty(message))
 {
-    <p class="mt-2">@message</p>
+    <div class="alert @(success ? "alert-success" : "alert-danger") mt-3">
+        @message
+    </div>
 }
 
 @code {
+    private CreateCustomerDto form = new()
+    {
+        FirstName = "", LastName = "", Email = "", Password = "",
+        PhoneNumber = "", StreetName = "", City = "", PostalCode = 0,
+        SecondaryUnit = null
+    };
+
+    private EditContext? editContext;
+
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(form);
+    }
+
     private string? message;
-	private string newCustomerName;
+    private bool success;
+    private bool busy;
 
     private async Task CreateCustomer()
     {
+        busy = true;
+        message = null;
+        success = false;
+
         try
         {
-            //var dto = new CreateCustomerDto { UserName = "TestUser", Password = "1234" };
-            //var created = await CustomerServices.AddCustomerAsync(dto);
-            //message = $" Customer '{created.UserName}' created successfully!";
+            var created = await CustomerServices.AddCustomerAsync(form);
+            success = true;
+            message = $"Customer '{created.FirstName} {created.LastName}' created successfully!";
+
+            // reset model AND validation state
+            form = new CreateCustomerDto
+            {
+                FirstName = "", LastName = "", Email = "", Password = "",
+                PhoneNumber = "", StreetName = "", City = "", PostalCode = 0,
+                SecondaryUnit = null
+            };
+            editContext = new EditContext(form);
         }
         catch (Exception ex)
         {
-            message = $" Error: {ex.Message}";
+            success = false;
+            message = $"Error: {ex.Message}";
         }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private void ResetForm()
+    {
+        form = new CreateCustomerDto
+        {
+            FirstName = "", LastName = "", Email = "", Password = "",
+            PhoneNumber = "", StreetName = "", City = "", PostalCode = 0,
+            SecondaryUnit = null
+        };
+        editContext = new EditContext(form);
     }
 }

@@ -1,0 +1,57 @@
+@page "/customer/{id:int}"
+@using ApiContracts
+@inject BlazorApp.Services.ICustomerServices CustomerServices
+
+<h3>Customer</h3>
+
+@if (loading)
+{
+    <p>loading...</p>
+}
+else if (error is not null)
+{
+    <div class="alert alert-danger">@error</div>
+}
+else if (customer is null)
+{
+    <div class="alert alert-warning">Not found.</div>
+}
+else
+{
+    <dl class="row">
+        <dt class="col-sm-3">Id</dt><dd class="col-sm-9">@customer.Id</dd>
+        <dt class="col-sm-3">Name</dt><dd class="col-sm-9">@customer.FirstName @customer.LastName</dd>
+        <dt class="col-sm-3">Email</dt><dd class="col-sm-9">@customer.Email</dd>
+        <dt class="col-sm-3">Phone</dt><dd class="col-sm-9">@customer.PhoneNumber</dd>
+        <dt class="col-sm-3">Address</dt>
+        <dd class="col-sm-9">@customer.StreetName, @customer.SecondaryUnit<br/>@customer.PostalCode @customer.City</dd>
+    </dl>
+}
+
+@code {
+    [Parameter] public int id { get; set; }
+
+    private CustomerDto? customer;
+    private string? error;
+    private bool loading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loading = true;
+        error = null;
+        customer = null;
+
+        try
+        {
+            customer = await CustomerServices.GetSingleAsync(id);
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+}
