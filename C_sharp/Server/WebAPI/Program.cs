@@ -2,6 +2,7 @@ using FileRepository;
 using RepositoryContracts;
 using ReSpawnMarket.SDK;
 using ReSpawnMarket.SDK.ServiceInterfaces;
+using ReSpawnMarket.SDK.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,8 +13,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddScoped<CustomerInterface, CustomerFileRespository>();
+// registering grpc services (real implementations)
 builder.Services.AddScoped<IRegisterCustomerService, CustomerRegisterGrpcService>();
+builder.Services.AddScoped<IGetCustomerService, GetCustomerGrpcService>();
 
 // adding grpc sdk services
 builder.Services.AddGrpcSdk();

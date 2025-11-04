@@ -3,7 +3,7 @@ using ReSpawnMarket.SDK.ServiceInterfaces;
 
 namespace WebAPI.Controllers;
 
-[Route("api/[controller]")] // api/CustomerRegisterService
+[Route("service/[controller]")] // service/CustomerRegisterService
 [ApiController]
 public class CustomerRegisterServiceController : ControllerBase
 {

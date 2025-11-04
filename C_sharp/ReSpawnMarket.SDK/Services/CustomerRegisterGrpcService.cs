@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ReSpawnMarket.SDK;
+namespace ReSpawnMarket.SDK.Services;
 
 public class CustomerRegisterGrpcService : IRegisterCustomerService
 {
@@ -15,6 +15,7 @@ public class CustomerRegisterGrpcService : IRegisterCustomerService
     {
         _grpcClient = grpcClient;
     }
+
     public async Task<RegisterCustomerResponse> RegisterCustomerAsync(RegisterCustomerRequest request
         , CancellationToken cancellationToken = default)
     {
@@ -29,4 +30,5 @@ public class CustomerRegisterGrpcService : IRegisterCustomerService
             throw;
         }
     }
+
 }
