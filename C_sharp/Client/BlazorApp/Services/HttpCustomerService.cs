@@ -39,7 +39,7 @@ public class HttpCustomerService : ICustomerServices
         var grpcResp = JsonSerializer.Deserialize<RegisterCustomerResponseDto>(json, JsonOpts)
                       ?? throw new Exception("Empty response");
 
-     
+        // TODO : remove this return because it's not first tier logic
         return new CustomerDto
         {
             Id           = grpcResp.CustomerId,   
@@ -57,7 +57,7 @@ public class HttpCustomerService : ICustomerServices
     public async Task<CustomerDto> GetSingleAsync(int id)
     {
        var httpResponse = await client.GetAsync($"service/GetCustomerService/{id}");
-    var text = await httpResponse.Content.ReadAsStringAsync();
+       var text = await httpResponse.Content.ReadAsStringAsync();
 
     if (!httpResponse.IsSuccessStatusCode)
         throw new Exception(string.IsNullOrWhiteSpace(text)

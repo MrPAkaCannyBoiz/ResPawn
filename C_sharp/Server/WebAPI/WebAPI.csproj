@@ -13,8 +13,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\ReSpawnMarket.SDK\ReSpawnMarket.SDK.csproj" />
     <ProjectReference Include="..\..\Shared\ApiContracts\ApiContracts.csproj" />
-    <ProjectReference Include="..\FileRepository\FileRepository.csproj" />
-    <ProjectReference Include="..\RepositoryContracts\RepositoryContracts.csproj" />
   </ItemGroup>
 
 </Project>
