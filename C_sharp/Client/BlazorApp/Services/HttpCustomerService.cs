@@ -29,7 +29,7 @@ public class HttpCustomerService : ICustomerServices
     {
         
         var httpResponse = await client.PostAsJsonAsync(
-            "service/CustomerRegisterService/RegisterCustomer", request);
+            "api/customers", request);
 
         var json = await httpResponse.Content.ReadAsStringAsync();
         if (!httpResponse.IsSuccessStatusCode)
@@ -56,7 +56,7 @@ public class HttpCustomerService : ICustomerServices
 
     public async Task<CustomerDto> GetSingleAsync(int id)
     {
-       var httpResponse = await client.GetAsync($"service/GetCustomerService/{id}");
+       var httpResponse = await client.GetAsync($"api/customers/{id}");
        var text = await httpResponse.Content.ReadAsStringAsync();
 
     if (!httpResponse.IsSuccessStatusCode)

@@ -3,7 +3,7 @@ using ReSpawnMarket.SDK.ServiceInterfaces;
 
 namespace WebAPI.Controllers;
 
-[Route("service/[controller]")] // service/CustomerRegisterService
+[Route("api/customers")]
 [ApiController]
 public class CustomerRegisterServiceController : ControllerBase
 {
@@ -15,7 +15,7 @@ public class CustomerRegisterServiceController : ControllerBase
     }
 
     //only service we have here is create customer
-    [HttpPost("RegisterCustomer")]
+    [HttpPost]
     public async Task<IActionResult> RegisterCustomerAsync([FromBody] Com.Respawnmarket.RegisterCustomerRequest request
         , CancellationToken cancellationToken)
     {

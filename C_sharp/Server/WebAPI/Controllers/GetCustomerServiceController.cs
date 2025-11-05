@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI.Controllers;
 
-[Route("service/[controller]")] // service/GetCustomerService
+[Route("api/customers")]
 [ApiController]
 public class GetCustomerServiceController : ControllerBase
 {
