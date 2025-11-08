@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ApiContracts;
+using Microsoft.AspNetCore.Mvc;
 
 namespace BlazorApp.Services;
 
@@ -25,48 +26,35 @@ public class HttpCustomerService : ICustomerServices
         public string? Message { get; set; }
     }
 
-    public async Task<CustomerDto> AddCustomerAsync(CreateCustomerDto request)
+ public async Task<CustomerDto> AddCustomerAsync(CreateCustomerDto request)
     {
-        
-        var httpResponse = await client.PostAsJsonAsync(
-            "api/customers", request);
+        var http = await client.PostAsJsonAsync("api/customers", request);
+        var text = await http.Content.ReadAsStringAsync();
 
-        var json = await httpResponse.Content.ReadAsStringAsync();
-        if (!httpResponse.IsSuccessStatusCode)
-            throw new Exception(json);
+        if (!http.IsSuccessStatusCode)
+            throw new Exception(string.IsNullOrWhiteSpace(text)
+                ? $"Request failed: {(int)http.StatusCode} {http.ReasonPhrase}"
+                : text);
 
-      
-        var grpcResp = JsonSerializer.Deserialize<RegisterCustomerResponseDto>(json, JsonOpts)
-                      ?? throw new Exception("Empty response");
-
-        // TODO : remove this return because it's not first tier logic
-        return new CustomerDto
+        return JsonSerializer.Deserialize<CustomerDto>(text, new JsonSerializerOptions
         {
-            Id           = grpcResp.CustomerId,   
-            FirstName    = request.FirstName,
-            LastName     = request.LastName,
-            Email        = request.Email,
-            PhoneNumber  = request.PhoneNumber,
-            StreetName   = request.StreetName,
-            SecondaryUnit = request.SecondaryUnit,
-            PostalCode   = request.PostalCode,
-            City         = request.City
-        };
+            PropertyNameCaseInsensitive = true
+        })!;
     }
 
     public async Task<CustomerDto> GetSingleAsync(int id)
     {
-       var httpResponse = await client.GetAsync($"api/customers/{id}");
-       var text = await httpResponse.Content.ReadAsStringAsync();
+        var http = await client.GetAsync($"api/customers/{id}");
+        var text = await http.Content.ReadAsStringAsync();
 
-    if (!httpResponse.IsSuccessStatusCode)
-        throw new Exception(string.IsNullOrWhiteSpace(text)
-            ? $"Request failed: {(int)httpResponse.StatusCode} {httpResponse.ReasonPhrase}"
-            : text);
+        if (!http.IsSuccessStatusCode)
+            throw new Exception(string.IsNullOrWhiteSpace(text)
+                ? $"Request failed: {(int)http.StatusCode} {http.ReasonPhrase}"
+                : text);
 
-    return JsonSerializer.Deserialize<CustomerDto>(text, new JsonSerializerOptions
-    {
-        PropertyNameCaseInsensitive = true
-    })!;
+        return JsonSerializer.Deserialize<CustomerDto>(text, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        })!;
     }
 }
