@@ -180,7 +180,8 @@ message UploadProductRequest
   string photo_url = 4;
   Category category = 5;
   string description = 6;
-  int32 sold_by_customer_id = 7;
+  string other_category = 7;
+  int32 sold_by_customer_id = 8;
 }
 
 message UploadProductResponse

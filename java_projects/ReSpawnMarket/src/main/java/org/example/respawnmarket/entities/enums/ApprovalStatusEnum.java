@@ -1,6 +1,6 @@
 package org.example.respawnmarket.entities.enums;
 
-public enum ApprovalStatus
+public enum ApprovalStatusEnum
 {
     PENDING,
     APPROVED,

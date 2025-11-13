@@ -1,6 +1,6 @@
 package org.example.respawnmarket.entities.enums;
 
-public enum Category
+public enum CategoryEnum
 {
     ELECTRONICS,
     JEWELRY,

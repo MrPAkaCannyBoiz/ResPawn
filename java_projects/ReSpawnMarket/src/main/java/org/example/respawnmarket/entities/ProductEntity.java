@@ -1,8 +1,8 @@
 package org.example.respawnmarket.entities;
 
 import jakarta.persistence.*;
-import org.example.respawnmarket.entities.enums.ApprovalStatus;
-import org.example.respawnmarket.entities.enums.Category;
+import org.example.respawnmarket.entities.enums.ApprovalStatusEnum;
+import org.example.respawnmarket.entities.enums.CategoryEnum;
 
 import java.time.LocalDateTime;
 
@@ -29,11 +29,11 @@ public class ProductEntity
 
     @Enumerated(EnumType.STRING)
     @Column (name = "approval_status", nullable = false)
-    private ApprovalStatus approvalStatus;
+    private ApprovalStatusEnum approvalStatus;
 
     @Enumerated(EnumType.STRING)
     @Column (name = "category", nullable = false)
-    private Category category;
+    private CategoryEnum category;
 
     @Column (name = "description", nullable = false)
     private String description;
@@ -57,7 +57,7 @@ public class ProductEntity
    }
 
     public ProductEntity(String name, double price, String condition, String description,
-                         String photoUrl, CustomerEntity seller, Category category)
+                         String photoUrl, CustomerEntity seller, CategoryEnum category)
     {
         this.name = name;
         this.price = price;
@@ -66,7 +66,7 @@ public class ProductEntity
         this.photoUrl = photoUrl;
         this.seller = seller;
         this.sold = false;
-        this.approvalStatus = ApprovalStatus.PENDING;
+        this.approvalStatus = ApprovalStatusEnum.PENDING;
         this.registerDate = LocalDateTime.now();
         this.category = category;
         this.otherCategory = "";
@@ -82,9 +82,9 @@ public class ProductEntity
         this.photoUrl = photoUrl;
         this.seller = seller;
         this.sold = false;
-        this.approvalStatus = ApprovalStatus.PENDING;
+        this.approvalStatus = ApprovalStatusEnum.PENDING;
         this.registerDate = LocalDateTime.now();
-        this.category = Category.OTHER;
+        this.category = CategoryEnum.OTHER;
         this.otherCategory = otherCategory;
     }
 
@@ -170,22 +170,22 @@ public class ProductEntity
         this.registerDate = registerDate;
     }
 
-    public Category getCategory()
+    public CategoryEnum getCategory()
     {
         return category;
     }
 
-    public void setCategory(Category category)
+    public void setCategory(CategoryEnum category)
     {
         this.category = category;
     }
 
-    public ApprovalStatus getApprovalStatus()
+    public ApprovalStatusEnum getApprovalStatus()
     {
         return approvalStatus;
     }
 
-    public void setApprovalStatus(ApprovalStatus approvalStatus)
+    public void setApprovalStatus(ApprovalStatusEnum approvalStatus)
     {
         this.approvalStatus = approvalStatus;
     }
