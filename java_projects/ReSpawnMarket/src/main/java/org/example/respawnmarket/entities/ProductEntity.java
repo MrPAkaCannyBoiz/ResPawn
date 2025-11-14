@@ -1,6 +1,10 @@
 package org.example.respawnmarket.entities;
 
 import jakarta.persistence.*;
+import org.example.respawnmarket.entities.enums.ApprovalStatusEnum;
+import org.example.respawnmarket.entities.enums.CategoryEnum;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "product")
@@ -17,8 +21,19 @@ public class ProductEntity
     @Column (name = "price", nullable = false)
     private double price;
 
+    @Column (name = "sold", nullable = false)
+    private boolean sold;
+
     @Column (name = "condition", nullable = false)
     private String condition;
+
+    @Enumerated(EnumType.STRING)
+    @Column (name = "approval_status", nullable = false)
+    private ApprovalStatusEnum approvalStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column (name = "category", nullable = false)
+    private CategoryEnum category;
 
     @Column (name = "description", nullable = false)
     private String description;
@@ -26,20 +41,23 @@ public class ProductEntity
     @Column (name = "photo_url", nullable = true)
     private String photoUrl;
 
+    @Column (name = "register_date", nullable = false)
+    private LocalDateTime registerDate;
+
+    @Column (name = "other_category", nullable = true)
+    private String otherCategory;
+
     //FK
     @ManyToOne
     @JoinColumn(name = "sold_by_customer", nullable = false)
     private CustomerEntity seller;
 
-    @ManyToOne
-    @JoinColumn(name = "shopping_cart_id", nullable = true)
-    private ShoppingCartEntity shoppingCart;
-
    public ProductEntity()
    {
    }
+
     public ProductEntity(String name, double price, String condition, String description,
-                         String photoUrl, CustomerEntity seller, ShoppingCartEntity shoppingCart)
+                         String photoUrl, CustomerEntity seller, CategoryEnum category)
     {
         this.name = name;
         this.price = price;
@@ -47,8 +65,29 @@ public class ProductEntity
         this.description = description;
         this.photoUrl = photoUrl;
         this.seller = seller;
-        this.shoppingCart = shoppingCart;
+        this.sold = false;
+        this.approvalStatus = ApprovalStatusEnum.PENDING;
+        this.registerDate = LocalDateTime.now();
+        this.category = category;
+        this.otherCategory = "";
     }
+
+    public ProductEntity(String name, double price, String condition, String description,
+                         String photoUrl, CustomerEntity seller, String otherCategory)
+    {
+        this.name = name;
+        this.price = price;
+        this.condition = condition;
+        this.description = description;
+        this.photoUrl = photoUrl;
+        this.seller = seller;
+        this.sold = false;
+        this.approvalStatus = ApprovalStatusEnum.PENDING;
+        this.registerDate = LocalDateTime.now();
+        this.category = CategoryEnum.OTHER;
+        this.otherCategory = otherCategory;
+    }
+
 
     public int getId()
     {
@@ -121,13 +160,44 @@ public class ProductEntity
         this.seller = seller;
     }
 
-    public ShoppingCartEntity getShoppingCart()
+    public LocalDateTime getRegisterDate()
     {
-        return shoppingCart;
+        return registerDate;
     }
 
-    public void setShoppingCart(ShoppingCartEntity shoppingCart)
+    public void setRegisterDate(LocalDateTime registerDate)
     {
-        this.shoppingCart = shoppingCart;
+        this.registerDate = registerDate;
     }
+
+    public CategoryEnum getCategory()
+    {
+        return category;
+    }
+
+    public void setCategory(CategoryEnum category)
+    {
+        this.category = category;
+    }
+
+    public ApprovalStatusEnum getApprovalStatus()
+    {
+        return approvalStatus;
+    }
+
+    public void setApprovalStatus(ApprovalStatusEnum approvalStatus)
+    {
+        this.approvalStatus = approvalStatus;
+    }
+
+    public boolean isSold()
+    {
+        return sold;
+    }
+
+    public void setSold(boolean sold)
+    {
+        this.sold = sold;
+    }
+
 }

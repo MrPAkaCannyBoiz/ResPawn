@@ -3,7 +3,9 @@ option java_multiple_files = true;
 option java_package = "com.respawnmarket";
 option java_outer_classname = "ReSpawnMarketServiceProto";
 package com.respawnmarket;
+import "google/protobuf/timestamp.proto";
 
+//  Data Models(database entities)
 message Customer
 {
   int32 id = 1;
@@ -33,6 +35,82 @@ message CustomerAddress
   int32 customer_id = 1;
   int32 address_id = 2;
 }
+
+message Reseller
+{
+  int32 id = 1;
+  string name = 2;
+  string username = 3;
+  string password = 4;
+}
+
+enum ApprovalStatus
+{
+  PENDING = 0;
+  APPROVED = 1;
+  NOT_APPROVED = 2;
+}
+
+enum Category
+{
+  CATEGORY_UNSPECIFIED = 0;
+  ELECTRONICS = 1;
+  JEWELRY = 2;
+  WATCHES = 3;
+  MUSICAL_INSTRUMENTS = 4;
+  TOOLS = 5;
+  VEHICLES = 6;
+  COLLECTIBLES = 7;
+  FASHION = 8;
+  HOME_APPLIANCES = 9;
+  SPORTS_EQUIPMENT = 10;
+  COMPUTERS = 11;
+  MOBILE_PHONES = 12;
+  CAMERAS = 13;
+  LUXURY_ITEMS = 14;
+  ARTWORK = 15;
+  ANTIQUES = 16;
+  GAMING_CONSOLES = 17;
+  FURNITURE = 18;
+  GOLD_AND_SILVER = 19;
+  OTHER = 20;
+}
+
+message Product
+{
+  int32 id = 1;
+  double price = 2;
+  bool sold = 3;
+  string condition = 4;
+  ApprovalStatus approval_status = 5;
+  string name = 6;
+  string photo_url = 7;
+  Category category = 8;
+  string description = 9;
+  int32 sold_by_customer_id = 10;
+  google.protobuf.Timestamp register_date = 11;
+}
+
+message ShoppingCart
+{
+  int32 id = 1;
+  double total_price = 2;
+}
+
+message CartProduct
+{
+  int32 cart_id = 1;
+  int32 product_id = 2;
+  int32 quantity = 3;
+}
+
+message Stock
+{
+  int32 product_id = 1;
+  int32 address_id = 2;
+  int32 quantity = 3;
+}
+
 
 //  Request(parameter) and Response(return) Messages for Logic Service
 message RegisterCustomerRequest
@@ -91,4 +169,56 @@ service GetCustomerService
   rpc GetCustomer (GetCustomerRequest) returns (GetCustomerResponse);
   rpc GetAllCustomers (GetAllCustomersRequest) returns (GetAllCustomersResponse);
 }
+
+// use case for "Upload Product Details" (include getter of products)
+//  Request(parameter) and Response(return) Messages
+message UploadProductRequest
+{
+  double price = 1;
+  string condition = 2;
+  string name = 3;
+  string photo_url = 4;
+  Category category = 5;
+  string description = 6;
+  string other_category = 7;
+  int32 sold_by_customer_id = 8;
+}
+
+message UploadProductResponse
+{
+  Product product = 1;
+}
+
+message GetProductRequest
+{
+  int32 product_id = 1;
+}
+
+message GetProductResponse
+{
+  Product product = 1;
+}
+
+message GetAllProductsRequest
+{
+  Empty empty = 1;
+}
+
+message GetAllProductsResponse
+{
+  repeated Product products = 1;
+}
+// service for "Upload Product Details" and "Get Product Details"
+
+service UploadProductService
+{
+  rpc UploadProduct (UploadProductRequest) returns (UploadProductResponse);
+}
+
+service GetProductService
+{
+  rpc GetProduct (GetProductRequest) returns (GetProductResponse);
+  rpc GetAllProducts (GetAllProductsRequest) returns (GetAllProductsResponse);
+}
+
 

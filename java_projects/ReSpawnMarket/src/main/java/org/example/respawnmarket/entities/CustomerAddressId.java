@@ -5,16 +5,16 @@ import jakarta.persistence.Embeddable;
 import java.util.Objects;
 
 @Embeddable
-public class CustomerAddressIdEntity
+public class CustomerAddressId
 {
     private int customerId;
     private int addressId;
 
-    public CustomerAddressIdEntity()
+    public CustomerAddressId()
     {
     }
 
-    public CustomerAddressIdEntity(int customerId, int addressId)
+    public CustomerAddressId(int customerId, int addressId)
     {
         this.customerId = customerId;
         this.addressId = addressId;
@@ -45,7 +45,7 @@ public class CustomerAddressIdEntity
     public boolean equals(Object o)
     {
         if (o == null || getClass() != o.getClass()) return false;
-        CustomerAddressIdEntity that = (CustomerAddressIdEntity) o;
+        CustomerAddressId that = (CustomerAddressId) o;
         return customerId == that.customerId && addressId == that.addressId;
     }
 

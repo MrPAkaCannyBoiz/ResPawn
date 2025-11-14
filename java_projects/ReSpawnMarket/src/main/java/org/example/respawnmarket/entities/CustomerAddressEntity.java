@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 public class CustomerAddressEntity
 {
     @EmbeddedId
-    private CustomerAddressIdEntity id;
+    private CustomerAddressId id;
 
     @MapsId ("customerId")
     @ManyToOne (optional = false, fetch = FetchType.LAZY)
@@ -28,15 +28,15 @@ public class CustomerAddressEntity
     {
         this.customer = customer;
         this.address = address;
-        this.id = new CustomerAddressIdEntity(customer.getId(), address.getId());
+        this.id = new CustomerAddressId(customer.getId(), address.getId());
     }
 
-    public CustomerAddressIdEntity getId()
+    public CustomerAddressId getId()
     {
         return id;
     }
 
-    public void setId(CustomerAddressIdEntity id)
+    public void setId(CustomerAddressId id)
     {
         this.id = id;
     }

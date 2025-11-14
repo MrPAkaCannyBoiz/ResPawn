@@ -1,7 +1,6 @@
 package org.example.respawnmarket.Service;
 
 import com.respawnmarket.*;
-import org.example.respawnmarket.dtos.CustomerDto;
 import org.example.respawnmarket.repositories.AddressRepository;
 import org.example.respawnmarket.repositories.CustomerAddressRepository;
 import org.example.respawnmarket.repositories.CustomerRepository;
