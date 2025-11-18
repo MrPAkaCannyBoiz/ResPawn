@@ -1,14 +1,23 @@
 package org.example.respawnmarket.entities;
 
-import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
 import org.example.respawnmarket.entities.enums.ApprovalStatusEnum;
 import org.example.respawnmarket.entities.enums.CategoryEnum;
 
-import java.time.LocalDateTime;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "product")
-
 public class ProductEntity
 {
     @Id
@@ -47,14 +56,19 @@ public class ProductEntity
     @Column (name = "other_category", nullable = true)
     private String otherCategory;
 
-    //FK
     @ManyToOne
     @JoinColumn(name = "sold_by_customer", nullable = false)
     private CustomerEntity seller;
 
-   public ProductEntity()
-   {
-   }
+    @Column(name = "reseller_comment", nullable = true)
+    private String resellerComment;
+
+    @Column(name = "inspected_by_reseller_id", nullable = true)
+    private Integer inspectedByResellerId;
+
+    public ProductEntity()
+    {
+    }
 
     public ProductEntity(String name, double price, String condition, String description,
                          String photoUrl, CustomerEntity seller, CategoryEnum category)
@@ -87,7 +101,6 @@ public class ProductEntity
         this.category = CategoryEnum.OTHER;
         this.otherCategory = otherCategory;
     }
-
 
     public int getId()
     {
@@ -149,7 +162,6 @@ public class ProductEntity
         this.photoUrl = photoUrl;
     }
 
-
     public CustomerEntity getSeller()
     {
         return seller;
@@ -200,4 +212,23 @@ public class ProductEntity
         this.sold = sold;
     }
 
+    public String getResellerComment()
+    {
+        return resellerComment;
+    }
+
+    public void setResellerComment(String resellerComment)
+    {
+        this.resellerComment = resellerComment;
+    }
+
+    public Integer getInspectedByResellerId()
+    {
+        return inspectedByResellerId;
+    }
+
+    public void setInspectedByResellerId(Integer inspectedByResellerId)
+    {
+        this.inspectedByResellerId = inspectedByResellerId;
+    }
 }
