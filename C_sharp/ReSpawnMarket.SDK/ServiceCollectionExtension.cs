@@ -15,5 +15,12 @@ public static class ServiceCollectionExtension
         {
             options.Address = new Uri("http://localhost:6767"); // must match the grpc server address
         });
+        services.AddGrpcClient<ProductInspectionService.ProductInspectionServiceClient>(options =>
+{
+    options.Address = new Uri("http://localhost:6767");
+});
+
+services.AddScoped<IProductInspectionService, ProductInspectionGrpcService>();
+
     }
 }
