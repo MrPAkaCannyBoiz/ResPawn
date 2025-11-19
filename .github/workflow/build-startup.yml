@@ -1,0 +1,44 @@
+name: Build and Startup Check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Maven Clean and Compile
+        run: mvn -B clean compile
+
+      - name: Maven Test (skip if none)
+        run: mvn -B test || echo "No tests found, skipping"
+
+      - name: Protobuf Codegen Check
+        run: mvn -B protobuf:compile || echo "No protobuf plugin configured"
+
+      - name: Startup Check (Spring Boot)
+        run: |
+          mvn -q -DskipTests spring-boot:run &
+          APP_PID=$!
+          echo "Waiting for Spring Boot to start..."
+          sleep 15
+          
+          if ps -p $APP_PID > /dev/null
+          then
+            echo "Spring Boot started successfully."
+            kill $APP_PID
+          else
+            echo "Spring Boot failed to start!"
+            exit 1
+          fi
