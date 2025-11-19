@@ -20,7 +20,8 @@ public class UploadProductDto
            string other_category = 7;
            int32 sold_by_customer_id = 8;       
         }
-    therefore, the properties must match these names for easier binding on Blazor client side
+    therefore, the properties must match these names for easier binding on Blazor client side except customer id 
+    which is passed in URL
     */
 
     public required double Price { get; set; }
@@ -30,6 +31,5 @@ public class UploadProductDto
     public required string PhotoUrl { get; set; }
     public Category Category { get; set; }
     public string? OtherCategory { get; set; }
-    public required int SoldByCustomerId { get; set; }
 
 }
