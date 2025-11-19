@@ -16,12 +16,13 @@ public class UploadProductController : ControllerBase
         _uploadProductService = uploadProductService;
     }
 
-    [HttpPost]
+    [HttpPost("customers/{customerId}")]
     // handle the exception globally
     [ProducesResponseType(typeof(UploadProductDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
-    public async Task<IActionResult> UploadProductAsync([FromBody] UploadProductDto dto, CancellationToken ct)
+    public async Task<IActionResult> UploadProductAsync([FromBody] UploadProductDto dto, 
+        [FromRoute] int customerId ,CancellationToken ct)
     {
         var grpcRequest = new UploadProductRequest
         {
@@ -32,7 +33,7 @@ public class UploadProductController : ControllerBase
             PhotoUrl = dto.PhotoUrl,
             Category = (Category)dto.Category,
             OtherCategory = dto.OtherCategory ?? string.Empty,
-            SoldByCustomerId = dto.SoldByCustomerId
+            SoldByCustomerId = customerId
         };
 
         var grpcResponse = await _uploadProductService.UploadProductAsync(grpcRequest, ct);
