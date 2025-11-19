@@ -15,5 +15,9 @@ public static class ServiceCollectionExtension
         {
             options.Address = new Uri("http://localhost:6767"); // must match the grpc server address
         });
+        services.AddGrpcClient<UploadProductService.UploadProductServiceClient>(options =>
+        {
+            options.Address = new Uri("http://localhost:6767"); // must match the grpc server address
+        });
     }
 }

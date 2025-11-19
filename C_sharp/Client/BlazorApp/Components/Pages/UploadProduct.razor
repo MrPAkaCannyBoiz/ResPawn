@@ -1,0 +1,147 @@
+﻿@page "/new_product"
+@*TODO: Remove the user id input, and replace it with proper login system*@
+@using ApiContracts.Dtos
+@using ApiContracts.Dtos.Enums
+@rendermode InteractiveServer
+@inject BlazorApp.Services.IUploadProductService UploadProductService
+
+
+@code 
+{
+	// attributes for UploadProductDto
+	private double _price ;
+	private string? _condition ;
+	private string? _description ;
+	private string? _name ;
+	private string? _photoUrl ;
+	private Category _category ;
+	private string _otherCategory = "";
+	private UploadProductDto? _uploadProductDto; 
+	// down below is for binding/blazor purposes
+	private int _userIdToUpload; // TODO: Use this to get the logged in user id
+	private string? _uploadProductMessage;
+	private bool _ispriceValid => _price >= 0;
+	private bool _isStringValid(string? str) => !string.IsNullOrWhiteSpace(str);
+
+	private async Task UploadNewProduct()
+	{
+		try
+		{
+			if (!(_isStringValid(_name)
+				&& _isStringValid(_description)
+				&& _isStringValid(_condition)
+				&& _ispriceValid
+				&& IsValidPhotoUrl(_photoUrl)
+				&& (_category != Category.OTHER || _isStringValid(_otherCategory))))
+			{
+				_uploadProductMessage = "Please correct the input before uploading.";
+				return;
+			}
+			_uploadProductDto = new()
+			{
+				Price = _price,
+				Condition = _condition!,
+				Description = _description!,
+				Name = _name!,
+				PhotoUrl = _photoUrl!,
+				Category = _category,
+				OtherCategory = _otherCategory,
+			};
+			var result = await UploadProductService
+							.UploadProductAsync(_userIdToUpload, _uploadProductDto);
+			_uploadProductMessage = "Item uploaded successfully! (Admin will soon check it)";
+		}
+		catch (Exception ex)
+		{
+			_uploadProductMessage = $"Error uploading item: {ex.Message}";
+		}
+	}
+
+	private bool IsValidPhotoUrl(string? url)
+	{
+		if (string.IsNullOrWhiteSpace(url)) return false;
+		if (url.Length > 1024) return false;
+		// Basic check; extend as needed.
+		return url.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+			|| url.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+	}
+}
+
+<h3>Upload your new Item here</h3>
+
+@*Product upload inputs*@
+<div class="mb-3">
+	<label for="name" class="form-label">Item Name</label>
+	<input type="text" class="form-control" id="name" @bind="_name" />
+	@if (!_isStringValid(_name))
+	{
+		<div class="text-danger">Name cannot be empty.</div>
+	}
+
+	<label for="description" class="form-label">Description</label>
+	<input type="text" class="form-control" id="description" @bind="_description" />
+	@if (!_isStringValid(_description))
+	{
+		<div class="text-danger">Description cannot be empty.</div>
+	}
+
+	<label for="condition" class="form-label">Condition</label>
+	<input type="text" class="form-control" id="condition" @bind="_condition" />
+	@if (!_isStringValid(_condition))
+	{
+		<div class="text-danger">Condition cannot be empty.</div>
+	}
+
+	<label for="price" class="form-label">Price offer</label>
+	<input type="number" class="form-control" id="price" @bind="_price" />
+	@if (!_ispriceValid)
+	{
+		<div class="text-danger">Price must be non-negative.</div>
+	}
+
+	<label for="photoUrl" class="form-label">Photo URL</label>
+	<input type="text" class="form-control" id="photoUrl" @bind="_photoUrl" />
+	@if (!IsValidPhotoUrl(_photoUrl))
+	{
+		<div class="text-danger">Photo URL is not valid.</div>
+	}
+	@if (!string.IsNullOrWhiteSpace(_photoUrl) && IsValidPhotoUrl(_photoUrl))
+	{
+		<div class="mt-2">
+			<strong>Preview:</strong><br />
+			<div class="p-2 border rounded bg-light" style="max-width:600px">
+				<img src="@_photoUrl" alt="Image Preview" class="img-fluid"
+					 style="max-height:300px ; object-fit:contain"
+					 onerror="this.src='/images/placeholder.png';this.onerror=null;" />
+			</div>
+		</div>
+	}
+
+	<label for="category" class="form-label">Category</label>
+	<select id="category" class="form-select" @bind="_category">
+		@foreach (Category catagory in Enum.GetValues(typeof(Category)))
+		{
+			<option value="@catagory">@catagory</option>
+		}
+	</select>
+
+	@if (_category == Category.OTHER)
+	{
+		<label for="otherCat" class="form-label mt-2">Category Name</label>
+		<input type="text" class="form-control" @bind="_otherCategory" />
+		@if (!_isStringValid(_otherCategory))
+		{
+			<div class="text-danger">Other Category cannot be empty.</div>
+		}
+	}
+
+	<label for="userId" class="form-label>">User ID (for testing purposes)</label>
+	<input type="number" class="form-control" id="userId" @bind="_userIdToUpload" />
+</div>
+
+<button class="btn btn-primary" @onclick="UploadNewProduct">Upload</button>
+
+@if (!string.IsNullOrWhiteSpace(_uploadProductMessage))
+{
+	<div class="mt-3">@_uploadProductMessage</div>
+}

@@ -110,6 +110,7 @@ public class UploadProductServiceImpl extends UploadProductServiceGrpc.UploadPro
             case PENDING -> ApprovalStatus.PENDING;
             case APPROVED -> ApprovalStatus.APPROVED;
             case NOT_APPROVED -> ApprovalStatus.NOT_APPROVED;
+            case REJECTED -> ApprovalStatus.REJECTED;
         };
     }
 }
