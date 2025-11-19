@@ -105,6 +105,17 @@
 	{
 		<div class="text-danger">Photo URL is not valid.</div>
 	}
+	@if (!string.IsNullOrWhiteSpace(_photoUrl) && IsValidPhotoUrl(_photoUrl))
+	{
+		<div class="mt-2">
+			<strong>Preview:</strong><br />
+			<div class="p-2 border rounded bg-light" style="max-width:600px">
+				<img src="@_photoUrl" alt="Image Preview" class="img-fluid"
+					 style="max-height:300px ; object-fit:contain"
+					 onerror="this.src='/images/placeholder.png';this.onerror=null;" />
+			</div>
+		</div>
+	}
 
 	<label for="category" class="form-label">Category</label>
 	<select id="category" class="form-select" @bind="_category">
