@@ -1,6 +1,6 @@
 [
   {
-    "Name": "New Profile",
+    "Name": "T2(WebAPI) + T1(Blazor)",
     "Projects": [
       {
         "Path": "Server\\WebAPI\\WebAPI.csproj",
