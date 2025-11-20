@@ -3,7 +3,7 @@ package org.example.respawnmarket.Service;
 import java.time.Instant;
 import java.util.List;
 
-import org.example.respawnmarket.dtos.ProductInspectionDto;
+import io.grpc.Status;
 import org.example.respawnmarket.entities.InspectionEntity;
 import org.example.respawnmarket.entities.ProductEntity;
 import org.example.respawnmarket.entities.ResellerEntity;
@@ -64,31 +64,39 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
     public void reviewProduct(ProductInspectionRequest request,
                               StreamObserver<ProductInspectionResponse> responseObserver)
     {
-        ProductEntity pendingProduct = productRepository.findPendingProduct(request.getProductId());
+        ProductEntity product = productRepository.findById(request.getProductId()).orElse(null);
+        if (product == null)
+        {
+            responseObserver.onError(
+                    Status.NOT_FOUND.withDescription("Product not found").asRuntimeException());
+            return;
+        }
         ResellerEntity resellerWhoChecks = resellerRepository.
                 findById(request.getResellerId()).orElse(null);
-        assert resellerWhoChecks != null;
-        assert pendingProduct != null;
+        if (resellerWhoChecks == null)
+        {
+            responseObserver.onError(
+                    Status.NOT_FOUND.withDescription("Reseller not found").asRuntimeException());
+            return;
+        }
 
-        var inspection = new InspectionEntity
-                (pendingProduct, resellerWhoChecks ,request.getResult(), request.getComments() ,request.getIsAccepted());
-        if (request.getIsAccepted())
-        {
-            pendingProduct.setApprovalStatus(ApprovalStatusEnum.APPROVED);
-            productRepository.save(pendingProduct);
-        }
-        else
-        {
-            pendingProduct.setApprovalStatus(ApprovalStatusEnum.REJECTED);
-            productRepository.save(pendingProduct);
-        }
+        InspectionEntity inspection = new InspectionEntity
+                (product, resellerWhoChecks, request.getComments(), request.getIsAccepted());
         inspectionRepository.save(inspection);
-
-
+        if (request.getIsAccepted()) //true -> approved
+        {
+            product.setApprovalStatus(ApprovalStatusEnum.APPROVED);
+            productRepository.save(product);
+        }
+        else // false -> rejected
+        {
+            product.setApprovalStatus(ApprovalStatusEnum.REJECTED);
+            productRepository.save(product);
+        }
 
         ProductInspectionResponse response = ProductInspectionResponse.newBuilder()
-                .setProductId(pendingProduct.getId())
-                .setApprovalStatus(toProtoApprovalStatus(pendingProduct.getApprovalStatus()))
+                .setProductId(product.getId())
+                .setApprovalStatus(toProtoApprovalStatus(product.getApprovalStatus()))
                 .build();
 
         responseObserver.onNext(response);

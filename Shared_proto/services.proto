@@ -221,13 +221,23 @@ service GetProductService
   rpc GetAllProducts (GetAllProductsRequest) returns (GetAllProductsResponse);
 }
 
+// use case for "Product Inspection by Reseller"
+
+message Inspection
+{
+  int32 id = 1;
+  int32 product_id = 2;
+  int32 inspected_by_reseller_id = 3;
+  google.protobuf.Timestamp inspection_date = 4;
+  string comments = 5;
+  bool is_accepted = 6;
+}
 
 message ProductInspectionRequest {
   int32 product_id = 1;
   int32 reseller_id = 2;
-  string result = 3;
-  string comments = 4;
-  bool is_accepted = 5;
+  string comments = 3;
+  bool is_accepted = 4;
 }
 
 message ProductInspectionResponse {

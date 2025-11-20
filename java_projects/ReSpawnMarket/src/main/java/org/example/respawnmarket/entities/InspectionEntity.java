@@ -12,12 +12,10 @@ public class InspectionEntity
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @MapsId("id")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn (name = "product_id", nullable = false)
     private ProductEntity product; // FK
 
-    @MapsId("id")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn (name = "inspected_by_reseller_id", nullable = false)
     private ResellerEntity reseller;
@@ -25,22 +23,20 @@ public class InspectionEntity
     @Column(name = "inspection_date", nullable = false)
     private LocalDateTime inspectionDate;
 
-    @Column(name = "result")
-    private String result;
 
     @Column(name = "comments", nullable = true)
     private String comment;
 
+    @Column(name = "is_accepted", nullable = false)
     private boolean isAccepted;
 
     public InspectionEntity() {}
 
-    public InspectionEntity(ProductEntity product, ResellerEntity reseller,
-                            String result, String comment,  boolean isAccepted) {
+    public InspectionEntity(ProductEntity product, ResellerEntity reseller, String comment, boolean isAccepted)
+    {
         this.product = product;
         this.reseller = reseller;
         this.inspectionDate = LocalDateTime.now();
-        this.result = result;
         this.comment = comment;
         this.isAccepted = isAccepted;
     }
@@ -75,14 +71,6 @@ public class InspectionEntity
 
     public void setInspectionDate(LocalDateTime inspectionDate) {
         this.inspectionDate = inspectionDate;
-    }
-
-    public String getResult() {
-        return result;
-    }
-
-    public void setResult(String result) {
-        this.result = result;
     }
 
     public String getComment() {
