@@ -1,7 +1,6 @@
 package org.example.respawnmarket.Service;
 
 import com.google.protobuf.Timestamp;
-import com.respawnmarket.*;
 import io.grpc.stub.StreamObserver;
 import org.example.respawnmarket.dtos.ProductDto;
 import org.example.respawnmarket.entities.CustomerEntity;
@@ -16,8 +15,10 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.ZoneOffset;
 
+import static org.example.respawnmarket.entities.enums.CategoryEnum.*;
+
 @Service
-public class UploadProductServiceImpl extends UploadProductServiceGrpc.UploadProductServiceImplBase
+public class UploadProductServiceImpl extends com.respawnmarket.UploadProductServiceGrpc.UploadProductServiceImplBase
 {
     private final JpaVendorAdapter jpaVendorAdapter;
     // upload product involve product, stock, customer
@@ -36,8 +37,8 @@ public class UploadProductServiceImpl extends UploadProductServiceGrpc.UploadPro
         this.jpaVendorAdapter = jpaVendorAdapter;
     }
 
-    public void uploadProduct(UploadProductRequest request
-            , StreamObserver<UploadProductResponse> responseObserver)
+    public void uploadProduct(com.respawnmarket.UploadProductRequest request
+            , StreamObserver<com.respawnmarket.UploadProductResponse> responseObserver)
     {
         CustomerEntity givenCustomer = customerRepository
                 .findById(request.getSoldByCustomerId()).orElse(null);
@@ -51,13 +52,13 @@ public class UploadProductServiceImpl extends UploadProductServiceGrpc.UploadPro
                 toEntityCategory(request.getCategory()));
         ProductEntity newProduct = productRepository.save(product);
 
-        Instant instant = newProduct.getRegisterDate().toInstant(ZoneOffset.UTC);
+        Instant instant = newProduct.getRegisterDate().toInstant(java.time.ZoneOffset.UTC);
         Timestamp registerDateTimestamp = Timestamp.newBuilder()
                 .setSeconds(instant.getEpochSecond())
                 .setNanos(0)
                 .build();
 
-        Product productDto = Product.newBuilder().setId(newProduct.getId())
+        com.respawnmarket.Product productDto = com.respawnmarket.Product.newBuilder().setId(newProduct.getId())
                 .setName(newProduct.getName())
                 .setPrice(newProduct.getPrice())
                 .setCondition(newProduct.getCondition())
@@ -69,49 +70,50 @@ public class UploadProductServiceImpl extends UploadProductServiceGrpc.UploadPro
                 .setApprovalStatus(toProtoApprovalStatus(newProduct.getApprovalStatus()))
                 .setRegisterDate(registerDateTimestamp)
                 .build();
-        UploadProductResponse response = UploadProductResponse.newBuilder()
+        com.respawnmarket.UploadProductResponse response = com.respawnmarket.UploadProductResponse.newBuilder()
                 .setProduct(productDto)
                 .build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
 
+
     // convert proto category to entity category to match ProductEntity constructor parameter
-    private CategoryEnum toEntityCategory(Category protoCategory)
+    private CategoryEnum toEntityCategory(com.respawnmarket.Category protoCategory)
     {
         return switch (protoCategory) {
             case CATEGORY_UNSPECIFIED -> null;
-            case ELECTRONICS -> CategoryEnum.ELECTRONICS;
-            case JEWELRY ->  CategoryEnum.JEWELRY;
-            case WATCHES ->  CategoryEnum.WATCHES;
-            case MUSICAL_INSTRUMENTS -> CategoryEnum.MUSICAL_INSTRUMENTS;
-            case TOOLS -> CategoryEnum.TOOLS;
-            case VEHICLES -> CategoryEnum.VEHICLES;
-            case COLLECTIBLES -> CategoryEnum.COLLECTIBLES;
-            case FASHION -> CategoryEnum.FASHION;
-            case HOME_APPLIANCES -> CategoryEnum.HOME_APPLIANCES;
-            case SPORTS_EQUIPMENT -> CategoryEnum.SPORTS_EQUIPMENT;
-            case COMPUTERS -> CategoryEnum.COMPUTERS;
-            case MOBILE_PHONES -> CategoryEnum.MOBILE_PHONES;
-            case CAMERAS -> CategoryEnum.CAMERAS;
-            case LUXURY_ITEMS -> CategoryEnum.LUXURY_ITEMS;
-            case ARTWORK -> CategoryEnum.ARTWORK;
-            case ANTIQUES -> CategoryEnum.ANTIQUES;
-            case GAMING_CONSOLES -> CategoryEnum.GAMING_CONSOLES;
-            case FURNITURE -> CategoryEnum.FURNITURE;
-            case GOLD_AND_SILVER -> CategoryEnum.GOLD_AND_SILVER;
-            case OTHER -> CategoryEnum.OTHER;
+            case ELECTRONICS -> ELECTRONICS;
+            case JEWELRY ->  JEWELRY;
+            case WATCHES ->  WATCHES;
+            case MUSICAL_INSTRUMENTS -> MUSICAL_INSTRUMENTS;
+            case TOOLS -> TOOLS;
+            case VEHICLES -> VEHICLES;
+            case COLLECTIBLES -> COLLECTIBLES;
+            case FASHION -> FASHION;
+            case HOME_APPLIANCES -> HOME_APPLIANCES;
+            case SPORTS_EQUIPMENT -> SPORTS_EQUIPMENT;
+            case COMPUTERS -> COMPUTERS;
+            case MOBILE_PHONES -> MOBILE_PHONES;
+            case CAMERAS -> CAMERAS;
+            case LUXURY_ITEMS -> LUXURY_ITEMS;
+            case ARTWORK -> ARTWORK;
+            case ANTIQUES -> ANTIQUES;
+            case GAMING_CONSOLES -> GAMING_CONSOLES;
+            case FURNITURE -> FURNITURE;
+            case GOLD_AND_SILVER -> GOLD_AND_SILVER;
+            case OTHER -> OTHER;
             case UNRECOGNIZED -> throw new IllegalArgumentException("Unrecognized category: " + protoCategory);
         };
     }
 
-    private ApprovalStatus toProtoApprovalStatus(ApprovalStatusEnum entityApprovalStatus)
+    private com.respawnmarket.ApprovalStatus toProtoApprovalStatus(ApprovalStatusEnum entityApprovalStatus)
     {
         return switch (entityApprovalStatus) {
-            case PENDING -> ApprovalStatus.PENDING;
-            case APPROVED -> ApprovalStatus.APPROVED;
-            case NOT_APPROVED -> ApprovalStatus.NOT_APPROVED;
-            case REJECTED -> ApprovalStatus.REJECTED;
+            case PENDING -> com.respawnmarket.ApprovalStatus.PENDING;
+            case APPROVED -> com.respawnmarket.ApprovalStatus.APPROVED;
+            case NOT_APPROVED -> com.respawnmarket.ApprovalStatus.NOT_APPROVED;
+            case REJECTED -> com.respawnmarket.ApprovalStatus.REJECTED;
         };
     }
 }

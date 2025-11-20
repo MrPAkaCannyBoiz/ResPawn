@@ -53,18 +53,9 @@ public class ProductEntity
     @Column (name = "register_date", nullable = false)
     private LocalDateTime registerDate;
 
-    @Column (name = "other_category", nullable = true)
-    private String otherCategory;
-
     @ManyToOne
     @JoinColumn(name = "sold_by_customer", nullable = false)
     private CustomerEntity seller;
-
-    @Column(name = "reseller_comment", nullable = true)
-    private String resellerComment;
-
-    @Column(name = "inspected_by_reseller_id", nullable = true)
-    private Integer inspectedByResellerId;
 
     public ProductEntity()
     {
@@ -83,7 +74,6 @@ public class ProductEntity
         this.approvalStatus = ApprovalStatusEnum.PENDING;
         this.registerDate = LocalDateTime.now();
         this.category = category;
-        this.otherCategory = "";
     }
 
     public ProductEntity(String name, double price, String condition, String description,
@@ -99,7 +89,6 @@ public class ProductEntity
         this.approvalStatus = ApprovalStatusEnum.PENDING;
         this.registerDate = LocalDateTime.now();
         this.category = CategoryEnum.OTHER;
-        this.otherCategory = otherCategory;
     }
 
     public int getId()
@@ -212,23 +201,4 @@ public class ProductEntity
         this.sold = sold;
     }
 
-    public String getResellerComment()
-    {
-        return resellerComment;
-    }
-
-    public void setResellerComment(String resellerComment)
-    {
-        this.resellerComment = resellerComment;
-    }
-
-    public Integer getInspectedByResellerId()
-    {
-        return inspectedByResellerId;
-    }
-
-    public void setInspectedByResellerId(Integer inspectedByResellerId)
-    {
-        this.inspectedByResellerId = inspectedByResellerId;
-    }
 }
