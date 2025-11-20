@@ -57,12 +57,6 @@ public class ProductEntity
     @JoinColumn(name = "sold_by_customer", nullable = false)
     private CustomerEntity seller;
 
-    @Column(name = "reseller_comment", nullable = true)
-    private String resellerComment;
-
-    @Column(name = "inspected_by_reseller_id", nullable = true)
-    private Integer inspectedByResellerId;
-
     public ProductEntity()
     {
     }
@@ -207,23 +201,4 @@ public class ProductEntity
         this.sold = sold;
     }
 
-    public String getResellerComment()
-    {
-        return resellerComment;
-    }
-
-    public void setResellerComment(String resellerComment)
-    {
-        this.resellerComment = resellerComment;
-    }
-
-    public Integer getInspectedByResellerId()
-    {
-        return inspectedByResellerId;
-    }
-
-    public void setInspectedByResellerId(Integer inspectedByResellerId)
-    {
-        this.inspectedByResellerId = inspectedByResellerId;
-    }
 }
