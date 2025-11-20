@@ -1,6 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using ApiContracts;
+using ApiContracts.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlazorApp.Services;

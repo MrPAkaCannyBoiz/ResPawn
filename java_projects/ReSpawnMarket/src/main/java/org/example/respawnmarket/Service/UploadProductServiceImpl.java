@@ -14,6 +14,7 @@ import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.ZoneOffset;
 
 @Service
 public class UploadProductServiceImpl extends UploadProductServiceGrpc.UploadProductServiceImplBase
@@ -50,7 +51,7 @@ public class UploadProductServiceImpl extends UploadProductServiceGrpc.UploadPro
                 toEntityCategory(request.getCategory()));
         ProductEntity newProduct = productRepository.save(product);
 
-        Instant instant = newProduct.getRegisterDate().toInstant(java.time.ZoneOffset.UTC);
+        Instant instant = newProduct.getRegisterDate().toInstant(ZoneOffset.UTC);
         Timestamp registerDateTimestamp = Timestamp.newBuilder()
                 .setSeconds(instant.getEpochSecond())
                 .setNanos(0)
@@ -110,6 +111,7 @@ public class UploadProductServiceImpl extends UploadProductServiceGrpc.UploadPro
             case PENDING -> ApprovalStatus.PENDING;
             case APPROVED -> ApprovalStatus.APPROVED;
             case NOT_APPROVED -> ApprovalStatus.NOT_APPROVED;
+            case REJECTED -> ApprovalStatus.REJECTED;
         };
     }
 }
