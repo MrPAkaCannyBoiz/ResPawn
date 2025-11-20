@@ -1,4 +1,4 @@
-﻿using ApiContracts;
+﻿using ApiContracts.Dtos;
 using Com.Respawnmarket;
 using Grpc.Core;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +18,6 @@ public class CustomerRegisterServiceController : ControllerBase
     {
         _registerCustomerService = registerCustomerService;
         _getCustomerService = getCustomerService;
-
     }
 
 

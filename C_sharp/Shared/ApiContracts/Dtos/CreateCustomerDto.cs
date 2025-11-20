@@ -1,6 +1,6 @@
 using System;
 
-namespace ApiContracts;
+namespace ApiContracts.Dtos;
 
 public class CreateCustomerDto
 {
