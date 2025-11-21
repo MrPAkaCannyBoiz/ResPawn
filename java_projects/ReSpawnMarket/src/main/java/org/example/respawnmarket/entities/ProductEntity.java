@@ -57,6 +57,13 @@ public class ProductEntity
     @JoinColumn(name = "sold_by_customer", nullable = false)
     private CustomerEntity seller;
 
+    @Column (name = "other_category", nullable = true)
+    private String otherCategory = "";
+
+    @ManyToOne
+    @JoinColumn(name = "pawnshop_id", nullable = true)
+    private PawnshopEntity pawnshop = null;
+
     public ProductEntity()
     {
     }
@@ -76,6 +83,7 @@ public class ProductEntity
         this.category = category;
     }
 
+    // TODO: maybe remove this constructor if not needed
     public ProductEntity(String name, double price, String condition, String description,
                          String photoUrl, CustomerEntity seller, String otherCategory)
     {
@@ -89,6 +97,7 @@ public class ProductEntity
         this.approvalStatus = ApprovalStatusEnum.PENDING;
         this.registerDate = LocalDateTime.now();
         this.category = CategoryEnum.OTHER;
+        this.otherCategory = otherCategory;
     }
 
     public int getId()
@@ -199,6 +208,26 @@ public class ProductEntity
     public void setSold(boolean sold)
     {
         this.sold = sold;
+    }
+
+    public String getOtherCategory()
+    {
+        return otherCategory;
+    }
+
+    public void setOtherCategory(String otherCategory)
+    {
+        this.otherCategory = otherCategory;
+    }
+
+    public PawnshopEntity getPawnshop()
+    {
+        return pawnshop;
+    }
+
+    public void setPawnshop(PawnshopEntity pawnshop)
+    {
+        this.pawnshop = pawnshop;
     }
 
 }

@@ -90,6 +90,8 @@ message Product
   string description = 9;
   int32 sold_by_customer_id = 10;
   google.protobuf.Timestamp register_date = 11;
+  string other_category = 12;
+  int32 pawnshop_id = 13;
 }
 
 message ShoppingCart
@@ -104,14 +106,6 @@ message CartProduct
   int32 product_id = 2;
   int32 quantity = 3;
 }
-
-message Stock
-{
-  int32 product_id = 1;
-  int32 address_id = 2;
-  int32 quantity = 3;
-}
-
 
 //  Request(parameter) and Response(return) Messages for Logic Service
 message RegisterCustomerRequest
@@ -233,16 +227,27 @@ message Inspection
   bool is_accepted = 6;
 }
 
-message ProductInspectionRequest {
+message Pawnshop
+{
+  int32 id = 1;
+  string name = 2;
+  int32 address_id = 3;
+}
+
+message ProductInspectionRequest
+{
   int32 product_id = 1;
   int32 reseller_id = 2;
   string comments = 3;
   bool is_accepted = 4;
+  int32 pawnshop_id = 5;
 }
 
-message ProductInspectionResponse {
+message ProductInspectionResponse
+{
   int32 product_id = 1;
   ApprovalStatus approvalStatus = 2;
+  int32 pawnshop_id = 3;
 }
 
 message GetPendingProductsRequest {
