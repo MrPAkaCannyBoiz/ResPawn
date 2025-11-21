@@ -3,7 +3,6 @@ package org.example.respawnmarket.Service;
 import com.google.protobuf.Timestamp;
 import com.respawnmarket.UploadProductRequest;
 import io.grpc.stub.StreamObserver;
-import org.example.respawnmarket.dtos.ProductDto;
 import org.example.respawnmarket.entities.CustomerEntity;
 import org.example.respawnmarket.entities.ProductEntity;
 import org.example.respawnmarket.entities.enums.ApprovalStatusEnum;
