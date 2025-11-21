@@ -10,6 +10,7 @@ import org.example.respawnmarket.entities.ResellerEntity;
 import org.example.respawnmarket.entities.enums.ApprovalStatusEnum;
 import org.example.respawnmarket.entities.enums.CategoryEnum;
 import org.example.respawnmarket.repositories.InspectionRepository;
+import org.example.respawnmarket.repositories.PawnshopRepository;
 import org.example.respawnmarket.repositories.ProductRepository;
 import org.example.respawnmarket.repositories.ResellerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,14 +34,17 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
     private final ProductRepository productRepository;
     private InspectionRepository inspectionRepository;
     private ResellerRepository resellerRepository;
+    private PawnshopRepository pawnshopRepository;
 
     @Autowired
     public ProductInspectionServiceImpl(ProductRepository productRepository
-            , InspectionRepository inspectionRepository,  ResellerRepository resellerRepository)
+            , InspectionRepository inspectionRepository
+            ,  ResellerRepository resellerRepository, PawnshopRepository pawnshopRepository)
     {
         this.productRepository = productRepository;
         this.inspectionRepository = inspectionRepository;
         this.resellerRepository = resellerRepository;
+        this.pawnshopRepository = pawnshopRepository;
     }
 
     @Override
@@ -86,6 +90,7 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
         if (request.getIsAccepted()) //true -> approved
         {
             product.setApprovalStatus(ApprovalStatusEnum.APPROVED);
+            product.setPawnshop(pawnshopRepository.findById(request.getPawnshopId()).orElse(null));
             productRepository.save(product);
         }
         else // false -> rejected
@@ -97,6 +102,7 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
         ProductInspectionResponse response = ProductInspectionResponse.newBuilder()
                 .setProductId(product.getId())
                 .setApprovalStatus(toProtoApprovalStatus(product.getApprovalStatus()))
+                .setPawnshopId(product.getPawnshop().getId())
                 .build();
 
         responseObserver.onNext(response);
@@ -126,6 +132,8 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
                 .setSold(entity.isSold())
                 .setApprovalStatus(approvalStatus)
                 .setRegisterDate(registerDateTimestamp)
+                .setOtherCategory(entity.getOtherCategory())
+                .setPawnshopId(entity.getPawnshop().getId())
                 .build();
     }
 

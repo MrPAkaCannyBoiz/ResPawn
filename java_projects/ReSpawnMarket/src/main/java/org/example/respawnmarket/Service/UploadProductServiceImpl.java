@@ -1,6 +1,7 @@
 package org.example.respawnmarket.Service;
 
 import com.google.protobuf.Timestamp;
+import com.respawnmarket.UploadProductRequest;
 import io.grpc.stub.StreamObserver;
 import org.example.respawnmarket.dtos.ProductDto;
 import org.example.respawnmarket.entities.CustomerEntity;
@@ -23,16 +24,13 @@ public class UploadProductServiceImpl extends com.respawnmarket.UploadProductSer
     private final JpaVendorAdapter jpaVendorAdapter;
     // upload product involve product, stock, customer
     private ProductRepository productRepository;
-    private StockRepository stockRepository;
     private CustomerRepository customerRepository;
 
     @Autowired
     public UploadProductServiceImpl(ProductRepository productRepository,
-                                    StockRepository stockRepository,
                                     CustomerRepository customerRepository, JpaVendorAdapter jpaVendorAdapter)
     {
         this.productRepository = productRepository;
-        this.stockRepository = stockRepository;
         this.customerRepository = customerRepository;
         this.jpaVendorAdapter = jpaVendorAdapter;
     }
@@ -43,13 +41,8 @@ public class UploadProductServiceImpl extends com.respawnmarket.UploadProductSer
         CustomerEntity givenCustomer = customerRepository
                 .findById(request.getSoldByCustomerId()).orElse(null);
         assert givenCustomer != null;
-        var product = new ProductEntity(request.getName(),
-                request.getPrice(),
-                request.getCondition(),
-                request.getDescription(),
-                request.getPhotoUrl(),
-                givenCustomer,
-                toEntityCategory(request.getCategory()));
+        var product = getProductEntity(request, givenCustomer);
+
         ProductEntity newProduct = productRepository.save(product);
 
         Instant instant = newProduct.getRegisterDate().toInstant(java.time.ZoneOffset.UTC);
@@ -69,12 +62,41 @@ public class UploadProductServiceImpl extends com.respawnmarket.UploadProductSer
                 .setSold(newProduct.isSold())
                 .setApprovalStatus(toProtoApprovalStatus(newProduct.getApprovalStatus()))
                 .setRegisterDate(registerDateTimestamp)
+                .setOtherCategory(newProduct.getOtherCategory())
                 .build();
         com.respawnmarket.UploadProductResponse response = com.respawnmarket.UploadProductResponse.newBuilder()
                 .setProduct(productDto)
                 .build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
+    }
+
+    private ProductEntity getProductEntity(UploadProductRequest request, CustomerEntity givenCustomer)
+    {
+        var product = new ProductEntity(request.getName(),
+                request.getPrice(),
+                request.getCondition(),
+                request.getDescription(),
+                request.getPhotoUrl(),
+                givenCustomer,
+                toEntityCategory(request.getCategory()));
+        switch (request.getCategory())
+        {
+            case OTHER ->
+            {
+                if (request.getOtherCategory().isEmpty())
+                {
+                    throw new IllegalArgumentException("Other category must be provided when category is OTHER");
+                }
+                else
+                {
+                    product.setOtherCategory(request.getOtherCategory());
+                }
+            }
+            case CATEGORY_UNSPECIFIED -> throw new IllegalArgumentException("Category must be specified");
+            default -> {} // do nothing
+        }
+        return product;
     }
 
 
