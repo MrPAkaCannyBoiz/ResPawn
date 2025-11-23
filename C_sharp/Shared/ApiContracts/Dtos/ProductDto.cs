@@ -2,11 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-
 namespace ApiContracts.Dtos;
 
 public class ProductDto
 {
+ 
+
     // in proto file:
     //int32 id = 1;
     //double price = 2;
@@ -19,7 +20,6 @@ public class ProductDto
     //string description = 9;
     //int32 sold_by_customer_id = 10;
     //google.protobuf.Timestamp register_date = 11;
-
     public required int Id { get; set; }
     public required double Price { get; set; }
     public required bool Sold { get; set; }

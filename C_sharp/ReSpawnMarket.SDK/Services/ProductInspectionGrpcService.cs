@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Com.Respawnmarket;
 using Grpc.Core;
 using ReSpawnMarket.SDK.ServiceInterfaces;
-using ReSpawnMarket.Shared;
+using ReSpawnMarket.Shared.ApiContracts.Dtos;
 
 namespace ReSpawnMarket.SDK.Services;
 

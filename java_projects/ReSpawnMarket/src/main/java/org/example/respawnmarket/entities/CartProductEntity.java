@@ -63,4 +63,9 @@ public class CartProductEntity
     {
         this.product = product;
     }
+
+  public int getQuantity()
+  {
+    return  quantity;
+  }
 }

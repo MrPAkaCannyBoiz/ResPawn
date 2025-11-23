@@ -1,7 +1,9 @@
+using Com.Respawnmarket;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ApiContracts.Dtos.ProductDto;
 
 namespace ReSpawnMarket.SDK.ServiceInterfaces
 {
