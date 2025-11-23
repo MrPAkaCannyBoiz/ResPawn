@@ -9,8 +9,12 @@ namespace ReSpawnMarket.SDK.ServiceInterfaces
 {
     public interface IProductInspectionService
     {
-         Task<ICollection<ProductDto>> GetPendingProductsAsync();
-        Task<ProductInspectionResultDto> ReviewProductAsync(ProductInspectionRequestDto dto);
- 
+        // two methods, get products (moved later because violate SRP) and review product
+        Task<GetPendingProductsResponse> GetPendingProductsAsync(GetPendingProductsRequest request,
+            CancellationToken cancellationToken = default);
+        Task<ProductInspectionResponse> ReviewProductAsync(
+            ProductInspectionRequest request,
+            CancellationToken cancellationToken = default);
+
     }
 }

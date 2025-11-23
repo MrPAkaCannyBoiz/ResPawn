@@ -1,4 +1,5 @@
 @page "/reseller/check"
+@using ApiContracts.Dtos
 @inject BlazorApp.Services.IProductInspectionHttpService InspectionService
 
 <h3>Pending Products</h3>
@@ -18,8 +19,8 @@ else
 
             <input class="form-control mb-2" placeholder="Comment (required if rejecting)" @bind="comment" />
 
-            <button class="btn btn-success me-2" @onclick="() => Review(p.Id, "APPROVED")">Approve</button>
-            <button class="btn btn-danger" @onclick="() => Review(p.Id, "REJECTED")">Reject</button>
+            @* <button class="btn btn-success me-2" @onclick="() => Review(p.Id, "APPROVED")">Approve</button>
+            <button class="btn btn-danger" @onclick="() => Review(p.Id, "REJECTED")">Reject</button> *@
         </div>
     }
 }
@@ -29,25 +30,25 @@ else
     private bool loading = true;
     private string? comment;
 
-    protected override async Task OnInitializedAsync()
-    {
-        products = (await InspectionService.GetPendingProductsAsync()).ToList();
-        loading = false;
-    }
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     products = (await InspectionService.GetPendingProductsAsync()).ToList();
+    //     loading = false;
+    // }
 
     private async Task Review(int productId, string status)
     {
-        if (status == "REJECTED" && string.IsNullOrWhiteSpace(comment))
-        {
-            await JS.InvokeVoidAsync("alert", "Please write a reason for the denial of purchase");
-            return;
-        }
+        // if (status == "REJECTED" && string.IsNullOrWhiteSpace(comment))
+        // {
+        //     await JS.InvokeVoidAsync("alert", "Please write a reason for the denial of purchase");
+        //     return;
+        // }
 
-        await InspectionService.ReviewProductAsync(
-            new ProductInspectionRequestDto(productId, 1, status, comment)
-        );
+        // await InspectionService.ReviewProductAsync(
+        //     new ProductInspectionRequestDto(productId, 1, status, comment)
+        // );
 
-        products = (await InspectionService.GetPendingProductsAsync()).ToList();
-        comment = "";
+        // products = (await InspectionService.GetPendingProductsAsync()).ToList();
+        // comment = "";
     }
 }

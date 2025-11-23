@@ -6,52 +6,45 @@ using System.Threading.Tasks;
 using Com.Respawnmarket;
 using Grpc.Core;
 using ReSpawnMarket.SDK.ServiceInterfaces;
-using ReSpawnMarket.Shared.ApiContracts.Dtos;
 
 namespace ReSpawnMarket.SDK.Services;
 
 public class ProductInspectionGrpcService : IProductInspectionService
 {
-    private readonly ProductInspectionService.ProductInspectionServiceClient client;
+    private readonly ProductInspectionService.ProductInspectionServiceClient _grpcClient;
 
     public ProductInspectionGrpcService(ProductInspectionService.ProductInspectionServiceClient grpcClient)
     {
-        client = grpcClient;
+        _grpcClient = grpcClient;
     }
 
-    public async Task<ICollection<ProductDto>> GetPendingProductsAsync()
+    public async Task<GetPendingProductsResponse> GetPendingProductsAsync
+        (GetPendingProductsRequest request, CancellationToken cancellationToken = default)
     {
-        var request = new GetPendingProductsRequest
+        try
         {
-            Empty = new Empty()
-        };
-
-        var response = await client.GetPendingProductsAsync(request);
-
-        return response.Products.Select(p => new ProductDto(
-            p.Id, p.Price, p.Sold, p.Condition,
-            p.ApprovalStatus.ToString(), p.Name, p.PhotoUrl,
-            p.Category.ToString(), p.SoldByCustomerId,
-            p.Description, p.RegisterDate.ToDateTime().Date
-        )).ToList();
+            GetPendingProductsResponse response =  await _grpcClient
+                .GetPendingProductsAsync(request, cancellationToken: cancellationToken);
+            return response;
+        }
+        catch (RpcException ex)
+        {
+            // Handle gRPC-specific exceptions
+            throw new Exception($"gRPC Error: {ex.Status.Detail}", ex);
+        }
     }
 
-    public async Task<ProductInspectionResultDto> ReviewProductAsync(ProductInspectionRequestDto dto)
+
+    public Task<ProductInspectionResponse> ReviewProductAsync(ProductInspectionRequest request, CancellationToken cancellationToken = default)
     {
-        var request = new ProductInspectionRequest
+        try
         {
-            ProductId = dto.ProductId,
-            ResellerId = dto.ResellerId,
-            Status = dto.Status,
-            Comment = dto.Comment ?? ""
-        };
-
-        var response = await client.ReviewProductAsync(request);
-
-        return new ProductInspectionResultDto(
-            response.ProductId,
-            response.Status,
-            response.Comment
-        );
+            return _grpcClient.ReviewProductAsync(request, cancellationToken: cancellationToken).ResponseAsync;
+        }
+        catch (RpcException ex)
+        {
+            // Handle gRPC-specific exceptions
+            throw new Exception($"gRPC Error: {ex.Status.Detail}", ex);
+        }
     }
 }
