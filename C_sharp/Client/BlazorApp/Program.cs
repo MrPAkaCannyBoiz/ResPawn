@@ -1,4 +1,5 @@
 using BlazorApp.Components;
+using BlazorApp.InterfaceServices;
 using BlazorApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +16,7 @@ builder.Services.AddScoped(sp => new HttpClient
 
 builder.Services.AddScoped<ICustomerServices, HttpCustomerService>();
 builder.Services.AddScoped<IUploadProductService, HttpUploadProductService>();
+builder.Services.AddScoped<IPurcharseService, HttpPurchaseService>();
 
 
 var app = builder.Build();

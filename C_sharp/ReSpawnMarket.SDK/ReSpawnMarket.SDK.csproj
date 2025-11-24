@@ -19,8 +19,5 @@
 	<ItemGroup>
 		<Protobuf Include="..\..\Shared_proto\services.proto" GrpcServices="Client" />
 	</ItemGroup>
-  <ItemGroup>
-  <ProjectReference Include="..\Shared\ApiContracts\Dtos" />
-</ItemGroup>
 	
 </Project>

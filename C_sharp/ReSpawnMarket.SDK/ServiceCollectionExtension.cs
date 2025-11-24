@@ -1,5 +1,6 @@
 ﻿using Com.Respawnmarket;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace ReSpawnMarket.SDK;
 
@@ -16,6 +17,10 @@ public static class ServiceCollectionExtension
             options.Address = new Uri("http://localhost:6767"); // must match the grpc server address
         });
         services.AddGrpcClient<UploadProductService.UploadProductServiceClient>(options =>
+        {
+            options.Address = new Uri("http://localhost:6767"); // must match the grpc server address
+        });
+        services.AddGrpcClient<PurchaseService.PurchaseServiceClient>(options =>
         {
             options.Address = new Uri("http://localhost:6767"); // must match the grpc server address
         });

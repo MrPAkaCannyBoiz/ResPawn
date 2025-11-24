@@ -22,6 +22,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IRegisterCustomerService, CustomerRegisterGrpcService>();
 builder.Services.AddScoped<IGetCustomerService, GetCustomerGrpcService>();
 builder.Services.AddScoped<IUploadProductService, UploadProductGrpcService>();
+builder.Services.AddScoped<IPurchaseService, PurchaseGrpcService>();
 
 // adding custom extension(static) grpc sdk services
 builder.Services.AddGrpcSdk();
