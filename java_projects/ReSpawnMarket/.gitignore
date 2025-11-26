@@ -34,7 +34,3 @@ build/
 
 ### .env files ###
 /.env
-/src/main/resources/sep3key
-/src/main/resources/jks.selfsigned.com.cer
-/src/main/resources/jks.selfsigned.com.p8.pem
-/src/main/resources/jks.selfsignedcert.com.cer
