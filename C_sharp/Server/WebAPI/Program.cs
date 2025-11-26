@@ -1,7 +1,10 @@
-using System.Text.Json;
+using Grpc.Net.Client;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.JSInterop.Infrastructure;
 using ReSpawnMarket.SDK;
 using ReSpawnMarket.SDK.ServiceInterfaces;
 using ReSpawnMarket.SDK.Services;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +29,23 @@ builder.Services.AddScoped<IPurchaseService, PurchaseGrpcService>();
 
 // adding custom extension(static) grpc sdk services
 builder.Services.AddGrpcSdk();
+
+// Configure Kestrel to use HTTPS with the specified .pfx certificate
+// install the certificate to trusted root authorities
+// use .env
+DotNetEnv.Env.Load();
+var pfxFilePath = Environment.GetEnvironmentVariable("PFX_FILE_PATH") 
+    ?? throw new InvalidOperationException("PFX_FILE_PATH environment variable is not set.");
+var pfxPassword = Environment.GetEnvironmentVariable("PFX_PASSWORD") 
+    ?? throw new InvalidOperationException("PFX_PASSWORD environment variable is not set.");
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenLocalhost(6760, lo =>
+    {
+        lo.UseHttps(pfxFilePath, pfxPassword); // key pair and its password
+    });
+});
 
 var app = builder.Build();
 
