@@ -11,13 +11,14 @@ public class ProductInspectionResultDto
     public int ProductId { get; set; }
     public string Status { get; set; }
     public string Comment { get; set; }
+    public bool Success { get; set; }
 
     public ProductInspectionResultDto(int productId, string status, string comment)
     {
         ProductId = productId;
         Status = status;
         Comment = comment;
-    }
+        Success = success;
 }
 
 }

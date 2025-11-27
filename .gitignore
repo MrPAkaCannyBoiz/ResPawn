@@ -12,6 +12,12 @@ out/
 .env.local
 .env.*.local
 
+#self-signed certificates (JKS/p12)
+*.jks
+*.p12
+sep3key/
+/self_signed_cert
+
 # self-signed certificates (JKS/p12)
 *.jks
 *.p12
