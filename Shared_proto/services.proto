@@ -135,9 +135,13 @@ message GetCustomerRequest
 
 message GetCustomerResponse
 {
-  Customer customer = 1;
-  repeated Address addresses = 2;
-  repeated Postal postals = 3;
+  int32 id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string email = 4;
+  string phone_number = 5;
+  repeated Address addresses = 6;
+  repeated Postal postals = 7;
 }
 
 message Empty { }
@@ -147,9 +151,20 @@ message GetAllCustomersRequest
   Empty empty = 1;
 }
 
+message NonSensitiveCustomerInfo
+{
+  int32 id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string email = 4;
+  string phone_number = 5;
+  repeated Address addresses = 6;
+  repeated Postal postals = 7;
+}
+
 message GetAllCustomersResponse
 {
-  repeated Customer customers = 1;
+  repeated NonSensitiveCustomerInfo customers = 1;
 }
 
 message UpdateCustomerRequest
@@ -158,19 +173,22 @@ message UpdateCustomerRequest
   string first_name = 2;
   string last_name = 3;
   string email = 4;
-  string password = 5;
-  string phone_number = 6;
-  string street_name = 7;
-  string secondary_unit = 8;
-  int32 postal_code = 9;
-  string city = 10;
+  string phone_number = 5;
+  string street_name = 6;
+  string secondary_unit = 7;
+  int32 postal_code = 8;
+  string city = 9;
 }
 
 message UpdateCustomerResponse
 {
-  Customer customer = 1;
-  repeated Address addresses = 2;
-  repeated Postal postals = 3;
+  int32 id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string email = 4;
+  string phone_number = 5;
+  repeated Address addresses = 6;
+  repeated Postal postals = 7;
 }
 
 // use case for "Register" (only customer)
