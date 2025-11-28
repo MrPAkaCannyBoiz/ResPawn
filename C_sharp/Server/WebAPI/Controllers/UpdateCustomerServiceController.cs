@@ -7,6 +7,7 @@ using ReSpawnMarket.SDK.ServiceInterfaces;
 namespace WebAPI.Controllers;
 
 // TODO : Introduce second address for customer and its dto at some point 
+// TODO : handle exceptions for gRPC calls (email already exists, etc.)
 [Route("api/customers")]
 [ApiController]
 public class UpdateCustomerServiceController : ControllerBase
@@ -33,7 +34,6 @@ public class UpdateCustomerServiceController : ControllerBase
             FirstName = dto.FirstName ?? "",
             LastName = dto.LastName ?? "",
             Email = dto.Email ?? "",
-            Password = dto.Password ?? "",
             PhoneNumber = dto.PhoneNumber ?? "",
             StreetName = dto.StreetName ?? "",
             SecondaryUnit = dto.SecondaryUnit ?? "",
@@ -44,17 +44,14 @@ public class UpdateCustomerServiceController : ControllerBase
         try
         {
             var grpcRes = await _updateCustomerService.UpdateCustomerAsync(grpcReq, ct);
-            if (grpcRes?.Customer is null)
-            {
-                return NotFound();
-            }
+            
             var returnDto = new CustomerDto
             {
-                Id = grpcRes.Customer.Id,
-                FirstName = grpcRes.Customer.FirstName,
-                LastName = grpcRes.Customer.LastName,
-                Email = grpcRes.Customer.Email,
-                PhoneNumber = grpcRes.Customer.PhoneNumber,
+                Id = grpcRes.Id,
+                FirstName = grpcRes.FirstName,
+                LastName = grpcRes.LastName,
+                Email = grpcRes.Email,
+                PhoneNumber = grpcRes.PhoneNumber,
                 StreetName = grpcRes.Addresses?.FirstOrDefault()?.StreetName ?? "",
                 SecondaryUnit = grpcRes.Addresses?.FirstOrDefault()?.SecondaryUnit ?? "",
                 PostalCode = grpcRes.Postals?.FirstOrDefault()?.PostalCode ?? 0,

@@ -28,15 +28,14 @@ public class GetCustomerController : ControllerBase
             CustomerId = customerId
         };
         var grpcRes = await _getCustomerService.GetCustomerAsync(grpcReq, ct);
-        if (grpcRes?.Customer is null) return NotFound();
 
         var dto = new CustomerDto
         {
-            Id = grpcRes.Customer.Id,
-            FirstName = grpcRes.Customer.FirstName,
-            LastName = grpcRes.Customer.LastName,
-            Email = grpcRes.Customer.Email,
-            PhoneNumber = grpcRes.Customer.PhoneNumber,
+            Id = grpcRes.Id,
+            FirstName = grpcRes.FirstName,
+            LastName = grpcRes.LastName,
+            Email = grpcRes.Email,
+            PhoneNumber = grpcRes.PhoneNumber,
             StreetName = grpcRes.Addresses?.FirstOrDefault()?.StreetName ?? "",
             SecondaryUnit = grpcRes.Addresses?.FirstOrDefault()?.SecondaryUnit ?? "",
             PostalCode = grpcRes.Postals?.FirstOrDefault()?.PostalCode ?? 0,

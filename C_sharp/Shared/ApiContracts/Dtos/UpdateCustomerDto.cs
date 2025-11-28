@@ -14,5 +14,4 @@ public class UpdateCustomerDto
     public int PostalCode { get; set; }
     public string City { get; set; }
     public string SecondaryUnit { get; set; } 
-    public string Password { get; set; } 
 }
