@@ -60,7 +60,11 @@ public class GetCustomerServiceImpl extends GetCustomerServiceGrpc.GetCustomerSe
                 .toList();
 
         GetCustomerResponse response = GetCustomerResponse.newBuilder()
-                .setCustomer(customerDto)
+                .setId(customerDto.getId())
+                .setFirstName(customerDto.getFirstName())
+                .setLastName(customerDto.getLastName())
+                .setEmail(customerDto.getEmail())
+                .setPhoneNumber(customerDto.getPhoneNumber())
                 .addAllAddresses(addresses)
                 .addAllPostals(postals)
                 .build();

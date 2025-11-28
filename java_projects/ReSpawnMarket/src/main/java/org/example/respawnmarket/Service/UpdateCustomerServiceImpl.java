@@ -59,13 +59,6 @@ public class UpdateCustomerServiceImpl extends UpdateCustomerServiceGrpc.UpdateC
         {
             updatedCustomer.setPhoneNumber(request.getPhoneNumber());
         }
-        if (!request.getPassword().isBlank())
-        {
-            // encrypt password before saving to DB (omitted for brevity)
-            BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-            String encodedPassword = passwordEncoder.encode(request.getPassword());
-            updatedCustomer.setPassword(encodedPassword);
-        }
         // find address to update (for now only one address per customer)
         var updatedAddress = addressRepository.findAddressByCustomerId(request.getCustomerId()).getFirst();
         assert updatedAddress != null;
@@ -142,7 +135,11 @@ public class UpdateCustomerServiceImpl extends UpdateCustomerServiceGrpc.UpdateC
                 .toList();
 
         UpdateCustomerResponse response = UpdateCustomerResponse.newBuilder()
-                .setCustomer(customerDto)
+                .setId(customerDto.getId())
+                .setFirstName(customerDto.getFirstName())
+                .setLastName(customerDto.getLastName())
+                .setEmail(customerDto.getEmail())
+                .setPhoneNumber(customerDto.getPhoneNumber())
                 .addAllAddresses(addresses)
                 .addAllPostals(postals)
                 .build();
