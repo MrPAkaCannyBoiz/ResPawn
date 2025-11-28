@@ -1,6 +1,7 @@
 package org.example.respawnmarket.Service;
 
 import com.respawnmarket.*;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.example.respawnmarket.entities.PostalEntity;
 import org.example.respawnmarket.repositories.AddressRepository;
@@ -8,11 +9,14 @@ import org.example.respawnmarket.repositories.CustomerAddressRepository;
 import org.example.respawnmarket.repositories.CustomerRepository;
 import org.example.respawnmarket.repositories.PostalRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+// TODO: add validation for each database constraint, so web api can catch errors properly
+// TODO: handle two addresses per customer
 @Service
 public class UpdateCustomerServiceImpl extends UpdateCustomerServiceGrpc.UpdateCustomerServiceImplBase
 {
@@ -95,7 +99,19 @@ public class UpdateCustomerServiceImpl extends UpdateCustomerServiceGrpc.UpdateC
                     .save(new PostalEntity(updatedPostalCode, request.getCity()));
             updatedAddress.setPostal(newPostal);
         }
-        customerRepository.save(updatedCustomer);
+        // check if constraints is violated before saving for customer
+        try
+        {
+            customerRepository.save(updatedCustomer);
+        }
+        catch (DataIntegrityViolationException e)
+        {
+            responseObserver.onError(Status.ALREADY_EXISTS
+                    .withDescription("this email already exists in the system")
+                    .asRuntimeException());
+            return;
+        }
+        // the rest ain't have unique constraints, just save
         addressRepository.save(updatedAddress);
         postalRepository.save(updatedPostal);
         // make response dto

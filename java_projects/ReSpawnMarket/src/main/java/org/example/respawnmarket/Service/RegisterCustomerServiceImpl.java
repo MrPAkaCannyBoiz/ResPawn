@@ -21,7 +21,8 @@ import com.respawnmarket.CustomerAddress;
 import com.respawnmarket.RegisterCustomerRequest;
 import com.respawnmarket.RegisterCustomerResponse;
 
-
+// TODO: add validation for each database constraint, so web api can catch errors properly
+// TODO: handle two addresses per customer
 @Service // Spring Boot will auto-detect this class as a service component
 public class RegisterCustomerServiceImpl extends CustomerRegisterServiceGrpc.CustomerRegisterServiceImplBase
 {
