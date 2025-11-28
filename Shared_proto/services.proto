@@ -152,6 +152,27 @@ message GetAllCustomersResponse
   repeated Customer customers = 1;
 }
 
+message UpdateCustomerRequest
+{
+  int32 customer_id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string email = 4;
+  string password = 5;
+  string phone_number = 6;
+  string street_name = 7;
+  string secondary_unit = 8;
+  int32 postal_code = 9;
+  string city = 10;
+}
+
+message UpdateCustomerResponse
+{
+  Customer customer = 1;
+  repeated Address addresses = 2;
+  repeated Postal postals = 3;
+}
+
 // use case for "Register" (only customer)
 service CustomerRegisterService
 {
@@ -163,6 +184,12 @@ service GetCustomerService
 {
   rpc GetCustomer (GetCustomerRequest) returns (GetCustomerResponse);
   rpc GetAllCustomers (GetAllCustomersRequest) returns (GetAllCustomersResponse);
+}
+
+// use case for "Edit Customer Details"
+service UpdateCustomerService
+{
+  rpc UpdateCustomer (UpdateCustomerRequest) returns (UpdateCustomerResponse);
 }
 
 // use case for "Upload Product Details" (include getter of products)

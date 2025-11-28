@@ -20,5 +20,9 @@ public static class ServiceCollectionExtension
         {
             options.Address = new Uri(_grpcServerAddress); // must match the grpc server address
         });
+        services.AddGrpcClient<UpdateCustomerService.UpdateCustomerServiceClient>(options =>
+        {
+            options.Address = new Uri(_grpcServerAddress); // must match the grpc server address
+        });
     }
 }

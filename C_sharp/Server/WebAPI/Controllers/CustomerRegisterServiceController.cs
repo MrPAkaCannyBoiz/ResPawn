@@ -6,6 +6,7 @@ using ReSpawnMarket.SDK.ServiceInterfaces;
 
 namespace WebAPI.Controllers;
 
+// TODO : Introduce second address for customer and its dto at some point 
 [Route("api/customers")]
 [ApiController]
 public class CustomerRegisterServiceController : ControllerBase
