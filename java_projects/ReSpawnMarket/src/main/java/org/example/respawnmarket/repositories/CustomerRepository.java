@@ -7,10 +7,4 @@ import org.springframework.data.repository.query.Param;
 
 public interface CustomerRepository extends JpaRepository<CustomerEntity, Integer>
 {
-    @Query("""
-            select c from ProductEntity p
-                     join p.seller c
-                     where p.id = :productId
-            """)
-    CustomerEntity findBySoldProductId(@Param("productId") int productId);
 }

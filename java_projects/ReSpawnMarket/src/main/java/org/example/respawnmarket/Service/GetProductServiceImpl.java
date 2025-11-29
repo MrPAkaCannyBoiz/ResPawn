@@ -99,11 +99,23 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
                     .setName(pawnshop.getName())
                     .setAddressId(pawnshop.getAddress().getId())
                     .build();
+            Address addressDto = Address.newBuilder()
+                    .setId(pawnshop.getAddress().getId())
+                    .setStreetName(pawnshop.getAddress().getStreetName())
+                    .setSecondaryUnit(pawnshop.getAddress().getSecondaryUnit())
+                    .setPostalCode(pawnshop.getAddress().getPostal().getPostalCode())
+                    .build();
+            Postal postalDto = Postal.newBuilder()
+                    .setPostalCode(pawnshop.getAddress().getPostal().getPostalCode())
+                    .setCity(pawnshop.getAddress().getPostal().getCity())
+                    .build();
 
             GetProductResponse response = GetProductResponse.newBuilder()
                     .setProduct(productDto)
                     .setCustomer(sellerDto)
                     .setPawnshop(pawnshopDto)
+                    .setPawnshopAddress(addressDto)
+                    .setPawnshopPostal(postalDto)
                     .build();
             responseObserver.onNext(response);
             responseObserver.onCompleted();
