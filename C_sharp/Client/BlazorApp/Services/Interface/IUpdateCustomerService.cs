@@ -1,6 +1,6 @@
 ﻿using ApiContracts.Dtos;
 
-namespace BlazorApp.Services;
+namespace BlazorApp.Services.Interface;
 
 public interface IUpdateCustomerService
 {

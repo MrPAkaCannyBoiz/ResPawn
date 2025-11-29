@@ -18,23 +18,6 @@ public class ProductInspectionGrpcService : IProductInspectionService
         _grpcClient = grpcClient;
     }
 
-    public async Task<GetPendingProductsResponse> GetPendingProductsAsync
-        (GetPendingProductsRequest request, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            GetPendingProductsResponse response =  await _grpcClient
-                .GetPendingProductsAsync(request, cancellationToken: cancellationToken);
-            return response;
-        }
-        catch (RpcException ex)
-        {
-            // Handle gRPC-specific exceptions
-            throw new Exception($"gRPC Error: {ex.Status.Detail}", ex);
-        }
-    }
-
-
     public Task<ProductInspectionResponse> ReviewProductAsync(ProductInspectionRequest request, CancellationToken cancellationToken = default)
     {
         try

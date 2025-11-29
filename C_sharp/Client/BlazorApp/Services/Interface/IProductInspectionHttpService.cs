@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using ApiContracts.Dtos;
 
 
-namespace BlazorApp.Services;
+namespace BlazorApp.Services.Interface;
 
 public interface IProductInspectionHttpService
 {

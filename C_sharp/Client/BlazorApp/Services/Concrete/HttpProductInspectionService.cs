@@ -5,8 +5,9 @@ using System.Threading.Tasks;
 
 using System.Text.Json;
 using ApiContracts.Dtos;
+using BlazorApp.Services.Interface;
 
-namespace BlazorApp.Services;
+namespace BlazorApp.Services.Concrete;
 
 public class HttpProductInspectionService  : IProductInspectionHttpService
 {

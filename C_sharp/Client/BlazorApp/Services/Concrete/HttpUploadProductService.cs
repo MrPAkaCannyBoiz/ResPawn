@@ -1,16 +1,17 @@
 ﻿using ApiContracts.Dtos;
+using BlazorApp.Services.Interface;
 using ReSpawnMarket.SDK.ServiceInterfaces;
 using System.Text.Json;
 
-namespace BlazorApp.Services;
+namespace BlazorApp.Services.Concrete;
 
-public class HttpUploadProductService : IUploadProductService
+public class HttpUploadProductService : Interface.IUploadProductService
 {
     private readonly HttpClient _client;
 
     public HttpUploadProductService(HttpClient client)
     {
-        this._client = client;
+        _client = client;
     }
 
     public async Task<ProductDto> UploadProductAsync(int customerId, UploadProductDto request)

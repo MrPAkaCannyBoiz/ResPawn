@@ -1,5 +1,6 @@
 using BlazorApp.Components;
-using BlazorApp.Services;
+using BlazorApp.Services.Concrete;
+using BlazorApp.Services.Interface;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,7 @@ builder.Services.AddScoped<ICustomerServices, HttpCustomerService>();
 builder.Services.AddScoped<IUploadProductService, HttpUploadProductService>();
 builder.Services.AddScoped<IUpdateCustomerService, HttpUpdateCustomerService>();
 builder.Services.AddScoped<IProductInspectionHttpService, HttpProductInspectionService>();
+builder.Services.AddScoped<IGetProductService, HttpGetProductService>();
 
 
 
