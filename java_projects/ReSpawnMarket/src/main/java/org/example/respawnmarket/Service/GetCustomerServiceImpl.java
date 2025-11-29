@@ -28,6 +28,7 @@ public class GetCustomerServiceImpl extends GetCustomerServiceGrpc.GetCustomerSe
     }
 
     // use case for getting customer info (admin only)
+    @Override
     public void getCustomer(GetCustomerRequest request,
                                 io.grpc.stub.StreamObserver<GetCustomerResponse> responseObserver)
     {

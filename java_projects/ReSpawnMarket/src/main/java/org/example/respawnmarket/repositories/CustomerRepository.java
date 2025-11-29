@@ -7,4 +7,6 @@ import org.springframework.data.repository.query.Param;
 
 public interface CustomerRepository extends JpaRepository<CustomerEntity, Integer>
 {
+  boolean existsByEmail(String email);
+  CustomerEntity findByEmail(String email);
 }
