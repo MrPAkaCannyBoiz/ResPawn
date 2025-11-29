@@ -1,6 +1,7 @@
-@page "/reseller/check"
+@page "/resellercheck"
 @using ApiContracts.Dtos
-@inject BlazorApp.Services.IProductInspectionHttpService InspectionService
+@using BlazorApp.Services.Interface
+@inject IProductInspectionHttpService InspectionService
 
 <h3>Pending Products</h3>
 

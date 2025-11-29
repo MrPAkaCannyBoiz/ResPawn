@@ -1,5 +1,6 @@
 using BlazorApp.Components;
-using BlazorApp.Services;
+using BlazorApp.Services.Concrete;
+using BlazorApp.Services.Interface;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,10 @@ builder.Services.AddScoped(sp => new HttpClient
 builder.Services.AddScoped<ICustomerServices, HttpCustomerService>();
 builder.Services.AddScoped<IUploadProductService, HttpUploadProductService>();
 builder.Services.AddScoped<IUpdateCustomerService, HttpUpdateCustomerService>();
+builder.Services.AddScoped<IProductInspectionHttpService, HttpProductInspectionService>();
+builder.Services.AddScoped<IGetProductService, HttpGetProductService>();
+
+
 
 var app = builder.Build();
 
@@ -25,6 +30,8 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
+    app.UseStatusCodePagesWithReExecute("/not-found");
+
 }
 //app.UseStatusCodePagesWithReExecute("/not-found", createScopeForErrors: true);
 

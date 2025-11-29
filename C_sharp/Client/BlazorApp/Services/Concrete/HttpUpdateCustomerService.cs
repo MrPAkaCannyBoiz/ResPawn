@@ -1,7 +1,8 @@
 ﻿using ApiContracts.Dtos;
+using BlazorApp.Services.Interface;
 using System.Text.Json;
 
-namespace BlazorApp.Services;
+namespace BlazorApp.Services.Concrete;
 
 public class HttpUpdateCustomerService : IUpdateCustomerService
 {
@@ -9,7 +10,7 @@ public class HttpUpdateCustomerService : IUpdateCustomerService
 
     public HttpUpdateCustomerService(HttpClient client)
     {
-        this._client = client;
+        _client = client;
     }
 
     public async Task<CustomerDto> UpdateCustomerAsync(int id, UpdateCustomerDto request)

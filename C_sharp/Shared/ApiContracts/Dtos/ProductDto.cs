@@ -24,10 +24,10 @@ public class ProductDto
     public required double Price { get; set; }
     public required bool Sold { get; set; }
     public required string Condition { get; set; }
-    public ApprovalStatus ApprovalStatus { get; set; }
+    public string ApprovalStatus { get; set; } = string.Empty;
     public required string Name { get; set; }
     public required string PhotoUrl { get; set; }
-    public Category Category { get; set; }
+    public string Category { get; set; } = string.Empty;
     public required string Description { get; set; }
     public required int SoldByCustomerId { get; set; }
     public required DateTime RegisterDate { get; set; }

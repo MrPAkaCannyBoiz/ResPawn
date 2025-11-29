@@ -236,6 +236,10 @@ message GetProductRequest
 message GetProductResponse
 {
   Product product = 1;
+  NonSensitiveCustomerInfo customer = 2;
+  Pawnshop pawnshop = 3;
+  Address pawnshop_address = 4;
+  Postal pawnshop_postal = 5;
 }
 
 message GetAllProductsRequest
@@ -258,6 +262,7 @@ service GetProductService
 {
   rpc GetProduct (GetProductRequest) returns (GetProductResponse);
   rpc GetAllProducts (GetAllProductsRequest) returns (GetAllProductsResponse);
+  rpc GetPendingProducts (GetPendingProductsRequest) returns (GetPendingProductsResponse);
 }
 
 // use case for "Product Inspection by Reseller"
@@ -304,6 +309,6 @@ message GetPendingProductsResponse {
 }
 
 service ProductInspectionService {
-  rpc GetPendingProducts (GetPendingProductsRequest) returns (GetPendingProductsResponse);
   rpc ReviewProduct (ProductInspectionRequest) returns (ProductInspectionResponse);
 }
+

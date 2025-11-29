@@ -24,5 +24,13 @@ public static class ServiceCollectionExtension
         {
             options.Address = new Uri(_grpcServerAddress);
         });
+        services.AddGrpcClient<ProductInspectionService.ProductInspectionServiceClient>(options =>
+        {
+            options.Address = new Uri(_grpcServerAddress);
+        });
+        services.AddGrpcClient<GetProductService.GetProductServiceClient>(options =>
+        {
+            options.Address = new Uri(_grpcServerAddress);
+        });
     }
 }
