@@ -1,6 +1,9 @@
+using BlazorApp.Auth;
 using BlazorApp.Components;
+using BlazorApp.Services;
 using BlazorApp.Services.Concrete;
 using BlazorApp.Services.Interface;
+using Microsoft.AspNetCore.Components.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,10 +20,10 @@ builder.Services.AddScoped(sp => new HttpClient
 builder.Services.AddScoped<ICustomerServices, HttpCustomerService>();
 builder.Services.AddScoped<IUploadProductService, HttpUploadProductService>();
 builder.Services.AddScoped<IUpdateCustomerService, HttpUpdateCustomerService>();
-builder.Services.AddScoped<IProductInspectionHttpService, HttpProductInspectionService>();
 builder.Services.AddScoped<IGetProductService, HttpGetProductService>();
+builder.Services.AddScoped<AuthenticationStateProvider, SimpleAuthProvider>();
 
-
+builder.Services.AddHttpService();
 
 var app = builder.Build();
 

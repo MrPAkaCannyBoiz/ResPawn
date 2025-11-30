@@ -8,7 +8,7 @@ using ReSpawnMarket.SDK.ServiceInterfaces;
 namespace WebAPI.Controllers;
 
 [ApiController]
-[Route("api/customers/login")]
+[Route("customers/login")]
 public class CustomerLoginController : ControllerBase
 {
     private readonly ICustomerLoginService _customerLoginService;
