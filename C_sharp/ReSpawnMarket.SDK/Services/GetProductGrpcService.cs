@@ -7,6 +7,7 @@ using System.Text;
 
 namespace ReSpawnMarket.SDK.Services;
 
+// TODO: handle exceptions for gRPC calls (not found and failed precondition) for single product fetch
 public class GetProductGrpcService : IGetProductService
 {
     private readonly GetProductService.GetProductServiceClient _grpcClient;

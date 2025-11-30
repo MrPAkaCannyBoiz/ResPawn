@@ -23,3 +23,8 @@ sep3key/
 *.p12
 sep3key/
 /self_signed_cert
+
+# IDE from IntelilJ IDE files
+/.idea
+/java_projects/.idea
+/ResPawnMarket.iml

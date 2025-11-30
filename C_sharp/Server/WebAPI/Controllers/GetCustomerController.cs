@@ -21,26 +21,34 @@ public class GetCustomerController : ControllerBase
     [ProducesResponseType(typeof(CustomerDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
+    [ProducesErrorResponseType(typeof(ApplicationException))]
     public async Task<IActionResult> GetCustomerAsync(int customerId, CancellationToken ct)
     {
         var grpcReq = new GetCustomerRequest
         {
             CustomerId = customerId
         };
-        var grpcRes = await _getCustomerService.GetCustomerAsync(grpcReq, ct);
 
-        var dto = new CustomerDto
+        try
         {
-            Id = grpcRes.Id,
-            FirstName = grpcRes.FirstName,
-            LastName = grpcRes.LastName,
-            Email = grpcRes.Email,
-            PhoneNumber = grpcRes.PhoneNumber,
-            StreetName = grpcRes.Addresses?.FirstOrDefault()?.StreetName ?? "",
-            SecondaryUnit = grpcRes.Addresses?.FirstOrDefault()?.SecondaryUnit ?? "",
-            PostalCode = grpcRes.Postals?.FirstOrDefault()?.PostalCode ?? 0,
-            City = grpcRes.Postals?.FirstOrDefault()?.City ?? ""
-        };
-        return Ok(dto);
+            var grpcRes = await _getCustomerService.GetCustomerAsync(grpcReq, ct);
+            var dto = new CustomerDto
+            {
+                Id = grpcRes.Id,
+                FirstName = grpcRes.FirstName,
+                LastName = grpcRes.LastName,
+                Email = grpcRes.Email,
+                PhoneNumber = grpcRes.PhoneNumber,
+                StreetName = grpcRes.Addresses?.FirstOrDefault()?.StreetName ?? "",
+                SecondaryUnit = grpcRes.Addresses?.FirstOrDefault()?.SecondaryUnit ?? "",
+                PostalCode = grpcRes.Postals?.FirstOrDefault()?.PostalCode ?? 0,
+                City = grpcRes.Postals?.FirstOrDefault()?.City ?? ""
+            };
+            return Ok(dto);
+        }
+        catch (ApplicationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 }
