@@ -1,0 +1,48 @@
+﻿@page "/customer-login"
+@rendermode InteractiveServer
+@using BlazorApp.Auth
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+
+@code 
+{
+    private string _email;
+    private string _password;
+    private string _loginMessage;
+
+    private async Task LoginAsync()
+    {
+        _loginMessage = string.Empty;
+        try
+        {
+            await ((SimpleAuthProvider)AuthStateProvider).CustomerLoginAsync(_email, _password);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Login failed: {ex.Message}");
+            _loginMessage = ex.Message;
+        }
+    }
+}
+
+<h3>Login</h3>
+
+<AuthorizeView>
+    <NotAuthorized>
+        <h3>Please login</h3>
+		<label>Email:</label>
+		<input type="text" @bind="_email" />
+		<label>Password:</label>
+		<input type="password" @bind="_password" />
+		@if (!string.IsNullOrEmpty(_loginMessage))
+		{
+			<label style="color: red">
+				@_loginMessage
+			</label>
+		}
+        <button @onclick="() => LoginAsync()">Login</button>
+    </NotAuthorized>
+    <Authorized>
+        <h3>Hello, @context.User.Identity!.Name</h3>
+    </Authorized>
+</AuthorizeView>

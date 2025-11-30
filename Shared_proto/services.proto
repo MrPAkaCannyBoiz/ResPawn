@@ -312,3 +312,23 @@ service ProductInspectionService {
   rpc ReviewProduct (ProductInspectionRequest) returns (ProductInspectionResponse);
 }
 
+// use case for login (customer)
+message CustomerLoginRequest
+{
+  string email = 1;
+  string password = 2;
+}
+
+message CustomerLoginResponse
+{
+  int32 customer_id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string email = 4;
+  string phone_number = 5;
+}
+
+service CustomerLoginService
+{
+  rpc Login(CustomerLoginRequest) returns (CustomerLoginResponse);
+}
