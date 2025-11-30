@@ -28,13 +28,12 @@ public class CustomerLoginServiceImpl extends CustomerLoginServiceGrpc.CustomerL
         String email = request.getEmail();
         String password = request.getPassword();
 
-        boolean isEmailExist = customerRepository.existsByEmail(email);
-        if (!isEmailExist)
+        CustomerEntity loginCustomer = customerRepository.findByEmail(email);
+        if (loginCustomer == null)
         {
           throwNotFoundIfInvalidCredentials(responseObserver);
           return;
         }
-        CustomerEntity loginCustomer = customerRepository.findByEmail(email);
         boolean isPasswordMatch = BCrypt.checkpw(password, loginCustomer.getPassword());
         if (!isPasswordMatch)
         {

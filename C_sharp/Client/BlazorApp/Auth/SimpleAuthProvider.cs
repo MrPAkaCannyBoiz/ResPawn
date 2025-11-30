@@ -58,7 +58,7 @@ public class SimpleAuthProvider : AuthenticationStateProvider
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        string customerAsJson = _primaryCacheUserJson!;
+        string? customerAsJson = _primaryCacheUserJson;
         try
         {
             customerAsJson = await _jSRuntime.InvokeAsync<string>("sessionStorage.getItem", "currentCustomer");
