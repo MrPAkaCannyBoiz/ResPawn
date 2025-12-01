@@ -25,18 +25,21 @@ public class GetProductController: ControllerBase
         {
             ProductId = Id
         };
-        var grpcResponse = await _getProductService.GetProductAsync(grpcRequest, ct);
-        if (grpcResponse.Product is null)
+        try
+        {
+            var grpcResponse = await _getProductService.GetProductAsync(grpcRequest, ct);
+            var responseDto = toDetailedDto(grpcResponse);
+            return Ok(responseDto);
+        }
+        catch (KeyNotFoundException ex)
         {
             return NotFound(new ProblemDetails
             {
                 Title = "Not Found",
-                Detail = $"Product with ID {Id} was not found.",
+                Detail = ex.Message,
                 Status = StatusCodes.Status404NotFound
             });
         }
-        var responseDto = toDetailedDto(grpcResponse);
-        return Ok(responseDto);
     }
 
     [HttpGet]
@@ -49,19 +52,24 @@ public class GetProductController: ControllerBase
         };
         var grpcResponse = await _getProductService.GetAllProductsAsync(grpcRequest, ct);
         var responseDtoList = grpcResponse.Products
-            .Select(p => new ProductDto
+            .Select(p => new ProductWithFirstImageDto
             {
-                Id = p.Id,
-                Price = p.Price,
-                Sold = p.Sold,
-                Condition = p.Condition,
-                ApprovalStatus = p.ApprovalStatus.ToString(),
-                Name = p.Name,
-                PhotoUrl = p.PhotoUrl,
-                Category = p.Category.ToString(),
-                Description = p.Description,
-                SoldByCustomerId = p.SoldByCustomerId,
-                RegisterDate = p.RegisterDate.ToDateTime()
+                Id = p.Product.Id,
+                Price = p.Product.Price,
+                Sold = p.Product.Sold,
+                Condition = p.Product.Condition,
+                ApprovalStatus = p.Product.ApprovalStatus.ToString(),
+                Name = p.Product.Name,
+                Category = p.Product.Category.ToString(),
+                Description = p.Product.Description,
+                SoldByCustomerId = p.Product.SoldByCustomerId,
+                RegisterDate = p.Product.RegisterDate.ToDateTime(),
+                Image = new ImageDto
+                {
+                    Id = p.FirstImage.Id,
+                    Url = p.FirstImage.Url,
+                    ProductId = p.FirstImage.ProductId
+                }
             })
             .ToList() ?? []; // Return empty list of ProductDto if null
         return Ok(responseDtoList);
@@ -77,19 +85,24 @@ public class GetProductController: ControllerBase
         };
         var grpcResponse = await _getProductService.GetPendingProductsAsync(grpcRequest, ct);
         var responseDtoList = grpcResponse.Products
-            .Select(p => new ProductDto
+            .Select(p => new ProductWithFirstImageDto
             {
-                Id = p.Id,
-                Price = p.Price,
-                Sold = p.Sold,
-                Condition = p.Condition,
-                ApprovalStatus = p.ApprovalStatus.ToString(),
-                Name = p.Name,
-                PhotoUrl = p.PhotoUrl,
-                Category = p.Category.ToString(),
-                Description = p.Description,
-                SoldByCustomerId = p.SoldByCustomerId,
-                RegisterDate = p.RegisterDate.ToDateTime()
+                Id = p.Product.Id,
+                Price = p.Product.Price,
+                Sold = p.Product.Sold,
+                Condition = p.Product.Condition,
+                ApprovalStatus = p.Product.ApprovalStatus.ToString(),
+                Name = p.Product.Name,
+                Category = p.Product.Category.ToString(),
+                Description = p.Product.Description,
+                SoldByCustomerId = p.Product.SoldByCustomerId,
+                RegisterDate = p.Product.RegisterDate.ToDateTime(),
+                Image = new ImageDto
+                {
+                    Id = p.FirstImage.Id,
+                    Url = p.FirstImage.Url,
+                    ProductId = p.FirstImage.ProductId
+                }
             })
             .ToList() ?? []; // Return empty list of ProductDto if null
         return Ok(responseDtoList);
@@ -98,6 +111,13 @@ public class GetProductController: ControllerBase
 
     private DetailedProductDto toDetailedDto(GetProductResponse response)
     {
+        var images = response.Images.Select(img => new ImageDto()
+        {
+            Id = img.Id,
+            Url = img.Url,
+            ProductId = img.ProductId
+        }).ToList();
+
         return new DetailedProductDto
         {
             ProductId = response.Product.Id,
@@ -106,7 +126,6 @@ public class GetProductController: ControllerBase
             Condition = response.Product.Condition,
             ApprovalStatus = response.Product.ApprovalStatus.ToString(),
             Name = response.Product.Name,
-            PhotoUrl = response.Product.PhotoUrl,
             Category = response.Product.Category.ToString(),
             Description = response.Product.Description,
             SoldByCustomerId = response.Product.SoldByCustomerId,
@@ -122,7 +141,8 @@ public class GetProductController: ControllerBase
             PawnshopStreetName = response.PawnshopAddress.StreetName,
             PawnshopSecondaryUnit = response.PawnshopAddress.SecondaryUnit,
             PawnshopPostalCode = response.PawnshopAddress.PostalCode,
-            PawnshopCity = response.PawnshopPostal.City
+            PawnshopCity = response.PawnshopPostal.City,
+            Images = images
         };
     }
 }

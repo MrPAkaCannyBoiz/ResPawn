@@ -31,5 +31,6 @@ public class UploadProductDto
     public required string PhotoUrl { get; set; }
     public Category Category { get; set; }
     public string? OtherCategory { get; set; }
+    public required List<string> ImageUrls { get; set; }
 
 }

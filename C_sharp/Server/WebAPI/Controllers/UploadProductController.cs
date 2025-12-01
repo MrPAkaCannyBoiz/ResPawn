@@ -30,10 +30,10 @@ public class UploadProductController : ControllerBase
             Condition = dto.Condition,
             Description = dto.Description,
             Name = dto.Name,
-            PhotoUrl = dto.PhotoUrl,
             Category = (Category)dto.Category,
             OtherCategory = dto.OtherCategory ?? string.Empty,
-            SoldByCustomerId = customerId
+            SoldByCustomerId = customerId,
+            ImageUrl = {dto.ImageUrls ?? new List<string>() } // same as ImageUrl.AddRange(dto.ImageUrls)
         };
 
         var grpcResponse = await _uploadProductService.UploadProductAsync(grpcRequest, ct);
@@ -47,6 +47,14 @@ public class UploadProductController : ControllerBase
             });
         }
 
+        //convert gRPC Image into ImageDto
+        var images = grpcResponse.Images.Select(img => new ImageDto()
+        { 
+            Id = img.Id,
+            Url = img.Url,
+            ProductId = img.ProductId
+        }).ToList(); 
+
         ProductDto responseDto = new()
         {
            Id = grpcResponse.Product.Id,
@@ -55,11 +63,11 @@ public class UploadProductController : ControllerBase
            Condition = grpcResponse.Product.Condition,
            ApprovalStatus = grpcResponse.Product.ApprovalStatus.ToString(),
            Name = grpcResponse.Product.Name,
-           PhotoUrl = grpcResponse.Product.PhotoUrl,
            Category = grpcResponse.Product.Category.ToString(),
            Description = grpcResponse.Product.Description,
            SoldByCustomerId = grpcResponse.Product.SoldByCustomerId,
-           RegisterDate = grpcResponse.Product.RegisterDate.ToDateTime()
+           RegisterDate = grpcResponse.Product.RegisterDate.ToDateTime(),
+           Images = images
         };
         return Ok(responseDto);
     }
