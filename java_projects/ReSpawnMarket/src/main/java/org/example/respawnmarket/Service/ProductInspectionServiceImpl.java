@@ -5,6 +5,7 @@ import java.util.List;
 
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import jakarta.transaction.Transactional;
 import org.example.respawnmarket.entities.InspectionEntity;
 import org.example.respawnmarket.entities.ProductEntity;
 import org.example.respawnmarket.entities.ResellerEntity;
@@ -29,10 +30,12 @@ import com.respawnmarket.ProductInspectionServiceGrpc;
 
 import io.grpc.stub.StreamObserver;
 
+import static org.example.respawnmarket.Service.ServiceExtensions.ApprovalStatusExtension.toProtoApprovalStatus;
+
 @Service
 public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.ProductInspectionServiceImplBase
 {
-    private final ProductRepository productRepository;
+    private ProductRepository productRepository;
     private InspectionRepository inspectionRepository;
     private ResellerRepository resellerRepository;
     private PawnshopRepository pawnshopRepository;
@@ -49,23 +52,7 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
     }
 
     @Override
-    public void getPendingProducts(GetPendingProductsRequest request,
-                                   StreamObserver<GetPendingProductsResponse> responseObserver)
-    {
-        List<ProductEntity> entities = productRepository.findByApprovalStatus(ApprovalStatusEnum.PENDING);
-
-        GetPendingProductsResponse.Builder responseBuilder = GetPendingProductsResponse.newBuilder();
-        for (ProductEntity entity : entities)
-        {
-            Product productProto = toProtoProduct(entity);
-            responseBuilder.addProducts(productProto);
-        }
-
-        responseObserver.onNext(responseBuilder.build());
-        responseObserver.onCompleted();
-    }
-
-    @Override
+    @Transactional
     public void reviewProduct(ProductInspectionRequest request,
                               StreamObserver<ProductInspectionResponse> responseObserver)
     {
@@ -114,6 +101,17 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
 
         if (request.getIsAccepted())
         {
+            product.setApprovalStatus(ApprovalStatusEnum.APPROVED);
+            product.setPawnshop(pawnshopRepository.findById(request.getPawnshopId()).orElse(null));
+            productRepository.save(product);
+            productRepository.flush();
+        }
+        else // false -> rejected
+        {
+            product.setApprovalStatus(ApprovalStatusEnum.REJECTED);
+            productRepository.save(product);
+            productRepository.flush();
+        }
           product.setPawnshop(pawnshop);
         }
         else
@@ -123,7 +121,6 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
 
         productRepository.save(product);
 
-        // 6) Build response safely (handle null pawnshop) omg this null execptions are crazy
         ProductInspectionResponse response = ProductInspectionResponse.newBuilder()
             .setProductId(product.getId())
             .setApprovalStatus(toProtoApprovalStatus(product.getApprovalStatus()))
@@ -134,38 +131,9 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
-      }
-      catch (StatusRuntimeException e)
-      {
-        // controlled gRPC errors (NOT_FOUND, etc.)
-        responseObserver.onError(e);
-      }
-      catch (Exception e)
-      {
-        // unexpected errors -> INTERNAL with message
-        e.printStackTrace();
-        responseObserver.onError(
-            Status.INTERNAL
-                .withDescription("Internal error during review")
-                .withCause(e)
-                .asRuntimeException());
-      }
     }
 
-    private ApprovalStatus toProtoApprovalStatus(ApprovalStatusEnum entityApprovalStatus)
-    {
-        if (entityApprovalStatus == null)
-        {
-            return ApprovalStatus.PENDING;
-        }
 
-        return switch (entityApprovalStatus)
-        {
-            case PENDING -> ApprovalStatus.PENDING;
-            case APPROVED -> ApprovalStatus.APPROVED;
-            case NOT_APPROVED, REJECTED -> ApprovalStatus.NOT_APPROVED;
-        };
-    }
 
     private Category toProtoCategory(CategoryEnum entityCategory)
     {

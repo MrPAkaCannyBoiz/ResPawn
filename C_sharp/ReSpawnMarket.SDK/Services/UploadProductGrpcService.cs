@@ -1,5 +1,6 @@
 ﻿using Com.Respawnmarket;
 using Grpc.Core;
+using ReSpawnMarket.SDK.ServiceExceptions;
 using ReSpawnMarket.SDK.ServiceInterfaces;
 using System;
 using System.Collections.Generic;
@@ -24,9 +25,14 @@ public class UploadProductGrpcService : IUploadProductService
                 .UploadProductAsync(request, cancellationToken: cancellationToken);
             return response;
         }
-        catch (RpcException ex)
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.InvalidArgument 
+                                        || ex.StatusCode == StatusCode.OutOfRange) // known errors from gRPC server
         {
-            throw new ApplicationException($"gRPC Error: {ex.StatusCode}: {ex.Status.Detail}", ex);
+            throw new UploadProductException($"Upload Product failed: {ex.Status.Detail}");
+        }
+        catch (RpcException ex) // unexpected gRPC error
+        {
+            throw new ApplicationException($"unknown gRPC Error: {ex.StatusCode}: {ex.Status.Detail}", ex);
         }
     }
 }

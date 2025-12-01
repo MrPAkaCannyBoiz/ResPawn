@@ -48,6 +48,10 @@ public class GetProductGrpcService : IGetProductService
         {
             return await _grpcClient.GetProductAsync(request, cancellationToken: ct);
         }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
+        {
+            throw new KeyNotFoundException($"Product with ID {request.ProductId} not found.", ex);
+        }
         catch (RpcException ex)
         {
             throw new Exception($"gRPC Error: {ex.Status.Detail}", ex);

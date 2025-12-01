@@ -13,7 +13,6 @@ public class DetailedProductDto
     public required string Condition { get; set; }
     public string ApprovalStatus { get; set; } = string.Empty;
     public required string Name { get; set; }
-    public required string PhotoUrl { get; set; }
     public string Category { get; set; } = string.Empty;
     public required string Description { get; set; }
     public required int SoldByCustomerId { get; set; }
@@ -30,5 +29,6 @@ public class DetailedProductDto
     public string PawnshopSecondaryUnit { get; set; } = string.Empty;
     public required int PawnshopPostalCode { get; set; }
     public required string PawnshopCity { get; set; }
+    public required List<ImageDto> Images { get; set; }
 
 }
