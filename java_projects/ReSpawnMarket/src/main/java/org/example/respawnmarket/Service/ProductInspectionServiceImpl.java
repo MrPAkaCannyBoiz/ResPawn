@@ -49,6 +49,23 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
     }
 
     @Override
+    public void getPendingProducts(GetPendingProductsRequest request,
+                                   StreamObserver<GetPendingProductsResponse> responseObserver)
+    {
+        List<ProductEntity> entities = productRepository.findByApprovalStatus(ApprovalStatusEnum.PENDING);
+
+        GetPendingProductsResponse.Builder responseBuilder = GetPendingProductsResponse.newBuilder();
+        for (ProductEntity entity : entities)
+        {
+            Product productProto = toProtoProduct(entity);
+            responseBuilder.addProducts(productProto);
+        }
+
+        responseObserver.onNext(responseBuilder.build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
     public void reviewProduct(ProductInspectionRequest request,
                               StreamObserver<ProductInspectionResponse> responseObserver)
     {
@@ -150,6 +167,37 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
         };
     }
 
+    private Category toProtoCategory(CategoryEnum entityCategory)
+    {
+        if (entityCategory == null)
+        {
+            return Category.CATEGORY_UNSPECIFIED;
+        }
+
+        return switch (entityCategory)
+        {
+            case ELECTRONICS -> Category.ELECTRONICS;
+            case JEWELRY -> Category.JEWELRY;
+            case WATCHES -> Category.WATCHES;
+            case MUSICAL_INSTRUMENTS -> Category.MUSICAL_INSTRUMENTS;
+            case TOOLS -> Category.TOOLS;
+            case VEHICLES -> Category.VEHICLES;
+            case COLLECTIBLES -> Category.COLLECTIBLES;
+            case FASHION -> Category.FASHION;
+            case HOME_APPLIANCES -> Category.HOME_APPLIANCES;
+            case SPORTS_EQUIPMENT -> Category.SPORTS_EQUIPMENT;
+            case COMPUTERS -> Category.COMPUTERS;
+            case MOBILE_PHONES -> Category.MOBILE_PHONES;
+            case CAMERAS -> Category.CAMERAS;
+            case LUXURY_ITEMS -> Category.LUXURY_ITEMS;
+            case ARTWORK -> Category.ARTWORK;
+            case ANTIQUES -> Category.ANTIQUES;
+            case GAMING_CONSOLES -> Category.GAMING_CONSOLES;
+            case FURNITURE -> Category.FURNITURE;
+            case GOLD_AND_SILVER -> Category.GOLD_AND_SILVER;
+            case OTHER -> Category.OTHER;
+        };
+    }
 
 
 }

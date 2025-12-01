@@ -11,11 +11,11 @@ public static class ServiceCollectionExtension
     {
         services.AddGrpcClient<CustomerRegisterService.CustomerRegisterServiceClient>(options =>
         {
-            options.Address = new Uri(_grpcServerAddress); 
+            options.Address = new Uri(_grpcServerAddress);
         });
         services.AddGrpcClient<GetCustomerService.GetCustomerServiceClient>(options =>
         {
-            options.Address = new Uri(_grpcServerAddress); 
+            options.Address = new Uri(_grpcServerAddress);
         });
         services.AddGrpcClient<UploadProductService.UploadProductServiceClient>(options =>
         {
@@ -33,9 +33,25 @@ public static class ServiceCollectionExtension
         {
             options.Address = new Uri(_grpcServerAddress);
         });
+        services.AddGrpcClient<CustomerLoginService.CustomerLoginServiceClient>(options =>
+        {
+            options.Address = new Uri(_grpcServerAddress);
+        });
+        services.AddGrpcClient<UpdateCustomerService.UpdateCustomerServiceClient>(options =>
+        {
+            options.Address = new Uri(_grpcServerAddress);
+        });
+        services.AddGrpcClient<ProductInspectionService.ProductInspectionServiceClient>(options =>
+        {
+            options.Address = new Uri(_grpcServerAddress);
+        });
+        services.AddGrpcClient<GetProductService.GetProductServiceClient>(options =>
+        {
+            options.Address = new Uri(_grpcServerAddress);
+        });
         services.AddGrpcClient<PurchaseService.PurchaseServiceClient>(options =>
         {
-            options.Address = new Uri(_grpcServerAddress); 
+            options.Address = new Uri(_grpcServerAddress);
     });
     }
 }

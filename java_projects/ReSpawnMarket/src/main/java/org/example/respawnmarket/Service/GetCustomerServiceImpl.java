@@ -28,41 +28,51 @@ public class GetCustomerServiceImpl extends GetCustomerServiceGrpc.GetCustomerSe
     this.postalRepository = postalRepository;
   }
 
-//  use case for
-//  getting customerinfo(admin only)
+    // use case for getting customer info (admin only)
+    @Override
+    public void getCustomer(GetCustomerRequest request,
+                                io.grpc.stub.StreamObserver<GetCustomerResponse> responseObserver)
+    {
+        var givenCustomer = customerRepository.findById(request.getCustomerId()).orElse(null);
+        assert givenCustomer != null;
+        Customer customerDto = Customer.newBuilder()
+                .setId(givenCustomer.getId())
+                .setFirstName(givenCustomer.getFirstName())
+                .setLastName(givenCustomer.getLastName())
+                .setEmail(givenCustomer.getEmail())
+                .setPhoneNumber(givenCustomer.getPhoneNumber())
+                .build();
 
-  public void getCustomer(GetCustomerRequest request,
-      io.grpc.stub.StreamObserver<GetCustomerResponse> responseObserver)
-  {
-    var givenCustomer = customerRepository.findById(request.getCustomerId())
-        .orElse(null);
-    assert givenCustomer != null;
-    Customer customerDto = Customer.newBuilder().setId(givenCustomer.getId())
-        .setFirstName(givenCustomer.getFirstName())
-        .setLastName(givenCustomer.getLastName())
-        .setEmail(givenCustomer.getEmail())
-        .setPhoneNumber(givenCustomer.getPhoneNumber()).build();
+        List<Address> addresses = addressRepository.findAddressByCustomerId(request.getCustomerId())
+                .stream()
+                .map(addressEntity -> Address.newBuilder()
+                        .setId(addressEntity.getId())
+                        .setStreetName(addressEntity.getStreetName())
+                        .setSecondaryUnit(addressEntity.getSecondaryUnit())
+                        .setPostalCode(addressEntity.getPostal().getPostalCode())
+                        .build())
+                .toList();
+        
+        List<Postal> postals = postalRepository.findByCustomerId(request.getCustomerId())
+                .stream()
+                .map(postalEntity -> Postal.newBuilder()
+                        .setPostalCode(postalEntity.getPostalCode())
+                        .setCity(postalEntity.getCity())
+                        .build())
+                .toList();
 
-    List<Address> addresses = addressRepository.findAddressByCustomerId(
-            request.getCustomerId()).stream().map(
-            addressEntity -> Address.newBuilder().setId(addressEntity.getId())
-                .setStreetName(addressEntity.getStreetName())
-                .setSecondaryUnit(addressEntity.getSecondaryUnit())
-                .setPostalCode(addressEntity.getPostal().getPostalCode()).build())
-        .toList();
+        GetCustomerResponse response = GetCustomerResponse.newBuilder()
+                .setId(customerDto.getId())
+                .setFirstName(customerDto.getFirstName())
+                .setLastName(customerDto.getLastName())
+                .setEmail(customerDto.getEmail())
+                .setPhoneNumber(customerDto.getPhoneNumber())
+                .addAllAddresses(addresses)
+                .addAllPostals(postals)
+                .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
 
-    List<Postal> postals = postalRepository.findByCustomerId(
-        request.getCustomerId()).stream().map(
-        postalEntity -> Postal.newBuilder()
-            .setPostalCode(postalEntity.getPostalCode())
-            .setCity(postalEntity.getCity()).build()).toList();
 
-    GetCustomerResponse response = GetCustomerResponse.newBuilder()
-        .setId(customerDto.getId()).setFirstName(customerDto.getFirstName())
-        .setLastName(customerDto.getLastName()).setEmail(customerDto.getEmail())
-        .setPhoneNumber(customerDto.getPhoneNumber()).addAllAddresses(addresses)
-        .addAllPostals(postals).build();
-    responseObserver.onNext(response);
-    responseObserver.onCompleted();
-  }
 }
