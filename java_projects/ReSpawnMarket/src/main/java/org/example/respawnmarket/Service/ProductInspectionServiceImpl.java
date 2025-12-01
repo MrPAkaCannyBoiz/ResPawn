@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.List;
 
 import io.grpc.Status;
+import jakarta.transaction.Transactional;
 import org.example.respawnmarket.entities.InspectionEntity;
 import org.example.respawnmarket.entities.ProductEntity;
 import org.example.respawnmarket.entities.ResellerEntity;
@@ -28,10 +29,12 @@ import com.respawnmarket.ProductInspectionServiceGrpc;
 
 import io.grpc.stub.StreamObserver;
 
+import static org.example.respawnmarket.Service.ServiceExtensions.ApprovalStatusExtension.toProtoApprovalStatus;
+
 @Service
 public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.ProductInspectionServiceImplBase
 {
-    private final ProductRepository productRepository;
+    private ProductRepository productRepository;
     private InspectionRepository inspectionRepository;
     private ResellerRepository resellerRepository;
     private PawnshopRepository pawnshopRepository;
@@ -48,6 +51,7 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
     }
 
     @Override
+    @Transactional
     public void reviewProduct(ProductInspectionRequest request,
                               StreamObserver<ProductInspectionResponse> responseObserver)
     {
@@ -75,11 +79,13 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
             product.setApprovalStatus(ApprovalStatusEnum.APPROVED);
             product.setPawnshop(pawnshopRepository.findById(request.getPawnshopId()).orElse(null));
             productRepository.save(product);
+            productRepository.flush();
         }
         else // false -> rejected
         {
             product.setApprovalStatus(ApprovalStatusEnum.REJECTED);
             productRepository.save(product);
+            productRepository.flush();
         }
 
         ProductInspectionResponse response = ProductInspectionResponse.newBuilder()
@@ -92,20 +98,7 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
         responseObserver.onCompleted();
     }
 
-    private ApprovalStatus toProtoApprovalStatus(ApprovalStatusEnum entityApprovalStatus)
-    {
-        if (entityApprovalStatus == null)
-        {
-            return ApprovalStatus.PENDING;
-        }
 
-        return switch (entityApprovalStatus)
-        {
-            case PENDING -> ApprovalStatus.PENDING;
-            case APPROVED -> ApprovalStatus.APPROVED;
-            case NOT_APPROVED, REJECTED -> ApprovalStatus.NOT_APPROVED;
-        };
-    }
 
 
 

@@ -1,11 +1,10 @@
-﻿using ApiContracts.Dtos.Enums;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace ApiContracts.Dtos;
 
-public class ProductDto
+public class ProductWithFirstImageDto
 {
     public required int Id { get; set; }
     public required double Price { get; set; }
@@ -17,5 +16,5 @@ public class ProductDto
     public required string Description { get; set; }
     public required int SoldByCustomerId { get; set; }
     public required DateTime RegisterDate { get; set; }
-    public required List<ImageDto> Images { get; set; }
+    public required ImageDto Image { get; set; }
 }

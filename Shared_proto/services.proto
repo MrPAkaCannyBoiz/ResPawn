@@ -77,6 +77,13 @@ enum Category
   OTHER = 20;
 }
 
+message Image
+{
+  int32 id = 1;
+  string url = 2;
+  int32 product_id = 3;
+}
+
 message Product
 {
   int32 id = 1;
@@ -85,13 +92,12 @@ message Product
   string condition = 4;
   ApprovalStatus approval_status = 5;
   string name = 6;
-  string photo_url = 7;
-  Category category = 8;
-  string description = 9;
-  int32 sold_by_customer_id = 10;
-  google.protobuf.Timestamp register_date = 11;
-  string other_category = 12;
-  int32 pawnshop_id = 13;
+  Category category = 7;
+  string description = 8;
+  int32 sold_by_customer_id = 9;
+  google.protobuf.Timestamp register_date = 10;
+  string other_category = 11;
+  int32 pawnshop_id = 12;
 }
 
 message ShoppingCart
@@ -216,7 +222,7 @@ message UploadProductRequest
   double price = 1;
   string condition = 2;
   string name = 3;
-  string photo_url = 4;
+  repeated string image_url = 4;
   Category category = 5;
   string description = 6;
   string other_category = 7;
@@ -226,6 +232,7 @@ message UploadProductRequest
 message UploadProductResponse
 {
   Product product = 1;
+  repeated Image images = 2;
 }
 
 message GetProductRequest
@@ -237,9 +244,10 @@ message GetProductResponse
 {
   Product product = 1;
   NonSensitiveCustomerInfo customer = 2;
-  Pawnshop pawnshop = 3;
-  Address pawnshop_address = 4;
-  Postal pawnshop_postal = 5;
+  repeated Image images = 3;
+  Pawnshop pawnshop = 4;
+  Address pawnshop_address = 5;
+  Postal pawnshop_postal = 6;
 }
 
 message GetAllProductsRequest
@@ -247,9 +255,23 @@ message GetAllProductsRequest
   Empty empty = 1;
 }
 
+message ProductWithFirstImage
+{
+  Product product = 1;
+  Image first_image = 2;
+}
+
 message GetAllProductsResponse
 {
-  repeated Product products = 1;
+  repeated ProductWithFirstImage products = 1;
+}
+
+message GetPendingProductsRequest {
+  Empty empty = 1;
+}
+
+message GetPendingProductsResponse {
+  repeated ProductWithFirstImage products = 1;
 }
 
 // service for "Upload Product Details" and "Get Product Details"
@@ -298,14 +320,6 @@ message ProductInspectionResponse
   int32 product_id = 1;
   ApprovalStatus approvalStatus = 2;
   int32 pawnshop_id = 3;
-}
-
-message GetPendingProductsRequest {
-  Empty empty = 1;
-}
-
-message GetPendingProductsResponse {
-  repeated Product products = 1;
 }
 
 service ProductInspectionService {

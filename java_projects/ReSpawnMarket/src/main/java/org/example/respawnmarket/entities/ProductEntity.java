@@ -47,9 +47,6 @@ public class ProductEntity
     @Column (name = "description", nullable = false)
     private String description;
 
-    @Column (name = "photo_url", nullable = true)
-    private String photoUrl;
-
     @Column (name = "register_date", nullable = false)
     private LocalDateTime registerDate;
 
@@ -62,20 +59,19 @@ public class ProductEntity
 
     @ManyToOne
     @JoinColumn(name = "pawnshop_id", nullable = true)
-    private PawnshopEntity pawnshop = null;
+    private PawnshopEntity pawnshop;
 
     public ProductEntity()
     {
     }
 
     public ProductEntity(String name, double price, String condition, String description,
-                         String photoUrl, CustomerEntity seller, CategoryEnum category)
+                         CustomerEntity seller, CategoryEnum category)
     {
         this.name = name;
         this.price = price;
         this.condition = condition;
         this.description = description;
-        this.photoUrl = photoUrl;
         this.seller = seller;
         this.sold = false;
         this.approvalStatus = ApprovalStatusEnum.PENDING;
@@ -85,13 +81,12 @@ public class ProductEntity
 
     // TODO: maybe remove this constructor if not needed
     public ProductEntity(String name, double price, String condition, String description,
-                         String photoUrl, CustomerEntity seller, String otherCategory)
+                         CustomerEntity seller, String otherCategory)
     {
         this.name = name;
         this.price = price;
         this.condition = condition;
         this.description = description;
-        this.photoUrl = photoUrl;
         this.seller = seller;
         this.sold = false;
         this.approvalStatus = ApprovalStatusEnum.PENDING;
@@ -125,11 +120,6 @@ public class ProductEntity
         return description;
     }
 
-    public String getPhotoUrl()
-    {
-        return photoUrl;
-    }
-
     public void setId(int id)
     {
         this.id = id;
@@ -153,11 +143,6 @@ public class ProductEntity
     public void setDescription(String description)
     {
         this.description = description;
-    }
-
-    public void setPhotoUrl(String photoUrl)
-    {
-        this.photoUrl = photoUrl;
     }
 
     public CustomerEntity getSeller()

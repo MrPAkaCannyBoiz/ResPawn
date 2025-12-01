@@ -14,7 +14,11 @@
 	private string? _condition ;
 	private string? _description ;
 	private string? _name ;
-	private string? _photoUrl ;
+	private string? _photoUrl0;
+	private string? _photoUrl1;
+	private string? _photoUrl2;
+	private string? _photoUrl3;
+	private string? _photoUrl4;
 	private Category _category ;
 	private string _otherCategory = "";
 	private UploadProductDto? _uploadProductDto; 
@@ -32,8 +36,8 @@
 				&& _isStringValid(_description)
 				&& _isStringValid(_condition)
 				&& _ispriceValid
-				&& IsValidPhotoUrl(_photoUrl)
-				&& (_category != Category.OTHER || _isStringValid(_otherCategory))))
+				&& IsFirstUrlFilled()
+				&& (_category != Category.OTHER || _isStringValid(_otherCategory))))		
 			{
 				_uploadProductMessage = "Please correct the input before uploading.";
 				return;
@@ -44,9 +48,16 @@
 				Condition = _condition!,
 				Description = _description!,
 				Name = _name!,
-				PhotoUrl = _photoUrl!,
 				Category = _category,
 				OtherCategory = _otherCategory,
+				ImageUrls = new List<string>()
+				{
+					_photoUrl0!,
+					_photoUrl1!,
+					_photoUrl2!,
+					_photoUrl3!,
+					_photoUrl4!
+				}.Where(url => IsValidPhotoUrl(url)).ToList()
 			};
 			var result = await UploadProductService
 							.UploadProductAsync(_userIdToUpload, _uploadProductDto);
@@ -65,6 +76,11 @@
 		// Basic check; extend as needed.
 		return url.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
 			|| url.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+	}
+
+	private bool IsFirstUrlFilled()
+	{
+		return !string.IsNullOrWhiteSpace(_photoUrl0) && IsValidPhotoUrl(_photoUrl0);
 	}
 }
 
@@ -100,23 +116,88 @@
 		<div class="text-danger">Price must be non-negative.</div>
 	}
 
-	<label for="photoUrl" class="form-label">Photo URL</label>
-	<input type="text" class="form-control" id="photoUrl" @bind="_photoUrl" />
-	@if (!IsValidPhotoUrl(_photoUrl))
+	<label for="photoUrl" class="form-label">Photo URL (up to 5)</label>
+	<input type="text" class="form-control" id="photoUrl" @bind="_photoUrl0" />
+	@if (!IsValidPhotoUrl(_photoUrl0))
 	{
 		<div class="text-danger">Photo URL is not valid.</div>
 	}
-	@if (!string.IsNullOrWhiteSpace(_photoUrl) && IsValidPhotoUrl(_photoUrl))
+	@if (!string.IsNullOrWhiteSpace(_photoUrl0) && IsValidPhotoUrl(_photoUrl0))
 	{
 		<div class="mt-2">
 			<strong>Preview:</strong><br />
 			<div class="p-2 border rounded bg-light" style="max-width:600px">
-				<img src="@_photoUrl" alt="Image Preview" class="img-fluid"
+				<img src="@_photoUrl0" alt="Image Preview" class="img-fluid"
 					 style="max-height:300px ; object-fit:contain"
 					 onerror="this.src='/images/placeholder.png';this.onerror=null;" />
 			</div>
 		</div>
 	}
+	<input type="text" class="form-control" id="photoUrl" @bind="_photoUrl1" />
+	@if (!IsValidPhotoUrl(_photoUrl1))
+	{
+		<div class="text-danger">Photo URL is not valid.</div>
+	}
+	@if (!string.IsNullOrWhiteSpace(_photoUrl1) && IsValidPhotoUrl(_photoUrl1))
+	{
+		<div class="mt-2">
+			<strong>Preview:</strong><br />
+			<div class="p-2 border rounded bg-light" style="max-width:600px">
+				<img src="@_photoUrl1" alt="Image Preview" class="img-fluid"
+					 style="max-height:300px ; object-fit:contain"
+					 onerror="this.src='/images/placeholder.png';this.onerror=null;" />
+			</div>
+		</div>
+	}
+	<input type="text" class="form-control" id="photoUrl" @bind="_photoUrl2" />
+	@if (!IsValidPhotoUrl(_photoUrl2))
+	{
+		<div class="text-danger">Photo URL is not valid.</div>
+	}
+	@if (!string.IsNullOrWhiteSpace(_photoUrl2) && IsValidPhotoUrl(_photoUrl2))
+	{
+		<div class="mt-2">
+			<strong>Preview:</strong><br />
+			<div class="p-2 border rounded bg-light" style="max-width:600px">
+				<img src="@_photoUrl2" alt="Image Preview" class="img-fluid"
+					 style="max-height:300px ; object-fit:contain"
+					 onerror="this.src='/images/placeholder.png';this.onerror=null;" />
+			</div>
+		</div>
+	}
+	<input type="text" class="form-control" id="photoUrl" @bind="_photoUrl3" />
+	@if (!IsValidPhotoUrl(_photoUrl3))
+	{
+		<div class="text-danger">Photo URL is not valid.</div>
+	}
+	@if (!string.IsNullOrWhiteSpace(_photoUrl3) && IsValidPhotoUrl(_photoUrl3))
+	{
+		<div class="mt-2">
+			<strong>Preview:</strong><br />
+			<div class="p-2 border rounded bg-light" style="max-width:600px">
+				<img src="@_photoUrl3" alt="Image Preview" class="img-fluid"
+					 style="max-height:300px ; object-fit:contain"
+					 onerror="this.src='/images/placeholder.png';this.onerror=null;" />
+			</div>
+		</div>
+	}
+	<input type="text" class="form-control" id="photoUrl" @bind="_photoUrl4" />
+	@if (!IsValidPhotoUrl(_photoUrl4))
+	{
+		<div class="text-danger">Photo URL is not valid.</div>
+	}
+	@if (!string.IsNullOrWhiteSpace(_photoUrl4) && IsValidPhotoUrl(_photoUrl4))
+	{
+		<div class="mt-2">
+			<strong>Preview:</strong><br />
+			<div class="p-2 border rounded bg-light" style="max-width:600px">
+				<img src="@_photoUrl4" alt="Image Preview" class="img-fluid"
+					 style="max-height:300px ; object-fit:contain"
+					 onerror="this.src='/images/placeholder.png';this.onerror=null;" />
+			</div>
+		</div>
+	}
+
 
 	<label for="category" class="form-label">Category</label>
 	<select id="category" class="form-select" @bind="_category">
