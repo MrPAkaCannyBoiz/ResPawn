@@ -33,7 +33,7 @@ public class UploadProductController : ControllerBase
             Category = (Category)dto.Category,
             OtherCategory = dto.OtherCategory ?? string.Empty,
             SoldByCustomerId = customerId,
-            ImageUrl = {dto.ImageUrls ?? new List<string>() } // same as ImageUrl.AddRange(dto.ImageUrls)
+            ImageUrl = {dto.ImageUrls ?? new List<string>() } // equivalent as ImageUrl.AddRange(dto.ImageUrls)
         };
 
         var grpcResponse = await _uploadProductService.UploadProductAsync(grpcRequest, ct);
