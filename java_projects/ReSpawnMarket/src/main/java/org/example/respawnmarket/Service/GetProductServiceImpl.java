@@ -146,19 +146,25 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
     private ProductWithFirstImage toProtoProductWithImage(ProductEntity entity)
     {
         Product productDto = toProtoProduct(entity);
-        ImageEntity firstImage = imageRepository.findAllByProductId(entity.getId()).getFirst();
-
-        Image firstImageDto = Image.newBuilder()
-                .setId(firstImage.getId())
-                .setUrl(firstImage.getImageUrl())
-                .setProductId(firstImage.getProduct().getId())
-                .build();
-        ProductWithFirstImage productWithFirstImage = ProductWithFirstImage
+        List<ImageEntity> images = imageRepository.findAllByProductId(entity.getId());
+        Image firstImageDto = null;
+        if (images != null && !images.isEmpty())
+        {
+            ImageEntity firstImage = images.getFirst();
+            firstImageDto = Image.newBuilder()
+                    .setId(firstImage.getId())
+                    .setUrl(firstImage.getImageUrl())
+                    .setProductId(firstImage.getProduct().getId())
+                    .build();
+        }
+        ProductWithFirstImage.Builder builder = ProductWithFirstImage
                 .newBuilder()
-                .setProduct(productDto)
-                .setFirstImage(firstImageDto)
-                .build();
-        return productWithFirstImage;
+                .setProduct(productDto);
+        if (firstImageDto != null)
+        {
+            builder.setFirstImage(firstImageDto);
+        }
+        return builder.build();
     }
 
     private Product toProtoProduct(ProductEntity entity)
@@ -183,6 +189,7 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
                 .setApprovalStatus(approvalStatus)
                 .setRegisterDate(registerDateTimestamp)
                 .setOtherCategory(entity.getOtherCategory() == null ? "" : entity.getOtherCategory())
+                .setPawnshopId(entity.getPawnshop().getId())
                 .build();
         return productDto;
     }

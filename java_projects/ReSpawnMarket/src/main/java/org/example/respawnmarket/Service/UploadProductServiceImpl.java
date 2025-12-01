@@ -59,13 +59,21 @@ public class UploadProductServiceImpl extends com.respawnmarket.UploadProductSer
         assert givenCustomer != null;
         var product = getProductEntity(request, responseObserver, givenCustomer);
         PawnshopEntity defaultPawnshop = pawnshopRepository.findById(0).orElse(null);
+        if (defaultPawnshop == null)
+        {
+            responseObserver.onError(Status.NOT_FOUND.withDescription(
+                "Default pawnshop with ID 0 does not exist. Cannot upload product.")
+                .asRuntimeException());
+            return;
+        }
+        assert product != null;
         product.setPawnshop(defaultPawnshop);
         ProductEntity newProduct = productRepository.save(product);
 
         List<ImageEntity> imageEntities = new ArrayList<>();
         for (String imageUrl : request.getImageUrlList())
         {
-            if (imageEntities.size() > 5)
+            if (imageEntities.size() >= 5)
             {
                 // throw error as gRPC exception (it's different from normal Java exception)
                 responseObserver.onError(Status.OUT_OF_RANGE.withDescription(
@@ -75,8 +83,8 @@ public class UploadProductServiceImpl extends com.respawnmarket.UploadProductSer
             }
             ImageEntity imageEntity = new ImageEntity(imageUrl, product);
             imageEntities.add(imageEntity);
-            imageRepository.save(imageEntity);
         }
+        imageRepository.saveAll(imageEntities);
 
         Instant instant = newProduct.getRegisterDate().toInstant(java.time.ZoneOffset.UTC);
         Timestamp registerDateTimestamp = Timestamp.newBuilder()
@@ -104,8 +112,6 @@ public class UploadProductServiceImpl extends com.respawnmarket.UploadProductSer
                 .build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
-        productRepository.flush(); // Forces Hibernate to write changes to the database immediately
-        imageRepository.flush();
     }
 
     private ProductEntity getProductEntity(UploadProductRequest request,
