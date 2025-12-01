@@ -3,6 +3,7 @@ package org.example.respawnmarket.Service;
 import com.google.protobuf.Timestamp;
 import com.respawnmarket.Image;
 import com.respawnmarket.UploadProductRequest;
+import com.respawnmarket.UploadProductResponse;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import jakarta.transaction.Transactional;
@@ -56,7 +57,7 @@ public class UploadProductServiceImpl extends com.respawnmarket.UploadProductSer
         CustomerEntity givenCustomer = customerRepository
                 .findById(request.getSoldByCustomerId()).orElse(null);
         assert givenCustomer != null;
-        var product = getProductEntity(request, givenCustomer);
+        var product = getProductEntity(request, responseObserver, givenCustomer);
         PawnshopEntity defaultPawnshop = pawnshopRepository.findById(0).orElse(null);
         product.setPawnshop(defaultPawnshop);
         ProductEntity newProduct = productRepository.save(product);
@@ -107,8 +108,8 @@ public class UploadProductServiceImpl extends com.respawnmarket.UploadProductSer
         imageRepository.flush();
     }
 
-    private ProductEntity getProductEntity(UploadProductRequest request
-            , CustomerEntity givenCustomer)
+    private ProductEntity getProductEntity(UploadProductRequest request,
+             StreamObserver<UploadProductResponse> responseObserver, CustomerEntity givenCustomer)
     {
         var product = new ProductEntity(
                 request.getName(),
@@ -123,14 +124,23 @@ public class UploadProductServiceImpl extends com.respawnmarket.UploadProductSer
             {
                 if (request.getOtherCategory().isEmpty())
                 {
-                    throw new IllegalArgumentException("Other category must be provided when category is OTHER");
+                    responseObserver.onError(Status.INVALID_ARGUMENT
+                            .withDescription("Other category must be specified when category is OTHER")
+                            .asRuntimeException());
+                    return null;
                 }
                 else
                 {
                     product.setOtherCategory(request.getOtherCategory());
                 }
             }
-            case CATEGORY_UNSPECIFIED -> throw new IllegalArgumentException("Category must be specified");
+            case CATEGORY_UNSPECIFIED ->
+            {
+                responseObserver.onError(Status.INVALID_ARGUMENT
+                        .withDescription("Category must be specified")
+                        .asRuntimeException());
+                return null;
+            }
             default -> {} // do nothing
         }
         return product;
