@@ -1,9 +1,17 @@
 package org.example.respawnmarket.Service;
 
 import com.google.protobuf.Timestamp;
+import com.respawnmarket.Image;
 import com.respawnmarket.UploadProductRequest;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import jakarta.transaction.Transactional;
+import org.example.respawnmarket.Service.ServiceExtensions.ApprovalStatusExtension;
+import org.example.respawnmarket.Service.ServiceExtensions.CategoryExtension;
+import org.example.respawnmarket.Service.ServiceExtensions.ImageExtension;
 import org.example.respawnmarket.entities.CustomerEntity;
+import org.example.respawnmarket.entities.ImageEntity;
+import org.example.respawnmarket.entities.PawnshopEntity;
 import org.example.respawnmarket.entities.ProductEntity;
 import org.example.respawnmarket.entities.enums.ApprovalStatusEnum;
 import org.example.respawnmarket.entities.enums.CategoryEnum;
@@ -14,26 +22,34 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
 
+import static org.example.respawnmarket.Service.ServiceExtensions.CategoryExtension.toEntityCategory;
 import static org.example.respawnmarket.entities.enums.CategoryEnum.*;
 
 @Service
 public class UploadProductServiceImpl extends com.respawnmarket.UploadProductServiceGrpc.UploadProductServiceImplBase
 {
-    private final JpaVendorAdapter jpaVendorAdapter;
-    // upload product involve product, stock, customer
+    // upload product involve product, customer, and image repositories
     private ProductRepository productRepository;
     private CustomerRepository customerRepository;
+    private ImageRepository imageRepository;
+    private PawnshopRepository pawnshopRepository;
 
     @Autowired
     public UploadProductServiceImpl(ProductRepository productRepository,
-                                    CustomerRepository customerRepository, JpaVendorAdapter jpaVendorAdapter)
+                                    CustomerRepository customerRepository, ImageRepository imageRepository,
+                                    PawnshopRepository pawnshopRepository)
     {
         this.productRepository = productRepository;
         this.customerRepository = customerRepository;
-        this.jpaVendorAdapter = jpaVendorAdapter;
+        this.imageRepository = imageRepository;
+        this.pawnshopRepository = pawnshopRepository;
     }
 
+    @Override
+    @Transactional // Ensure atomicity of the upload operation
     public void uploadProduct(com.respawnmarket.UploadProductRequest request
             , StreamObserver<com.respawnmarket.UploadProductResponse> responseObserver)
     {
@@ -41,8 +57,25 @@ public class UploadProductServiceImpl extends com.respawnmarket.UploadProductSer
                 .findById(request.getSoldByCustomerId()).orElse(null);
         assert givenCustomer != null;
         var product = getProductEntity(request, givenCustomer);
-
+        PawnshopEntity defaultPawnshop = pawnshopRepository.findById(0).orElse(null);
+        product.setPawnshop(defaultPawnshop);
         ProductEntity newProduct = productRepository.save(product);
+
+        List<ImageEntity> imageEntities = new ArrayList<>();
+        for (String imageUrl : request.getImageUrlList())
+        {
+            if (imageEntities.size() > 5)
+            {
+                // throw error as gRPC exception (it's different from normal Java exception)
+                responseObserver.onError(Status.OUT_OF_RANGE.withDescription(
+                        "Cannot upload more than 5 images per product")
+                        .asRuntimeException());
+                return; // abort the operation
+            }
+            ImageEntity imageEntity = new ImageEntity(imageUrl, product);
+            imageEntities.add(imageEntity);
+            imageRepository.save(imageEntity);
+        }
 
         Instant instant = newProduct.getRegisterDate().toInstant(java.time.ZoneOffset.UTC);
         Timestamp registerDateTimestamp = Timestamp.newBuilder()
@@ -55,30 +88,35 @@ public class UploadProductServiceImpl extends com.respawnmarket.UploadProductSer
                 .setPrice(newProduct.getPrice())
                 .setCondition(newProduct.getCondition())
                 .setDescription(newProduct.getDescription())
-                .setPhotoUrl(newProduct.getPhotoUrl())
                 .setSoldByCustomerId(newProduct.getSeller().getId())
                 .setCategory(request.getCategory())
                 .setSold(newProduct.isSold())
-                .setApprovalStatus(toProtoApprovalStatus(newProduct.getApprovalStatus()))
+                .setApprovalStatus(ApprovalStatusExtension
+                        .toProtoApprovalStatus(newProduct.getApprovalStatus()))
                 .setRegisterDate(registerDateTimestamp)
                 .setOtherCategory(newProduct.getOtherCategory())
                 .build();
+
         com.respawnmarket.UploadProductResponse response = com.respawnmarket.UploadProductResponse.newBuilder()
                 .setProduct(productDto)
+                .addAllImages(ImageExtension.toProtoImageList(imageEntities))
                 .build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
+        productRepository.flush(); // Forces Hibernate to write changes to the database immediately
+        imageRepository.flush();
     }
 
-    private ProductEntity getProductEntity(UploadProductRequest request, CustomerEntity givenCustomer)
+    private ProductEntity getProductEntity(UploadProductRequest request
+            , CustomerEntity givenCustomer)
     {
-        var product = new ProductEntity(request.getName(),
+        var product = new ProductEntity(
+                request.getName(),
                 request.getPrice(),
                 request.getCondition(),
                 request.getDescription(),
-                request.getPhotoUrl(),
                 givenCustomer,
-                toEntityCategory(request.getCategory()));
+                CategoryExtension.toEntityCategory(request.getCategory()));
         switch (request.getCategory())
         {
             case OTHER ->
@@ -99,42 +137,4 @@ public class UploadProductServiceImpl extends com.respawnmarket.UploadProductSer
     }
 
 
-    // convert proto category to entity category to match ProductEntity constructor parameter
-    private CategoryEnum toEntityCategory(com.respawnmarket.Category protoCategory)
-    {
-        return switch (protoCategory) {
-            case CATEGORY_UNSPECIFIED -> null;
-            case ELECTRONICS -> ELECTRONICS;
-            case JEWELRY ->  JEWELRY;
-            case WATCHES ->  WATCHES;
-            case MUSICAL_INSTRUMENTS -> MUSICAL_INSTRUMENTS;
-            case TOOLS -> TOOLS;
-            case VEHICLES -> VEHICLES;
-            case COLLECTIBLES -> COLLECTIBLES;
-            case FASHION -> FASHION;
-            case HOME_APPLIANCES -> HOME_APPLIANCES;
-            case SPORTS_EQUIPMENT -> SPORTS_EQUIPMENT;
-            case COMPUTERS -> COMPUTERS;
-            case MOBILE_PHONES -> MOBILE_PHONES;
-            case CAMERAS -> CAMERAS;
-            case LUXURY_ITEMS -> LUXURY_ITEMS;
-            case ARTWORK -> ARTWORK;
-            case ANTIQUES -> ANTIQUES;
-            case GAMING_CONSOLES -> GAMING_CONSOLES;
-            case FURNITURE -> FURNITURE;
-            case GOLD_AND_SILVER -> GOLD_AND_SILVER;
-            case OTHER -> OTHER;
-            case UNRECOGNIZED -> throw new IllegalArgumentException("Unrecognized category: " + protoCategory);
-        };
-    }
-
-    private com.respawnmarket.ApprovalStatus toProtoApprovalStatus(ApprovalStatusEnum entityApprovalStatus)
-    {
-        return switch (entityApprovalStatus) {
-            case PENDING -> com.respawnmarket.ApprovalStatus.PENDING;
-            case APPROVED -> com.respawnmarket.ApprovalStatus.APPROVED;
-            case NOT_APPROVED -> com.respawnmarket.ApprovalStatus.NOT_APPROVED;
-            case REJECTED -> com.respawnmarket.ApprovalStatus.REJECTED;
-        };
-    }
 }

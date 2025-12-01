@@ -1,6 +1,7 @@
 package org.example.respawnmarket.Service;
 import com.respawnmarket.CustomerRegisterServiceGrpc;
 import io.grpc.stub.StreamObserver;
+import jakarta.transaction.Transactional;
 import org.example.respawnmarket.entities.AddressEntity;
 import org.example.respawnmarket.entities.CustomerAddressEntity;
 import org.example.respawnmarket.entities.CustomerEntity;
@@ -40,6 +41,8 @@ public class RegisterCustomerServiceImpl extends CustomerRegisterServiceGrpc.Cus
         this.customerAddressRepository = customerAddressRepository;
     }
 
+    @Override
+    @Transactional
     public void registerCustomer(RegisterCustomerRequest request,
                                  StreamObserver<RegisterCustomerResponse> responseObserver)
     {
@@ -73,6 +76,9 @@ public class RegisterCustomerServiceImpl extends CustomerRegisterServiceGrpc.Cus
         AddressEntity savedAddress = addressRepository.save(address);
         CustomerAddressEntity savedCustomerAddress = new CustomerAddressEntity(savedCustomer, savedAddress);
         customerAddressRepository.save(savedCustomerAddress);
+        customerRepository.flush();
+        addressRepository.flush();
+        customerAddressRepository.flush();
         // make dto for response
         System.out.println("Registering customer: " + request);
 

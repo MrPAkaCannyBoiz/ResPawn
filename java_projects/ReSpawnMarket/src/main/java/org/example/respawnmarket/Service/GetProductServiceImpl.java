@@ -3,7 +3,9 @@ package org.example.respawnmarket.Service;
 import com.google.protobuf.Timestamp;
 import com.respawnmarket.*;
 import io.grpc.stub.StreamObserver;
+import org.example.respawnmarket.Service.ServiceExtensions.ImageExtension;
 import org.example.respawnmarket.entities.CustomerEntity;
+import org.example.respawnmarket.entities.ImageEntity;
 import org.example.respawnmarket.entities.PawnshopEntity;
 import org.example.respawnmarket.entities.ProductEntity;
 import org.example.respawnmarket.entities.enums.ApprovalStatusEnum;
@@ -16,6 +18,9 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.example.respawnmarket.Service.ServiceExtensions.ApprovalStatusExtension.toProtoApprovalStatus;
+import static org.example.respawnmarket.Service.ServiceExtensions.CategoryExtension.toProtoCategory;
+
 // TODO: add two addresses of customer in response
 @Service
 public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServiceImplBase
@@ -23,14 +28,16 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
     private ProductRepository productRepository;
     private CustomerRepository customerRepository;
     private PawnshopRepository pawnshopRepository;
+    private ImageRepository imageRepository;
 
     @Autowired
     public GetProductServiceImpl(ProductRepository productRepository, CustomerRepository customerRepository,
-                                 PawnshopRepository pawnshopRepository)
+                                 PawnshopRepository pawnshopRepository, ImageRepository imageRepository)
     {
         this.productRepository = productRepository;
         this.customerRepository = customerRepository;
         this.pawnshopRepository = pawnshopRepository;
+        this.imageRepository = imageRepository;
     }
 
     @Override
@@ -38,9 +45,13 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
                                    StreamObserver<GetPendingProductsResponse> responseObserver)
     {
         List<ProductEntity> entities = productRepository.findPendingProduct();
+        for (ProductEntity entity : entities)
+        {
+            checkNullAndRelations(entity, responseObserver);
+        }
 
-        List<Product> products = entities.stream()
-                .map(this::toProtoProduct)
+        List<ProductWithFirstImage> products = entities.stream()
+                .map(this::toProtoProductWithImage)
                 .toList();
         GetPendingProductsResponse response = GetPendingProductsResponse.newBuilder()
                 .addAllProducts(products)
@@ -55,33 +66,16 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
     {
         try
         {
-            // throw error if product and its related entities not found
             int productId = request.getProductId();
             ProductEntity productEntity = productRepository.findById(productId).orElse(null);
-            if (productEntity == null)
-            {
-                responseObserver.onError(io.grpc.Status.NOT_FOUND
-                        .withDescription("Product not found: " + productId)
-                        .asRuntimeException());
-                return;
-            }
+            checkNullAndRelations(productEntity, responseObserver); // throws error if null
+            List<ImageEntity> imageEntities = imageRepository.findAllByProductId(productId);
+
+            assert productEntity != null;
             CustomerEntity seller = customerRepository.findById(
                     productEntity.getSeller().getId()).orElse(null);
             PawnshopEntity pawnshop = pawnshopRepository.findById(
                     productEntity.getPawnshop().getId()).orElse(null);
-
-            StringBuilder issues = new StringBuilder();
-            if (seller == null) issues.append("seller missing; ");
-            if (pawnshop == null) issues.append("pawnshop missing; ");
-            if (productEntity.getRegisterDate() == null) issues.append("registerDate missing; ");
-
-            if (!issues.isEmpty())
-            {
-                responseObserver.onError(io.grpc.Status.FAILED_PRECONDITION
-                        .withDescription("Product has incomplete relations: " + issues.toString().trim())
-                        .asRuntimeException());
-                return;
-            }
 
             // build response
             assert seller != null;
@@ -112,6 +106,7 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
 
             GetProductResponse response = GetProductResponse.newBuilder()
                     .setProduct(productDto)
+                    .addAllImages(ImageExtension.toProtoImageList(imageEntities))
                     .setCustomer(sellerDto)
                     .setPawnshop(pawnshopDto)
                     .setPawnshopAddress(addressDto)
@@ -133,9 +128,13 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
                                    StreamObserver<GetAllProductsResponse> responseObserver)
     {
         List<ProductEntity> entities = productRepository.findAll();
+        for (ProductEntity entity : entities)
+        {
+            checkNullAndRelations(entity, responseObserver);
+        }
 
-        List<Product> products = entities.stream()
-                .map(this::toProtoProduct)
+        List<ProductWithFirstImage> products = entities.stream()
+                .map(this::toProtoProductWithImage)
                 .toList();
         GetAllProductsResponse response = GetAllProductsResponse.newBuilder()
                 .addAllProducts(products)
@@ -144,78 +143,76 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
         responseObserver.onCompleted();
     }
 
+    private ProductWithFirstImage toProtoProductWithImage(ProductEntity entity)
+    {
+        Product productDto = toProtoProduct(entity);
+        ImageEntity firstImage = imageRepository.findAllByProductId(entity.getId()).getFirst();
+
+        Image firstImageDto = Image.newBuilder()
+                .setId(firstImage.getId())
+                .setUrl(firstImage.getImageUrl())
+                .setProductId(firstImage.getProduct().getId())
+                .build();
+        ProductWithFirstImage productWithFirstImage = ProductWithFirstImage
+                .newBuilder()
+                .setProduct(productDto)
+                .setFirstImage(firstImageDto)
+                .build();
+        return productWithFirstImage;
+    }
+
     private Product toProtoProduct(ProductEntity entity)
     {
         ApprovalStatus approvalStatus = toProtoApprovalStatus(entity.getApprovalStatus());
         Category category = toProtoCategory(entity.getCategory());
-
         Instant instant = entity.getRegisterDate().toInstant(java.time.ZoneOffset.UTC);
         Timestamp registerDateTimestamp = Timestamp.newBuilder()
                 .setSeconds(instant.getEpochSecond())
                 .setNanos(0)
                 .build();
 
-        return Product.newBuilder()
+        Product productDto = Product.newBuilder()
                 .setId(entity.getId())
                 .setName(entity.getName())
                 .setPrice(entity.getPrice())
                 .setCondition(entity.getCondition())
                 .setDescription(entity.getDescription())
-                .setPhotoUrl(entity.getPhotoUrl() == null ? "" : entity.getPhotoUrl())
                 .setSoldByCustomerId(entity.getSeller().getId())
                 .setCategory(category)
                 .setSold(entity.isSold())
                 .setApprovalStatus(approvalStatus)
                 .setRegisterDate(registerDateTimestamp)
-                .setOtherCategory(entity.getOtherCategory())
-                .setPawnshopId(entity.getPawnshop().getId())
+                .setOtherCategory(entity.getOtherCategory() == null ? "" : entity.getOtherCategory())
                 .build();
+        return productDto;
     }
 
-    private Category toProtoCategory(CategoryEnum entityCategory)
+    private void checkNullAndRelations(ProductEntity productEntity, StreamObserver<?> responseObserver)
     {
-        if (entityCategory == null)
+        if (productEntity == null)
         {
-            return Category.CATEGORY_UNSPECIFIED;
+            responseObserver.onError(io.grpc.Status.NOT_FOUND
+                    .withDescription("Product not found")
+                    .asRuntimeException());
+            return;
         }
+        CustomerEntity seller = customerRepository.findById(
+                productEntity.getSeller().getId()).orElse(null);
+        PawnshopEntity pawnshop = pawnshopRepository.findById(
+                productEntity.getPawnshop().getId()).orElse(null);
 
-        return switch (entityCategory)
+        StringBuilder issues = new StringBuilder();
+        if (seller == null) issues.append("seller missing; ");
+        if (pawnshop == null) issues.append("pawnshop missing; ");
+        if (productEntity.getRegisterDate() == null) issues.append("registerDate missing; ");
+
+        if (!issues.isEmpty())
         {
-            case ELECTRONICS -> Category.ELECTRONICS;
-            case JEWELRY -> Category.JEWELRY;
-            case WATCHES -> Category.WATCHES;
-            case MUSICAL_INSTRUMENTS -> Category.MUSICAL_INSTRUMENTS;
-            case TOOLS -> Category.TOOLS;
-            case VEHICLES -> Category.VEHICLES;
-            case COLLECTIBLES -> Category.COLLECTIBLES;
-            case FASHION -> Category.FASHION;
-            case HOME_APPLIANCES -> Category.HOME_APPLIANCES;
-            case SPORTS_EQUIPMENT -> Category.SPORTS_EQUIPMENT;
-            case COMPUTERS -> Category.COMPUTERS;
-            case MOBILE_PHONES -> Category.MOBILE_PHONES;
-            case CAMERAS -> Category.CAMERAS;
-            case LUXURY_ITEMS -> Category.LUXURY_ITEMS;
-            case ARTWORK -> Category.ARTWORK;
-            case ANTIQUES -> Category.ANTIQUES;
-            case GAMING_CONSOLES -> Category.GAMING_CONSOLES;
-            case FURNITURE -> Category.FURNITURE;
-            case GOLD_AND_SILVER -> Category.GOLD_AND_SILVER;
-            case OTHER -> Category.OTHER;
-        };
+            responseObserver.onError(io.grpc.Status.FAILED_PRECONDITION
+                    .withDescription("Product has incomplete relations: " + issues.toString().trim())
+                    .asRuntimeException());
+        }
     }
 
-    private ApprovalStatus toProtoApprovalStatus(ApprovalStatusEnum entityApprovalStatus)
-    {
-        if (entityApprovalStatus == null)
-        {
-            return ApprovalStatus.PENDING;
-        }
 
-        return switch (entityApprovalStatus)
-        {
-            case PENDING -> ApprovalStatus.PENDING;
-            case APPROVED -> ApprovalStatus.APPROVED;
-            case NOT_APPROVED, REJECTED -> ApprovalStatus.NOT_APPROVED;
-        };
-    }
 }

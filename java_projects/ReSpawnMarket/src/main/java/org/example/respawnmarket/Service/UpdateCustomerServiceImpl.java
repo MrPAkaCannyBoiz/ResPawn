@@ -3,6 +3,7 @@ package org.example.respawnmarket.Service;
 import com.respawnmarket.*;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import jakarta.transaction.Transactional;
 import org.example.respawnmarket.entities.PostalEntity;
 import org.example.respawnmarket.repositories.AddressRepository;
 import org.example.respawnmarket.repositories.CustomerAddressRepository;
@@ -35,6 +36,8 @@ public class UpdateCustomerServiceImpl extends UpdateCustomerServiceGrpc.UpdateC
         this.customerAddressRepository = customerAddressRepository;
     }
 
+    @Override
+    @Transactional
     public void updateCustomer(UpdateCustomerRequest request,
                                StreamObserver<UpdateCustomerResponse> responseObserver)
     {
@@ -96,6 +99,7 @@ public class UpdateCustomerServiceImpl extends UpdateCustomerServiceGrpc.UpdateC
         try
         {
             customerRepository.save(updatedCustomer);
+            customerRepository.flush();
         }
         catch (DataIntegrityViolationException e)
         {
@@ -107,6 +111,8 @@ public class UpdateCustomerServiceImpl extends UpdateCustomerServiceGrpc.UpdateC
         // the rest ain't have unique constraints, just save
         addressRepository.save(updatedAddress);
         postalRepository.save(updatedPostal);
+        addressRepository.flush();
+        postalRepository.flush();
         // make response dto
         Customer customerDto = Customer.newBuilder()
                 .setId(updatedCustomer.getId())
