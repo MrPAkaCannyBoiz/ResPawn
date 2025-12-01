@@ -1,0 +1,157 @@
+﻿@page "/reseller/product/{ProductId:int}"
+@using ApiContracts.Dtos
+@rendermode InteractiveServer
+@inject BlazorApp.Services.Interface.IProductInspectionService inspectionService
+@inject NavigationManager Nav
+<h3>Review Product</h3>
+
+@if (loading)
+{
+    <p><em>Loading product...</em></p>
+}
+else if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-danger">@error</div>
+}
+else if (product is null)
+{
+    <p>Product not found.</p>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="row g-0">
+            <div class="col-md-4">
+                @if (!string.IsNullOrWhiteSpace(product.PhotoUrl))
+                {
+                    <img class="img-fluid rounded-start" src="@product.PhotoUrl" alt="@product.Name" />
+                }
+            </div>
+            <div class="col-md-8">
+                <div class="card-body">
+                    <h5 class="card-title">@product.Name (@product.Price.ToString("0.00") DKK)</h5>
+                    <p class="card-text">
+                        <strong>Condition:</strong> @product.Condition<br />
+                        <strong>Category:</strong> @product.Category<br />
+                        <strong>Description:</strong> @product.Description<br />
+                        <strong>Current status:</strong> @product.ApprovalStatus
+                    </p>
+
+                    <h6>Seller</h6>
+                    <p class="card-text">
+                        @product.SellerFirstName @product.SellerLastName<br />
+                        @product.SellerEmail<br />
+                        @product.SellerPhoneNumber
+                    </p>
+
+                    <h6>Pawnshop</h6>
+                    <p class="card-text">
+                        @product.PawnshopName<br />
+                        @product.PawnshopStreetName @product.PawnshopSecondaryUnit<br />
+                        @product.PawnshopPostalCode @product.PawnshopCity
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success">@successMessage</div>
+    }
+
+    <EditForm Model="form" OnValidSubmit="SubmitReview">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+      <div class="mb-3 form-check">
+    <InputCheckbox class="form-check-input" @bind-Value="form.IsAccepted" />
+    <label class="form-check-label">
+        Approve this product
+    </label>
+</div>
+
+        <div class="mb-3">
+            <label class="form-label">Pawnshop Id</label>
+            <InputNumber class="form-control" @bind-Value="form.PawnshopId" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Comments</label>
+            <InputTextArea class="form-control" @bind-Value="form.Comments" />
+        </div>
+
+        <button class="btn btn-primary" type="submit" disabled="@busy">
+            @(busy ? "Submitting..." : "Submit review")
+        </button>
+        <button class="btn btn-secondary ms-2" type="button"
+                @onclick="@(() => Nav.NavigateTo("/reseller/pending-products"))">
+            Back to list
+        </button>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public int ProductId { get; set; }
+
+    private DetailedProductDto? product;
+    private ProductInspectionDto form = new(); 
+    private bool loading = true;
+    private bool busy;
+    private string? error;
+    private string? successMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            loading = true;
+            error = null;
+            successMessage = null;
+
+            product = await inspectionService.GetProductDetailsAsync(ProductId);
+
+            
+            form = new ProductInspectionDto
+            {
+                ResellerId = 1,     // TODO: derive from logged-in reseller
+                PawnshopId = product.PawnshopId,
+                Comments = "",
+                IsAccepted = true   // default to approve
+            };
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task SubmitReview()
+    {
+        busy = true;
+        error = null;
+        successMessage = null;
+
+        try
+        {
+            var result = await inspectionService.ReviewProductAsync(ProductId, form);
+
+            successMessage =
+                $"Review saved. ProductId={result.ProductId}, New status={result.ApprovalStatus}, PawnshopId={result.PawnshopId}";
+
+        
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+}

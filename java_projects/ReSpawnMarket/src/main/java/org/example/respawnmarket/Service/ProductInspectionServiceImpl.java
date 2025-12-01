@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.List;
 
 import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import org.example.respawnmarket.entities.InspectionEntity;
 import org.example.respawnmarket.entities.ProductEntity;
 import org.example.respawnmarket.entities.ResellerEntity;
@@ -48,93 +49,90 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
     }
 
     @Override
-    public void getPendingProducts(GetPendingProductsRequest request,
-                                   StreamObserver<GetPendingProductsResponse> responseObserver)
-    {
-        List<ProductEntity> entities = productRepository.findByApprovalStatus(ApprovalStatusEnum.PENDING);
-
-        GetPendingProductsResponse.Builder responseBuilder = GetPendingProductsResponse.newBuilder();
-        for (ProductEntity entity : entities)
-        {
-            Product productProto = toProtoProduct(entity);
-            responseBuilder.addProducts(productProto);
-        }
-
-        responseObserver.onNext(responseBuilder.build());
-        responseObserver.onCompleted();
-    }
-
-    @Override
     public void reviewProduct(ProductInspectionRequest request,
                               StreamObserver<ProductInspectionResponse> responseObserver)
     {
-        ProductEntity product = productRepository.findById(request.getProductId()).orElse(null);
-        if (product == null)
-        {
-            responseObserver.onError(
-                    Status.NOT_FOUND.withDescription("Product not found").asRuntimeException());
-            return;
-        }
-        ResellerEntity resellerWhoChecks = resellerRepository.
-                findById(request.getResellerId()).orElse(null);
-        if (resellerWhoChecks == null)
-        {
-            responseObserver.onError(
-                    Status.NOT_FOUND.withDescription("Reseller not found").asRuntimeException());
-            return;
-        }
+      try
+      {
+        int productId  = request.getProductId();
+        int resellerId = request.getResellerId();
+        int pawnshopId = request.getPawnshopId();
 
-        InspectionEntity inspection = new InspectionEntity
-                (product, resellerWhoChecks, request.getComments(), request.getIsAccepted());
+        // 1) Load product
+        ProductEntity product = productRepository.findById(productId)
+            .orElseThrow(() -> Status.NOT_FOUND
+                .withDescription("Product not found: " + productId)
+                .asRuntimeException());
+
+        // 2) Load reseller
+        ResellerEntity resellerWhoChecks = resellerRepository.findById(resellerId)
+            .orElseThrow(() -> Status.NOT_FOUND
+                .withDescription("Reseller not found: " + resellerId)
+                .asRuntimeException());
+
+        // 3) Only load pawnshop if APPROVED
+        //    (for rejected products we keep pawnshop = null)
+        var pawnshop = request.getIsAccepted()
+            ? pawnshopRepository.findById(pawnshopId)
+            .orElseThrow(() -> Status.NOT_FOUND
+                .withDescription("Pawnshop not found: " + pawnshopId)
+                .asRuntimeException())
+            : null;
+
+        // 4) Save inspection row
+        InspectionEntity inspection = new InspectionEntity(
+            product,
+            resellerWhoChecks,
+            request.getComments(),
+            request.getIsAccepted()
+        );
         inspectionRepository.save(inspection);
-        if (request.getIsAccepted()) //true -> approved
+
+        // 5) Update product state
+        product.setApprovalStatus(
+            request.getIsAccepted()
+                ? ApprovalStatusEnum.APPROVED
+                : ApprovalStatusEnum.REJECTED
+        );
+
+        if (request.getIsAccepted())
         {
-            product.setApprovalStatus(ApprovalStatusEnum.APPROVED);
-            product.setPawnshop(pawnshopRepository.findById(request.getPawnshopId()).orElse(null));
-            productRepository.save(product);
+          product.setPawnshop(pawnshop);
         }
-        else // false -> rejected
+        else
         {
-            product.setApprovalStatus(ApprovalStatusEnum.REJECTED);
-            productRepository.save(product);
+          product.setPawnshop(null); // no pawnshop for rejected products
         }
 
+        productRepository.save(product);
+
+        // 6) Build response safely (handle null pawnshop) omg this null execptions are crazy
         ProductInspectionResponse response = ProductInspectionResponse.newBuilder()
-                .setProductId(product.getId())
-                .setApprovalStatus(toProtoApprovalStatus(product.getApprovalStatus()))
-                .setPawnshopId(product.getPawnshop().getId())
-                .build();
+            .setProductId(product.getId())
+            .setApprovalStatus(toProtoApprovalStatus(product.getApprovalStatus()))
+            .setPawnshopId(product.getPawnshop() != null
+                ? product.getPawnshop().getId()
+                : 0) // 0 = "no pawnshop"
+            .build();
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
-    }
-
-    private Product toProtoProduct(ProductEntity entity)
-    {
-        ApprovalStatus approvalStatus = toProtoApprovalStatus(entity.getApprovalStatus());
-        Category category = toProtoCategory(entity.getCategory());
-
-        Instant instant = entity.getRegisterDate().toInstant(java.time.ZoneOffset.UTC);
-        Timestamp registerDateTimestamp = Timestamp.newBuilder()
-                .setSeconds(instant.getEpochSecond())
-                .setNanos(0)
-                .build();
-
-        return Product.newBuilder()
-                .setId(entity.getId())
-                .setName(entity.getName())
-                .setPrice(entity.getPrice())
-                .setCondition(entity.getCondition())
-                .setDescription(entity.getDescription())
-                .setPhotoUrl(entity.getPhotoUrl() == null ? "" : entity.getPhotoUrl())
-                .setSoldByCustomerId(entity.getSeller().getId())
-                .setCategory(category)
-                .setSold(entity.isSold())
-                .setApprovalStatus(approvalStatus)
-                .setRegisterDate(registerDateTimestamp)
-                .setOtherCategory(entity.getOtherCategory())
-                .setPawnshopId(entity.getPawnshop().getId())
-                .build();
+      }
+      catch (StatusRuntimeException e)
+      {
+        // controlled gRPC errors (NOT_FOUND, etc.)
+        responseObserver.onError(e);
+      }
+      catch (Exception e)
+      {
+        // unexpected errors -> INTERNAL with message
+        e.printStackTrace();
+        responseObserver.onError(
+            Status.INTERNAL
+                .withDescription("Internal error during review")
+                .withCause(e)
+                .asRuntimeException());
+      }
     }
 
     private ApprovalStatus toProtoApprovalStatus(ApprovalStatusEnum entityApprovalStatus)
@@ -152,37 +150,6 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
         };
     }
 
-    private Category toProtoCategory(CategoryEnum entityCategory)
-    {
-        if (entityCategory == null)
-        {
-            return Category.CATEGORY_UNSPECIFIED;
-        }
-
-        return switch (entityCategory)
-        {
-            case ELECTRONICS -> Category.ELECTRONICS;
-            case JEWELRY -> Category.JEWELRY;
-            case WATCHES -> Category.WATCHES;
-            case MUSICAL_INSTRUMENTS -> Category.MUSICAL_INSTRUMENTS;
-            case TOOLS -> Category.TOOLS;
-            case VEHICLES -> Category.VEHICLES;
-            case COLLECTIBLES -> Category.COLLECTIBLES;
-            case FASHION -> Category.FASHION;
-            case HOME_APPLIANCES -> Category.HOME_APPLIANCES;
-            case SPORTS_EQUIPMENT -> Category.SPORTS_EQUIPMENT;
-            case COMPUTERS -> Category.COMPUTERS;
-            case MOBILE_PHONES -> Category.MOBILE_PHONES;
-            case CAMERAS -> Category.CAMERAS;
-            case LUXURY_ITEMS -> Category.LUXURY_ITEMS;
-            case ARTWORK -> Category.ARTWORK;
-            case ANTIQUES -> Category.ANTIQUES;
-            case GAMING_CONSOLES -> Category.GAMING_CONSOLES;
-            case FURNITURE -> Category.FURNITURE;
-            case GOLD_AND_SILVER -> Category.GOLD_AND_SILVER;
-            case OTHER -> Category.OTHER;
-        };
-    }
 
 
 }

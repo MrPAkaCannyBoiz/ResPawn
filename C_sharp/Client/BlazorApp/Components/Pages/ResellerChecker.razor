@@ -1,0 +1,83 @@
+﻿@page "/resellercheck"
+@using ApiContracts.Dtos
+@inject BlazorApp.Services.Interface.IProductInspectionService InspectionService
+@rendermode InteractiveServer
+@inject NavigationManager Nav
+<h3>Pending Products</h3>
+
+@if (loading)
+{
+    <p><em>Loading pending products...</em></p>
+}
+else if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-danger">@error</div>
+}
+else if (products is null || products.Count == 0)
+{
+    <p>No products awaiting inspection 🎉</p>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-md-2 g-3">
+        @foreach (var p in products)
+        {
+            <div class="col">
+                <div class="card h-100">
+                    @if (!string.IsNullOrWhiteSpace(p.PhotoUrl))
+                    {
+                        <img src="@p.PhotoUrl" class="card-img-top" alt="@p.Name" />
+                    }
+
+                    <div class="card-body">
+                        <h5 class="card-title">@p.Name (@p.Price.ToString("0.00") DKK)</h5>
+                        <p class="card-text">
+                            <strong>Condition:</strong> @p.Condition<br />
+                            <strong>Category:</strong> @p.Category<br />
+                            <strong>Uploaded:</strong> @p.RegisterDate.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                        </p>
+
+                        <button class="btn btn-primary"
+                                @onclick="() => GoToDetails(p.Id)">
+                            More details / Inspect
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<ProductDto>? products;
+    private bool loading = true;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            loading = true;
+            error = null;
+
+            var list = await InspectionService.GetPendingProductsAsync();
+            // oldest first
+            products = list
+                .OrderBy(p => p.RegisterDate)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private void GoToDetails(int id)
+    {
+        Nav.NavigateTo($"/reseller/product/{id}");
+    }
+}

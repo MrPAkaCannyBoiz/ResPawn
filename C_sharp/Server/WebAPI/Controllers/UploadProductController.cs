@@ -53,10 +53,10 @@ public class UploadProductController : ControllerBase
            Price = grpcResponse.Product.Price,
            Sold = grpcResponse.Product.Sold,
            Condition = grpcResponse.Product.Condition,
-           ApprovalStatus = (ApiContracts.Dtos.Enums.ApprovalStatus) grpcResponse.Product.ApprovalStatus,
+           ApprovalStatus = grpcResponse.Product.ApprovalStatus.ToString(),
            Name = grpcResponse.Product.Name,
            PhotoUrl = grpcResponse.Product.PhotoUrl,
-           Category = (ApiContracts.Dtos.Enums.Category) grpcResponse.Product.Category,
+           Category = grpcResponse.Product.Category.ToString(),
            Description = grpcResponse.Product.Description,
            SoldByCustomerId = grpcResponse.Product.SoldByCustomerId,
            RegisterDate = grpcResponse.Product.RegisterDate.ToDateTime()

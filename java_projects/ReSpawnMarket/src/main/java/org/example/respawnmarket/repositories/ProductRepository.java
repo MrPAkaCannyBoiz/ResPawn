@@ -10,13 +10,10 @@ import org.springframework.data.repository.query.Param;
 
 public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
 {
-    List<ProductEntity> findByApprovalStatus(ApprovalStatusEnum approvalStatus);
-
     @Query("""
             select p from ProductEntity p
                      where p.approvalStatus = "PENDING"
-                                 and p.id = :productId
             """)
-    ProductEntity findPendingProduct(@Param("productId") Integer productId);
+    List<ProductEntity> findPendingProduct();
 }
 

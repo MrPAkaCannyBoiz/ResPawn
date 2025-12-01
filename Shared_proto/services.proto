@@ -160,9 +160,13 @@ message GetCustomerRequest
 
 message GetCustomerResponse
 {
-  Customer customer = 1;
-  repeated Address addresses = 2;
-  repeated Postal postals = 3;
+  int32 id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string email = 4;
+  string phone_number = 5;
+  repeated Address addresses = 6;
+  repeated Postal postals = 7;
 }
 
 message Empty { }
@@ -172,9 +176,44 @@ message GetAllCustomersRequest
   Empty empty = 1;
 }
 
+message NonSensitiveCustomerInfo
+{
+  int32 id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string email = 4;
+  string phone_number = 5;
+  repeated Address addresses = 6;
+  repeated Postal postals = 7;
+}
+
 message GetAllCustomersResponse
 {
-  repeated Customer customers = 1;
+  repeated NonSensitiveCustomerInfo customers = 1;
+}
+
+message UpdateCustomerRequest
+{
+  int32 customer_id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string email = 4;
+  string phone_number = 5;
+  string street_name = 6;
+  string secondary_unit = 7;
+  int32 postal_code = 8;
+  string city = 9;
+}
+
+message UpdateCustomerResponse
+{
+  int32 id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string email = 4;
+  string phone_number = 5;
+  repeated Address addresses = 6;
+  repeated Postal postals = 7;
 }
 
 // use case for "Register" (only customer)
@@ -188,6 +227,12 @@ service GetCustomerService
 {
   rpc GetCustomer (GetCustomerRequest) returns (GetCustomerResponse);
   rpc GetAllCustomers (GetAllCustomersRequest) returns (GetAllCustomersResponse);
+}
+
+// use case for "Edit Customer Details"
+service UpdateCustomerService
+{
+  rpc UpdateCustomer (UpdateCustomerRequest) returns (UpdateCustomerResponse);
 }
 
 // use case for "Upload Product Details" (include getter of products)
@@ -216,6 +261,10 @@ message GetProductRequest
 message GetProductResponse
 {
   Product product = 1;
+  NonSensitiveCustomerInfo customer = 2;
+  Pawnshop pawnshop = 3;
+  Address pawnshop_address = 4;
+  Postal pawnshop_postal = 5;
 }
 
 message GetAllProductsRequest
@@ -238,6 +287,7 @@ service GetProductService
 {
   rpc GetProduct (GetProductRequest) returns (GetProductResponse);
   rpc GetAllProducts (GetAllProductsRequest) returns (GetAllProductsResponse);
+  rpc GetPendingProducts (GetPendingProductsRequest) returns (GetPendingProductsResponse);
 }
 
 // use case for "Product Inspection by Reseller"
@@ -284,7 +334,6 @@ message GetPendingProductsResponse {
 }
 
 service ProductInspectionService {
-  rpc GetPendingProducts (GetPendingProductsRequest) returns (GetPendingProductsResponse);
   rpc ReviewProduct (ProductInspectionRequest) returns (ProductInspectionResponse);
 }
 

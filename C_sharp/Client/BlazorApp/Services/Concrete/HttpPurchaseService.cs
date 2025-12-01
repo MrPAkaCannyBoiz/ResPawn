@@ -1,7 +1,7 @@
 using System;
 using System.Text.Json;
 using ApiContracts;
-using BlazorApp.InterfaceServices;
+using BlazorApp.Services.Interface;
 
 namespace BlazorApp.Services;
 

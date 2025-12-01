@@ -14,59 +14,55 @@ import java.util.List;
 @Service
 public class GetCustomerServiceImpl extends GetCustomerServiceGrpc.GetCustomerServiceImplBase
 {
-    private CustomerRepository customerRepository;
-    private AddressRepository addressRepository;
-    private PostalRepository postalRepository;
-    private CustomerAddressRepository customerAddressRepository;
+  private CustomerRepository customerRepository;
+  private AddressRepository addressRepository;
+  private PostalRepository postalRepository;
+  private CustomerAddressRepository customerAddressRepository;
 
-    @Autowired
-    public GetCustomerServiceImpl(CustomerRepository customerRepository, AddressRepository addressRepository, PostalRepository postalRepository)
-    {
-        this.customerRepository = customerRepository;
-        this.addressRepository = addressRepository;
-        this.postalRepository = postalRepository;
-    }
+  @Autowired public GetCustomerServiceImpl(
+      CustomerRepository customerRepository,
+      AddressRepository addressRepository, PostalRepository postalRepository)
+  {
+    this.customerRepository = customerRepository;
+    this.addressRepository = addressRepository;
+    this.postalRepository = postalRepository;
+  }
 
-    // use case for getting customer info (admin only)
-    public void getCustomer(GetCustomerRequest request,
-                                io.grpc.stub.StreamObserver<GetCustomerResponse> responseObserver)
-    {
-        var givenCustomer = customerRepository.findById(request.getCustomerId()).orElse(null);
-        assert givenCustomer != null;
-        Customer customerDto = Customer.newBuilder()
-                .setId(givenCustomer.getId())
-                .setFirstName(givenCustomer.getFirstName())
-                .setLastName(givenCustomer.getLastName())
-                .setEmail(givenCustomer.getEmail())
-                .setPhoneNumber(givenCustomer.getPhoneNumber())
-                .build();
+//  use case for
+//  getting customerinfo(admin only)
 
-        List<Address> addresses = addressRepository.findAddressByCustomerId(request.getCustomerId())
-                .stream()
-                .map(addressEntity -> Address.newBuilder()
-                        .setId(addressEntity.getId())
-                        .setStreetName(addressEntity.getStreetName())
-                        .setSecondaryUnit(addressEntity.getSecondaryUnit())
-                        .setPostalCode(addressEntity.getPostal().getPostalCode())
-                        .build())
-                .toList();
-        
-        List<Postal> postals = postalRepository.findByCustomerId(request.getCustomerId())
-                .stream()
-                .map(postalEntity -> Postal.newBuilder()
-                        .setPostalCode(postalEntity.getPostalCode())
-                        .setCity(postalEntity.getCity())
-                        .build())
-                .toList();
+  public void getCustomer(GetCustomerRequest request,
+      io.grpc.stub.StreamObserver<GetCustomerResponse> responseObserver)
+  {
+    var givenCustomer = customerRepository.findById(request.getCustomerId())
+        .orElse(null);
+    assert givenCustomer != null;
+    Customer customerDto = Customer.newBuilder().setId(givenCustomer.getId())
+        .setFirstName(givenCustomer.getFirstName())
+        .setLastName(givenCustomer.getLastName())
+        .setEmail(givenCustomer.getEmail())
+        .setPhoneNumber(givenCustomer.getPhoneNumber()).build();
 
-        GetCustomerResponse response = GetCustomerResponse.newBuilder()
-                .setCustomer(customerDto)
-                .addAllAddresses(addresses)
-                .addAllPostals(postals)
-                .build();
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
-    }
+    List<Address> addresses = addressRepository.findAddressByCustomerId(
+            request.getCustomerId()).stream().map(
+            addressEntity -> Address.newBuilder().setId(addressEntity.getId())
+                .setStreetName(addressEntity.getStreetName())
+                .setSecondaryUnit(addressEntity.getSecondaryUnit())
+                .setPostalCode(addressEntity.getPostal().getPostalCode()).build())
+        .toList();
 
+    List<Postal> postals = postalRepository.findByCustomerId(
+        request.getCustomerId()).stream().map(
+        postalEntity -> Postal.newBuilder()
+            .setPostalCode(postalEntity.getPostalCode())
+            .setCity(postalEntity.getCity()).build()).toList();
 
+    GetCustomerResponse response = GetCustomerResponse.newBuilder()
+        .setId(customerDto.getId()).setFirstName(customerDto.getFirstName())
+        .setLastName(customerDto.getLastName()).setEmail(customerDto.getEmail())
+        .setPhoneNumber(customerDto.getPhoneNumber()).addAllAddresses(addresses)
+        .addAllPostals(postals).build();
+    responseObserver.onNext(response);
+    responseObserver.onCompleted();
+  }
 }

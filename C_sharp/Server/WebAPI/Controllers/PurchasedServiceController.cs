@@ -85,10 +85,10 @@ Console.WriteLine(
                 Price = p.Price,
                 Sold = p.Sold,
                 Condition = p.Condition,
-                ApprovalStatus = (ApiContracts.Dtos.Enums.ApprovalStatus)p.ApprovalStatus,
+                ApprovalStatus = p.ApprovalStatus.ToString(),
                 Name = p.Name,
                 PhotoUrl = p.PhotoUrl,
-                Category = (ApiContracts.Dtos.Enums.Category)p.Category,
+                Category = p.Category.ToString(),
                 Description = p.Description,
                 SoldByCustomerId = p.SoldByCustomerId,
                 RegisterDate = p.RegisterDate.ToDateTime()

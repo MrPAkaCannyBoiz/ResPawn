@@ -1,9 +1,10 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ApiContracts.Dtos;
+using BlazorApp.Services.Interface;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BlazorApp.Services;
+namespace BlazorApp.Services.Concrete;
 
 public class HttpCustomerService : ICustomerServices
 {
@@ -16,15 +17,7 @@ public class HttpCustomerService : ICustomerServices
         this.client = client;
     }
 
-   
-    private sealed class RegisterCustomerResponseDto
-    {
-        [JsonPropertyName("customerId")]
-        public int CustomerId { get; set; }
 
-        [JsonPropertyName("message")]
-        public string? Message { get; set; }
-    }
 
  public async Task<CustomerDto> AddCustomerAsync(CreateCustomerDto request)
     {
