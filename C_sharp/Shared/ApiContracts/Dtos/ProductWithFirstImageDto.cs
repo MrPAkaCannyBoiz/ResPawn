@@ -16,5 +16,6 @@ public class ProductWithFirstImageDto
     public required string Description { get; set; }
     public required int SoldByCustomerId { get; set; }
     public required DateTime RegisterDate { get; set; }
+    public required string OtherCategory { get; set; }
     public required ImageDto Image { get; set; }
 }

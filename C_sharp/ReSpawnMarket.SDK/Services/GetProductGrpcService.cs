@@ -15,12 +15,22 @@ public class GetProductGrpcService : IGetProductService
     {
         _grpcClient = grpcClient;
     }
+
+ 
     public Task<GetAllProductsResponse> GetAllProductsAsync(
         GetAllProductsRequest request, CancellationToken ct = default)
     {
         try
         {
             return _grpcClient.GetAllProductsAsync(request, cancellationToken: ct).ResponseAsync;
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.FailedPrecondition)
+        {
+            throw new KeyNotFoundException($"Relations incompleted : {ex.Message}", ex);
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
+        {
+            throw new KeyNotFoundException($"All product not found : {ex.Message}", ex);
         }
         catch (RpcException ex)
         {
@@ -34,6 +44,14 @@ public class GetProductGrpcService : IGetProductService
         try
         {
             return _grpcClient.GetPendingProductsAsync(request, cancellationToken: ct).ResponseAsync;
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.FailedPrecondition)
+        {
+            throw new KeyNotFoundException($"Relations incompleted : {ex.Message}", ex);
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
+        {
+            throw new KeyNotFoundException($"Pending product not found : {ex.Message}", ex);
         }
         catch (RpcException ex)
         {
@@ -52,8 +70,35 @@ public class GetProductGrpcService : IGetProductService
         {
             throw new KeyNotFoundException($"Product with ID {request.ProductId} not found.", ex);
         }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.FailedPrecondition)
+        {
+            throw new KeyNotFoundException($"Relations incompleted : {ex.Message}", ex);
+        }
         catch (RpcException ex)
         {
+            throw new Exception($"gRPC Error: {ex.Status.Detail}", ex);
+        }
+    }
+
+    public async Task<GetAllAvailableProductsResponse> GetAllAvailableProductsAsync(GetAllAvailableProductsRequest request,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            return await _grpcClient.GetAllAvailableProductsAsync(request, cancellationToken: ct);
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
+        {
+
+            throw new KeyNotFoundException($"All product sold out : {ex.Message}", ex);
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.FailedPrecondition)
+        {
+            throw new KeyNotFoundException($"Relations incompleted : {ex.Message}", ex);
+        }
+        catch (RpcException ex) 
+        {
+
             throw new Exception($"gRPC Error: {ex.Status.Detail}", ex);
         }
     }

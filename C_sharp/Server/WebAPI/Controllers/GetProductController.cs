@@ -17,8 +17,8 @@ public class GetProductController: ControllerBase
     }
 
     [HttpGet("{Id}")]
-    [ProducesResponseType(typeof(ProductDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(DetailedProductDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetProductAsync(int Id, CancellationToken ct)
     {
         var grpcRequest = new GetProductRequest
@@ -43,8 +43,9 @@ public class GetProductController: ControllerBase
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(List<ProductDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(IQueryable<ProductWithFirstImageDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<ProductWithFirstImageDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetAllProductAsync(CancellationToken ct)
     {
         var grpcRequest = new GetAllProductsRequest
@@ -64,6 +65,7 @@ public class GetProductController: ControllerBase
                 Description = p.Product.Description,
                 SoldByCustomerId = p.Product.SoldByCustomerId,
                 RegisterDate = p.Product.RegisterDate.ToDateTime(),
+                OtherCategory = p.Product.OtherCategory,
                 Image = new ImageDto
                 {
                     Id = p.FirstImage.Id,
@@ -76,8 +78,9 @@ public class GetProductController: ControllerBase
     }
 
     [HttpGet("pending")]
-    [ProducesResponseType(typeof(List<ProductDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(IQueryable<ProductWithFirstImageDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<ProductWithFirstImageDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetPendingProductsAsync(CancellationToken ct)
     {
         var grpcRequest = new GetPendingProductsRequest
@@ -97,6 +100,7 @@ public class GetProductController: ControllerBase
                 Description = p.Product.Description,
                 SoldByCustomerId = p.Product.SoldByCustomerId,
                 RegisterDate = p.Product.RegisterDate.ToDateTime(),
+                OtherCategory = p.Product.OtherCategory,
                 Image = new ImageDto
                 {
                     Id = p.FirstImage.Id,
@@ -108,7 +112,42 @@ public class GetProductController: ControllerBase
         return Ok(responseDtoList);
     }
 
+    [HttpGet("available")]
+    [ProducesResponseType(typeof(IQueryable<ProductWithFirstImageDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<ProductWithFirstImageDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetAvaliableProductsAsync(CancellationToken ct)
+    {
+        var grpcRequest = new GetAllAvailableProductsRequest
+        {
+        };
+        var grpcResponse = await _getProductService.GetAllAvailableProductsAsync(grpcRequest, ct);
+        var responseDtoList = grpcResponse.Products
+            .Select(p => new ProductWithFirstImageDto
+            {
+                Id = p.Product.Id,
+                Price = p.Product.Price,
+                Sold = p.Product.Sold,
+                Condition = p.Product.Condition,
+                ApprovalStatus = p.Product.ApprovalStatus.ToString(),
+                Name = p.Product.Name,
+                Category = p.Product.Category.ToString(),
+                Description = p.Product.Description,
+                SoldByCustomerId = p.Product.SoldByCustomerId,
+                RegisterDate = p.Product.RegisterDate.ToDateTime(),
+                OtherCategory = p.Product.OtherCategory,
+                Image = new ImageDto
+                {
+                    Id = p.FirstImage.Id,
+                    Url = p.FirstImage.Url,
+                    ProductId = p.FirstImage.ProductId
+                }
+            })
+            .ToList() ?? []; // Return empty list of ProductDto if null
+        return Ok(responseDtoList);
+    }
 
+   
     private DetailedProductDto toDetailedDto(GetProductResponse response)
     {
         var images = response.Images.Select(img => new ImageDto()
