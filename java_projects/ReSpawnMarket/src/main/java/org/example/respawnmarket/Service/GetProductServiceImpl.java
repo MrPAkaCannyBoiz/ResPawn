@@ -124,6 +124,7 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
         }
     }
 
+    @Override
     public void getAllProducts(GetAllProductsRequest request,
                                    StreamObserver<GetAllProductsResponse> responseObserver)
     {
@@ -142,6 +143,34 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
+
+    @Override
+    public void getAllAvailableProducts(GetAllAvailableProductsRequest request,
+                                   StreamObserver<GetAllAvailableProductsResponse> responseObserver)
+    {
+        // available products are products that are not sold and approved
+        List<ProductEntity> entities = productRepository.findAllAvailableProducts();
+        if (entities == null)
+        {
+            responseObserver.onError(io.grpc.Status.NOT_FOUND
+                    .withDescription("All products currently sold out")
+                    .asRuntimeException());
+            return;
+        }
+        for (ProductEntity entity : entities)
+        {
+            checkNullAndRelations(entity, responseObserver);
+        }
+        List<ProductWithFirstImage> products = entities.stream()
+                .map(this::toProtoProductWithImage)
+                .toList();
+        GetAllAvailableProductsResponse response = GetAllAvailableProductsResponse.newBuilder()
+                .addAllProducts(products)
+                .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
 
     private ProductWithFirstImage toProtoProductWithImage(ProductEntity entity)
     {

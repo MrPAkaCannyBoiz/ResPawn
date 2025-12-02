@@ -1,0 +1,61 @@
+﻿@page "/available-product"
+@using ApiContracts.Dtos
+@using BlazorApp.Services.Interface
+@rendermode InteractiveServer
+@inject IGetProductService GetProductService
+@inject NavigationManager NavigationManager
+
+@code 
+{
+	//attributes for product list
+	private IQueryable<ProductWithFirstImageDto>? _products;
+	private string _addToCartMessage = "";
+
+	protected override async Task OnInitializedAsync()
+	{
+		_products = await GetProductService.GetAllAvailableAsync();
+	}
+
+	private void AddProductToCart(int productId)
+	{
+		// implement cart addition logic here
+		_addToCartMessage = $"Product with ID {productId} added to cart. (not implemented)";
+	}
+}
+
+<link href="css/AvailableProduct.css" rel="stylesheet" />
+
+<h3>Buy Products here</h3>
+
+<p>@_addToCartMessage</p>
+
+@if (_products == null)
+{
+	<p>Loading...</p>
+}
+else
+{
+	<div class="product-list">
+		@foreach (var product in _products)
+		{
+			<div class="product-row">
+				<NavLink class="product-card" href="@($"/products/{product.Id}")">
+					@if (product.Image != null)
+					{
+						<img class="product-image" src="@product.Image.Url" alt="@product.Name" />
+					}
+					else
+					{
+						<span class="product-image">No Image</span>
+					}
+					<div class="product-details">
+						<div><strong>@product.Name</strong></div>
+						<div>@product.Description</div>
+					</div>
+					<div class="product-price">@product.Price DKK</div>
+				</NavLink>
+				<div class="add-to-cart" @onclick="() => AddProductToCart(product.Id)">Add to cart</div>
+			</div>
+		}
+	</div>
+}
