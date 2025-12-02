@@ -116,7 +116,7 @@ public class GetProductController: ControllerBase
     [ProducesResponseType(typeof(IQueryable<ProductWithFirstImageDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(List<ProductWithFirstImageDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetAvaliableProductsAsync(CancellationToken ct)
+    public async Task<IActionResult> GetAvailableProductsAsync(CancellationToken ct)
     {
         var grpcRequest = new GetAllAvailableProductsRequest
         {

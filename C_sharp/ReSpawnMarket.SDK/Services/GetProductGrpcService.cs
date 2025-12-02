@@ -89,7 +89,6 @@ public class GetProductGrpcService : IGetProductService
         }
         catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
         {
-
             throw new KeyNotFoundException($"All product sold out : {ex.Message}", ex);
         }
         catch (RpcException ex) when (ex.StatusCode == StatusCode.FailedPrecondition)

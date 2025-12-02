@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="wwwroot\css\AvaliableProduct.css" />
+    <None Include="wwwroot\css\AvailableProduct.css" />
   </ItemGroup>
 
   <ItemGroup>
