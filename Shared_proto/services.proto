@@ -299,6 +299,14 @@ message GetPendingProductsResponse {
   repeated ProductWithFirstImage products = 1;
 }
 
+message GetAllAvailableProductsRequest {
+  Empty empty = 1;
+}
+
+message GetAllAvailableProductsResponse {
+  repeated ProductWithFirstImage products = 1;
+}
+
 // service for "Upload Product Details" and "Get Product Details"
 service UploadProductService
 {
@@ -310,6 +318,7 @@ service GetProductService
   rpc GetProduct (GetProductRequest) returns (GetProductResponse);
   rpc GetAllProducts (GetAllProductsRequest) returns (GetAllProductsResponse);
   rpc GetPendingProducts (GetPendingProductsRequest) returns (GetPendingProductsResponse);
+  rpc GetAllAvailableProducts (GetAllAvailableProductsRequest) returns (GetAllAvailableProductsResponse);
 }
 
 // use case for "Product Inspection by Reseller"

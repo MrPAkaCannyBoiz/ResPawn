@@ -11,27 +11,65 @@ public class HttpGetProductService : IGetProductService
     {
         _httpClient = httpClient;
     }
-    public async Task<List<ProductDto>> GetAllAsync()
+    public async Task<IQueryable<ProductWithFirstImageDto>> GetAllAsync()
     {
-       var httpResponse = await _httpClient.GetAsync("api/products");
-       var textResponse = await httpResponse.Content.ReadAsStringAsync();
-       return JsonSerializer.Deserialize<List<ProductDto>>(textResponse, 
+       HttpResponseMessage httpResponse = await _httpClient.GetAsync("products");
+       string textResponse = await httpResponse.Content.ReadAsStringAsync();
+       if (!httpResponse.IsSuccessStatusCode)
+       {
+            throw new Exception($"Error getting posts: {httpResponse.StatusCode}, {textResponse}");
+       }
+       List<ProductWithFirstImageDto> productDtos = JsonSerializer
+            .Deserialize<List<ProductWithFirstImageDto>>(textResponse, 
            JsonCaseInsensitiveExtension.MakeJsonCaseInsensitive())!;
+       return productDtos.AsQueryable();
     }
 
-    public async Task<List<ProductDto>> GetAllPendingAsync()
+    public async Task<IQueryable<ProductWithFirstImageDto>> GetAllPendingAsync()
     {
-        var httpResponse = await _httpClient.GetAsync("api/products/pending");
-        var textResponse = await httpResponse.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<List<ProductDto>>(textResponse,
-            JsonCaseInsensitiveExtension.MakeJsonCaseInsensitive())!;
+        HttpResponseMessage httpResponse = await _httpClient.GetAsync("products/pending");
+        string textResponse = await httpResponse.Content.ReadAsStringAsync();
+        if (!httpResponse.IsSuccessStatusCode)
+        {
+            throw new Exception($"Error getting posts: {httpResponse.StatusCode}, {textResponse}");
+        }
+        List<ProductWithFirstImageDto> productDtos = JsonSerializer
+          .Deserialize<List<ProductWithFirstImageDto>>(textResponse,
+         JsonCaseInsensitiveExtension.MakeJsonCaseInsensitive())!;
+        return productDtos.AsQueryable();
     }
 
     public async Task<DetailedProductDto> GetSingleAsync(int id)
     {
-       var httpResponse = await _httpClient.GetAsync($"api/products/{id}");
-       var textResponse = await httpResponse.Content.ReadAsStringAsync();
-       return JsonSerializer.Deserialize<DetailedProductDto>(textResponse,
+       HttpResponseMessage httpResponse = await _httpClient.GetAsync($"products/{id}");
+       string textResponse = await httpResponse.Content.ReadAsStringAsync();
+       if (!httpResponse.IsSuccessStatusCode)
+       {
+           throw new Exception($"Error getting posts: {httpResponse.StatusCode}, {textResponse}");
+       }
+        return JsonSerializer.Deserialize<DetailedProductDto>(textResponse,
               JsonCaseInsensitiveExtension.MakeJsonCaseInsensitive())!;
+    }
+    public async Task<IQueryable<ProductWithFirstImageDto>> GetAllAvailableAsync()
+    {
+        HttpResponseMessage httpResponse = await _httpClient.GetAsync("products/available");
+        string textResponse = await httpResponse.Content.ReadAsStringAsync();
+
+        if (!httpResponse.IsSuccessStatusCode)
+        {
+            throw new Exception($"Error getting products: {httpResponse.StatusCode}, {textResponse}");
+        }
+
+        if (string.IsNullOrWhiteSpace(textResponse))
+        {
+            // Return empty list if no products are available
+            return new List<ProductWithFirstImageDto>().AsQueryable();
+        }
+
+        List<ProductWithFirstImageDto> productDtos = JsonSerializer
+            .Deserialize<List<ProductWithFirstImageDto>>(textResponse,
+            JsonCaseInsensitiveExtension.MakeJsonCaseInsensitive())!;
+
+        return productDtos.AsQueryable();
     }
 }
