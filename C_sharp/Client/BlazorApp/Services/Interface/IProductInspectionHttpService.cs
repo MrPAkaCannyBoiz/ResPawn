@@ -9,6 +9,6 @@ namespace BlazorApp.Services.Interface;
 
 public interface IProductInspectionHttpService
 {
-    Task<ICollection<ProductDto>> GetPendingProductsAsync();
     //Task<ProductInspectionResultDto> ReviewProductAsync(ProductInspectionRequestDto dto);
+    Task<ProductInspectionResultDto> VerifyProductAsync(int productId, ProductVerificationDto dto);
 }

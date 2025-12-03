@@ -9,7 +9,7 @@ using BlazorApp.Services.Interface;
 
 namespace BlazorApp.Services.Concrete;
 
-public class HttpProductInspectionService 
+public class HttpProductInspectionService : IProductInspectionHttpService
 {
     private readonly HttpClient client;
 
@@ -17,6 +17,7 @@ public class HttpProductInspectionService
     {
         this.client = client;
     }
+
 
     //public async Task<ICollection<ProductDto>> GetPendingProductsAsync()
     //{
@@ -31,5 +32,21 @@ public class HttpProductInspectionService
     //   var text = await http.Content.ReadAsStringAsync();
     //   return JsonSerializer.Deserialize<ProductInspectionResultDto>(text, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
     //}
+
+    public async Task<ProductInspectionResultDto> VerifyProductAsync(int productId, ProductVerificationDto dto)
+    {
+        HttpResponseMessage http = await client.PostAsJsonAsync(
+            $"inspection/product/verify/{productId}", dto);
+        string text = await http.Content.ReadAsStringAsync();
+        if (!http.IsSuccessStatusCode)
+        {
+            throw new Exception(
+                $"Error verifying product: {text}");
+        }
+        ProductInspectionResultDto resultDto =
+            JsonSerializer.Deserialize<ProductInspectionResultDto>(
+                text, JsonCaseInsensitiveExtension.MakeJsonCaseInsensitive())!;
+        return resultDto;
+    }
 }
 

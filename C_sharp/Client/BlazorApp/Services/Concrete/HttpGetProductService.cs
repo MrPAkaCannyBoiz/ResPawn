@@ -72,4 +72,27 @@ public class HttpGetProductService : IGetProductService
 
         return productDtos.AsQueryable();
     }
+
+    public async Task<IQueryable<ProductWithFirstImageDto>> GetAllReviewingAsync()
+    {
+        HttpResponseMessage httpResponse = await _httpClient.GetAsync("products/reviewing");
+        string textResponse = await httpResponse.Content.ReadAsStringAsync();
+
+        if (!httpResponse.IsSuccessStatusCode)
+        {
+            throw new Exception($"Error getting products: {httpResponse.StatusCode}, {textResponse}");
+        }
+
+        if (string.IsNullOrWhiteSpace(textResponse))
+        {
+            // Return empty list if no products are available
+            return new List<ProductWithFirstImageDto>().AsQueryable();
+        }
+
+        List<ProductWithFirstImageDto> productDtos = JsonSerializer
+            .Deserialize<List<ProductWithFirstImageDto>>(textResponse,
+            JsonCaseInsensitiveExtension.MakeJsonCaseInsensitive())!;
+
+        return productDtos.AsQueryable();
+    }
 }
