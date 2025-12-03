@@ -21,6 +21,15 @@ builder.Services.AddScoped<ICustomerServices, HttpCustomerService>();
 builder.Services.AddScoped<IUploadProductService, HttpUploadProductService>();
 builder.Services.AddScoped<IUpdateCustomerService, HttpUpdateCustomerService>();
 builder.Services.AddScoped<IGetProductService, HttpGetProductService>();
+builder.Services.AddScoped<IPurcharseService, HttpPurchaseService>();
+builder.Services.AddScoped<IProductInspectionService, HttpProductInspectionService>();
+
+
+
+
+
+builder.Services.AddScoped<IUpdateCustomerService, HttpUpdateCustomerService>();
+builder.Services.AddScoped<IGetProductService, HttpGetProductService>();
 builder.Services.AddScoped<AuthenticationStateProvider, SimpleAuthProvider>();
 
 builder.Services.AddHttpService();

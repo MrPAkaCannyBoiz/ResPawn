@@ -10,7 +10,7 @@ public class ShoppingCartEntity
     private int id;
 
     @Column (name = "total_price", nullable = false)
-    private int totalPrice;
+    private double totalPrice;
 
     public ShoppingCartEntity()
     {}
@@ -25,11 +25,11 @@ public class ShoppingCartEntity
         return id;
     }
 
-    public int getTotalPrice(){
+    public double getTotalPrice(){
         return totalPrice;
     }
 
-    public void setTotalPrice(int totalPrice){
+    public void setTotalPrice(double totalPrice){
         this.totalPrice = totalPrice;
     }
 }
