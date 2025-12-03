@@ -129,14 +129,7 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
                                    StreamObserver<GetAllProductsResponse> responseObserver)
     {
         List<ProductEntity> entities = productRepository.findAll();
-        for (ProductEntity entity : entities)
-        {
-            checkNullAndRelations(entity, responseObserver);
-        }
-
-        List<ProductWithFirstImage> products = entities.stream()
-                .map(this::toProtoProductWithImage)
-                .toList();
+        List<ProductWithFirstImage> products = toProtoProductWithImageList(entities, responseObserver);
         GetAllProductsResponse response = GetAllProductsResponse.newBuilder()
                 .addAllProducts(products)
                 .build();
@@ -150,20 +143,7 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
     {
         // available products are products that are not sold and approved
         List<ProductEntity> entities = productRepository.findAllAvailableProducts();
-        if (entities == null)
-        {
-            responseObserver.onError(io.grpc.Status.NOT_FOUND
-                    .withDescription("All products currently sold out")
-                    .asRuntimeException());
-            return;
-        }
-        for (ProductEntity entity : entities)
-        {
-            checkNullAndRelations(entity, responseObserver);
-        }
-        List<ProductWithFirstImage> products = entities.stream()
-                .map(this::toProtoProductWithImage)
-                .toList();
+        List<ProductWithFirstImage> products = toProtoProductWithImageList(entities, responseObserver);
         GetAllAvailableProductsResponse response = GetAllAvailableProductsResponse.newBuilder()
                 .addAllProducts(products)
                 .build();
@@ -171,6 +151,17 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
         responseObserver.onCompleted();
     }
 
+    public void getAllReviewingProducts(GetAllReviewingProductsRequest request,
+                                   StreamObserver<GetAllReviewingProductsResponse> responseObserver)
+    {
+        List<ProductEntity> entities = productRepository.findAllReviewingProducts();
+        List<ProductWithFirstImage> products = toProtoProductWithImageList(entities, responseObserver);
+        GetAllReviewingProductsResponse response = GetAllReviewingProductsResponse.newBuilder()
+                .addAllProducts(products)
+                .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
 
     private ProductWithFirstImage toProtoProductWithImage(ProductEntity entity)
     {
@@ -248,6 +239,27 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
                     .withDescription("Product has incomplete relations: " + issues.toString().trim())
                     .asRuntimeException());
         }
+    }
+
+    private List<ProductWithFirstImage> toProtoProductWithImageList(List<ProductEntity> entities,
+                                                                    StreamObserver<?> responseObserver)
+    {
+        if (entities == null)
+        {
+            responseObserver.onError(io.grpc.Status.NOT_FOUND
+                    .withDescription("Products not found")
+                    .asRuntimeException());
+        }
+        assert entities != null;
+        for (ProductEntity entity : entities)
+        {
+            checkNullAndRelations(entity, responseObserver);
+        }
+
+        List<ProductWithFirstImage> products = entities.stream()
+                .map(this::toProtoProductWithImage)
+                .toList();
+        return products;
     }
 
 
