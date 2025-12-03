@@ -153,7 +153,7 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
     {
       responseObserver.onError(
           io.grpc.Status.INTERNAL
-              .withDescription("Failed to get product")
+              .withDescription("Failed to get product" + e.getMessage())
               .withCause(e)
               .asRuntimeException());
     }
@@ -244,7 +244,7 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
                 .setApprovalStatus(approvalStatus)
                 .setRegisterDate(registerDateTimestamp)
                 .setOtherCategory(entity.getOtherCategory() == null ? "" : entity.getOtherCategory())
-                .setPawnshopId(entity.getPawnshop().getId())
+                .setPawnshopId(entity.getPawnshop() != null ? entity.getPawnshop().getId() : 0)
                 .build();
         return productDto;
     }
@@ -252,42 +252,42 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
   private void checkNullAndRelations(ProductEntity productEntity,
       StreamObserver<?> responseObserver)
   {
-    if (productEntity == null)
-    {
-      responseObserver.onError(
-          io.grpc.Status.NOT_FOUND.withDescription("Product not found")
-              .asRuntimeException());
-      return;
-    }
+      if (productEntity == null)
+      {
+          responseObserver.onError(
+                  io.grpc.Status.NOT_FOUND.withDescription("Product not found")
+                          .asRuntimeException());
+          return;
+      }
 
-    CustomerEntity seller = customerRepository.findById(
-        productEntity.getSeller().getId()).orElse(null);
+      CustomerEntity seller = customerRepository.findById(
+              productEntity.getSeller().getId()).orElse(null);
 
-    PawnshopEntity pawnshop = null;
-    if (productEntity.getPawnshop() != null)
-    {
-      pawnshop = pawnshopRepository.findById(
-          productEntity.getPawnshop().getId()).orElse(null);
-    }
+      PawnshopEntity pawnshop = null;
+      if (productEntity.getPawnshop() != null)
+      {
+          pawnshop = pawnshopRepository.findById(
+                  productEntity.getPawnshop().getId()).orElse(null);
+      }
 
-    boolean isPending =
-        productEntity.getApprovalStatus() == ApprovalStatusEnum.PENDING;
+      boolean isPending =
+              productEntity.getApprovalStatus() == ApprovalStatusEnum.PENDING;
 
-    StringBuilder issues = new StringBuilder();
-    if (seller == null)
-      issues.append("seller missing; ");
-    // only require pawnshop when NOT pending
-    if (!isPending && pawnshop == null)
-      issues.append("pawnshop missing; ");
-    if (productEntity.getRegisterDate() == null)
-      issues.append("registerDate missing; ");
+      StringBuilder issues = new StringBuilder();
+      if (seller == null)
+          issues.append("seller missing");
+      // Only require pawnshop when NOT pending
+      if (!isPending && pawnshop == null)
+          issues.append("pawnshop missing on non-pending product");
+      if (productEntity.getRegisterDate() == null)
+          issues.append("registerDate missing");
 
-        if (!issues.isEmpty())
-        {
-            responseObserver.onError(io.grpc.Status.FAILED_PRECONDITION
-                    .withDescription("Product has incomplete relations: " + issues.toString().trim())
-                    .asRuntimeException());
-        }
+      if (!issues.isEmpty())
+      {
+          responseObserver.onError(io.grpc.Status.FAILED_PRECONDITION
+                  .withDescription("Product has incomplete relations: " + issues.toString().trim())
+                  .asRuntimeException());
+      }
     }
 
     private List<ProductWithFirstImage> toProtoProductWithImageList(List<ProductEntity> entities,

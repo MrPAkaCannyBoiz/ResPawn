@@ -116,7 +116,6 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
       }
       catch (StatusRuntimeException e)
       {
-
         responseObserver.onError(e);
       }
       catch (Exception e)
@@ -129,65 +128,22 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
         );
       }
     }
-    private Category toProtoCategory(CategoryEnum entityCategory)
-    {
-        if (entityCategory == null)
-        {
-            return Category.CATEGORY_UNSPECIFIED;
-        }
-
-        return switch (entityCategory)
-        {
-            case ELECTRONICS -> Category.ELECTRONICS;
-            case JEWELRY -> Category.JEWELRY;
-            case WATCHES -> Category.WATCHES;
-            case MUSICAL_INSTRUMENTS -> Category.MUSICAL_INSTRUMENTS;
-            case TOOLS -> Category.TOOLS;
-            case VEHICLES -> Category.VEHICLES;
-            case COLLECTIBLES -> Category.COLLECTIBLES;
-            case FASHION -> Category.FASHION;
-            case HOME_APPLIANCES -> Category.HOME_APPLIANCES;
-            case SPORTS_EQUIPMENT -> Category.SPORTS_EQUIPMENT;
-            case COMPUTERS -> Category.COMPUTERS;
-            case MOBILE_PHONES -> Category.MOBILE_PHONES;
-            case CAMERAS -> Category.CAMERAS;
-            case LUXURY_ITEMS -> Category.LUXURY_ITEMS;
-            case ARTWORK -> Category.ARTWORK;
-            case ANTIQUES -> Category.ANTIQUES;
-            case GAMING_CONSOLES -> Category.GAMING_CONSOLES;
-            case FURNITURE -> Category.FURNITURE;
-            case GOLD_AND_SILVER -> Category.GOLD_AND_SILVER;
-            case OTHER -> Category.OTHER;
-        };
-    }
-
-    private void checkNull(ProductEntity product, ResellerEntity reseller,
-                           StreamObserver<?> responseObserver)
-    {
-        if (product == null)
-        {
-            responseObserver.onError(
-                    Status.NOT_FOUND.withDescription(
-                                    "Product not found/ The Product is not in 'REVIEWING' status")
-                            .asRuntimeException());
-        }
-        if (reseller == null)
-        {
-            responseObserver.onError(
-                    Status.NOT_FOUND.withDescription("Reseller not found").asRuntimeException());
-        }
-    }
-
 
     @Override
     @Transactional
     public void verifyProduct(ProductVerificationRequest request,
                               StreamObserver<ProductVerificationResponse> responseObserver)
     {
-        ProductEntity product = productRepository.findById(request.getProductId()).orElse(null);
+        ProductEntity product = productRepository.findById(request.getProductId())
+                .orElseThrow(() -> Status
+                .NOT_FOUND
+                .withDescription(
+                        "Product not found/ The Product is not in 'REVIEWING' status")
+                .asRuntimeException());
         ResellerEntity resellerWhoChecks = resellerRepository.
-                findById(request.getResellerId()).orElse(null);
-        checkNull(product, resellerWhoChecks, responseObserver);
+                findById(request.getResellerId()).orElseThrow(() -> Status.NOT_FOUND
+                        .withDescription("Reseller not found, id:" + request.getResellerId())
+                        .asRuntimeException());
         InspectionEntity inspection = new InspectionEntity
                 (product, resellerWhoChecks, request.getComments(), request.getIsAccepted());
         inspection.setApprovalStage(ApprovalStatusEnum.APPROVED);
@@ -212,6 +168,8 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
+
+
 
 }
 

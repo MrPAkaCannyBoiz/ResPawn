@@ -3,6 +3,7 @@ package org.example.respawnmarket.Service;
 import com.google.protobuf.Timestamp;
 import com.respawnmarket.*;
 import io.grpc.stub.StreamObserver;
+import jakarta.transaction.Transactional;
 import org.example.respawnmarket.entities.*;
 import org.example.respawnmarket.entities.enums.ApprovalStatusEnum;
 import org.example.respawnmarket.entities.enums.CategoryEnum;
@@ -35,6 +36,9 @@ public class PurchaseServiceImpl extends PurchaseServiceGrpc.PurchaseServiceImpl
     this.cartProductRepository = cartProductRepository;
     this.transactionRepository = transactionRepository;
   }
+
+  @Override
+  @Transactional
   public void buyProducts(BuyProductsRequest request,
       StreamObserver<BuyProductsResponse> responseObserver)
   {
