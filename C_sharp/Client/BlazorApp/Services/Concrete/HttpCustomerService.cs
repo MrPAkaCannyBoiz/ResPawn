@@ -17,15 +17,7 @@ public class HttpCustomerService : ICustomerServices
         this.client = client;
     }
 
-   
-    private sealed class RegisterCustomerResponseDto
-    {
-        [JsonPropertyName("customerId")]
-        public int CustomerId { get; set; }
 
-        [JsonPropertyName("message")]
-        public string? Message { get; set; }
-    }
 
  public async Task<CustomerDto> AddCustomerAsync(CreateCustomerDto request)
     {

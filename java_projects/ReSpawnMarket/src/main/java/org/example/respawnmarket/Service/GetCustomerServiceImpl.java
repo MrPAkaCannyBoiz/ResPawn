@@ -14,18 +14,19 @@ import java.util.List;
 @Service
 public class GetCustomerServiceImpl extends GetCustomerServiceGrpc.GetCustomerServiceImplBase
 {
-    private CustomerRepository customerRepository;
-    private AddressRepository addressRepository;
-    private PostalRepository postalRepository;
-    private CustomerAddressRepository customerAddressRepository;
+  private CustomerRepository customerRepository;
+  private AddressRepository addressRepository;
+  private PostalRepository postalRepository;
+  private CustomerAddressRepository customerAddressRepository;
 
-    @Autowired
-    public GetCustomerServiceImpl(CustomerRepository customerRepository, AddressRepository addressRepository, PostalRepository postalRepository)
-    {
-        this.customerRepository = customerRepository;
-        this.addressRepository = addressRepository;
-        this.postalRepository = postalRepository;
-    }
+  @Autowired public GetCustomerServiceImpl(
+      CustomerRepository customerRepository,
+      AddressRepository addressRepository, PostalRepository postalRepository)
+  {
+    this.customerRepository = customerRepository;
+    this.addressRepository = addressRepository;
+    this.postalRepository = postalRepository;
+  }
 
     // use case for getting customer info (admin only)
     @Override

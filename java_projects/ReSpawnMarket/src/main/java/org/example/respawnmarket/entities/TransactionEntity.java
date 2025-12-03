@@ -22,16 +22,16 @@ public class  TransactionEntity
 
   @ManyToOne
   @JoinColumn(name = "customer_id")
-  private CustomerEntity customerId;
+  private CustomerEntity customer;
 
-  public CustomerEntity getCustomerId()
+  public CustomerEntity getCustomer()
   {
-    return customerId;
+    return customer;
   }
 
-  public void setCustomerId(CustomerEntity customerId)
+  public void setCustomerId(CustomerEntity customer)
   {
-    this.customerId = customerId;
+    this.customer = customer;
   }
 
   public TransactionEntity()

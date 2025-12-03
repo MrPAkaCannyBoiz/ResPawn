@@ -54,64 +54,98 @@ public class UploadProductServiceImpl extends com.respawnmarket.UploadProductSer
     public void uploadProduct(com.respawnmarket.UploadProductRequest request
             , StreamObserver<com.respawnmarket.UploadProductResponse> responseObserver)
     {
-        CustomerEntity givenCustomer = customerRepository
-                .findById(request.getSoldByCustomerId()).orElse(null);
-        assert givenCustomer != null;
-        var product = getProductEntity(request, responseObserver, givenCustomer);
-        PawnshopEntity defaultPawnshop = pawnshopRepository.findById(0).orElse(null);
-        if (defaultPawnshop == null)
-        {
-            responseObserver.onError(Status.NOT_FOUND.withDescription(
-                "Default pawnshop with ID 0 does not exist. Cannot upload product.")
+      CustomerEntity givenCustomer = customerRepository
+          .findById(request.getSoldByCustomerId())
+          .orElse(null);
+
+      if (givenCustomer == null)
+      {
+        responseObserver.onError(
+            Status.NOT_FOUND.withDescription(
+                    "Customer not found: " + request.getSoldByCustomerId())
                 .asRuntimeException());
-            return;
-        }
-        assert product != null;
-        product.setPawnshop(defaultPawnshop);
-        ProductEntity newProduct = productRepository.save(product);
+        return;
+      }
 
-        List<ImageEntity> imageEntities = new ArrayList<>();
-        for (String imageUrl : request.getImageUrlList())
+      // 2) Build ProductEntity from request (may return null if validation fails)
+      ProductEntity product = getProductEntity(request, responseObserver, givenCustomer);
+      if (product == null)
+      {
+        // getProductEntity already called responseObserver.onError(...)
+        return;
+      }
+
+      // 3) Initial state for newly uploaded product
+      //    - No pawnshop yet (assigned when APPROVED by reseller)
+      //    - ApprovalStatus = PENDING
+      //    - Sold = false
+      product.setPawnshop(null);
+      product.setApprovalStatus(ApprovalStatusEnum.PENDING);
+      product.setSold(false);
+
+      if (product.getRegisterDate() == null)
+      {
+        product.setRegisterDate(java.time.LocalDateTime.now());
+      }
+
+      // 4) Persist product first (so images can reference it)
+      ProductEntity newProduct = productRepository.save(product);
+
+      // 5) Handle images (max 5)
+      List<ImageEntity> imageEntities = new ArrayList<>();
+      for (String imageUrl : request.getImageUrlList())
+      {
+        if (imageEntities.size() >= 5)
         {
-            if (imageEntities.size() >= 5)
-            {
-                // throw error as gRPC exception (it's different from normal Java exception)
-                responseObserver.onError(Status.OUT_OF_RANGE.withDescription(
-                        "Cannot upload more than 5 images per product")
-                        .asRuntimeException());
-                return; // abort the operation
-            }
-            ImageEntity imageEntity = new ImageEntity(imageUrl, product);
-            imageEntities.add(imageEntity);
+          responseObserver.onError(
+              Status.OUT_OF_RANGE.withDescription(
+                      "Cannot upload more than 5 images per product")
+                  .asRuntimeException());
+          return;
         }
-        imageRepository.saveAll(imageEntities);
 
-        Instant instant = newProduct.getRegisterDate().toInstant(java.time.ZoneOffset.UTC);
-        Timestamp registerDateTimestamp = Timestamp.newBuilder()
-                .setSeconds(instant.getEpochSecond())
-                .setNanos(0)
-                .build();
+        ImageEntity imageEntity = new ImageEntity(imageUrl, newProduct);
+        imageEntities.add(imageEntity);
+      }
+      imageRepository.saveAll(imageEntities);
 
-        com.respawnmarket.Product productDto = com.respawnmarket.Product.newBuilder().setId(newProduct.getId())
-                .setName(newProduct.getName())
-                .setPrice(newProduct.getPrice())
-                .setCondition(newProduct.getCondition())
-                .setDescription(newProduct.getDescription())
-                .setSoldByCustomerId(newProduct.getSeller().getId())
-                .setCategory(request.getCategory())
-                .setSold(newProduct.isSold())
-                .setApprovalStatus(ApprovalStatusExtension
-                        .toProtoApprovalStatus(newProduct.getApprovalStatus()))
-                .setRegisterDate(registerDateTimestamp)
-                .setOtherCategory(newProduct.getOtherCategory())
-                .build();
+      // 6) Map to gRPC Product + response
+      Instant instant = newProduct.getRegisterDate()
+          .toInstant(java.time.ZoneOffset.UTC);
+      Timestamp registerDateTimestamp = Timestamp.newBuilder()
+          .setSeconds(instant.getEpochSecond())
+          .setNanos(0)
+          .build();
 
-        com.respawnmarket.UploadProductResponse response = com.respawnmarket.UploadProductResponse.newBuilder()
-                .setProduct(productDto)
-                .addAllImages(ImageExtension.toProtoImageList(imageEntities))
-                .build();
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
+      com.respawnmarket.Product productDto =
+          com.respawnmarket.Product.newBuilder()
+              .setId(newProduct.getId())
+              .setName(newProduct.getName())
+              .setPrice(newProduct.getPrice())
+              .setCondition(newProduct.getCondition())
+              .setDescription(newProduct.getDescription())
+              .setSoldByCustomerId(newProduct.getSeller().getId())
+              .setCategory(request.getCategory())
+              .setSold(newProduct.isSold())
+              .setApprovalStatus(
+                  ApprovalStatusExtension.toProtoApprovalStatus(
+                      newProduct.getApprovalStatus()))
+              .setRegisterDate(registerDateTimestamp)
+              .setOtherCategory(
+                  newProduct.getOtherCategory() == null
+                      ? ""
+                      : newProduct.getOtherCategory())
+              // pawnshop_id is omitted here -> will be default 0 until approval
+              .build();
+
+      UploadProductResponse response =
+          UploadProductResponse.newBuilder()
+              .setProduct(productDto)
+              .addAllImages(ImageExtension.toProtoImageList(imageEntities))
+              .build();
+
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
     }
 
     private ProductEntity getProductEntity(UploadProductRequest request,
