@@ -19,10 +19,26 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
 
     @Query("""
             select p from ProductEntity p
-                     where (p.approvalStatus = "APPROVED" or p.approvalStatus = "approved")
+                     where (upper(p.approvalStatus) = "APPROVED")
                      and p.sold = false
                      order by p.id
             """)
     List<ProductEntity> findAllAvailableProducts();
+
+    @Query("""
+            select p from ProductEntity p
+                     where (upper(p.approvalStatus) = "REVIEWING")
+                     and p.id = :productId
+            """)
+    ProductEntity findReviewingProductById(@Param("productId") Integer productId);
+
+    @Query("""
+            select p from ProductEntity p
+                     where (upper(p.approvalStatus) = "REVIEWING")
+                     order by p.id
+            """)
+    List<ProductEntity> findAllReviewingProducts();
+
+
 }
 

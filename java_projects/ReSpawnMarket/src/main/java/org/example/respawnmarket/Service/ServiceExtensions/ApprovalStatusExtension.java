@@ -13,7 +13,7 @@ public class ApprovalStatusExtension
         {
             case PENDING -> com.respawnmarket.ApprovalStatus.PENDING;
             case APPROVED -> com.respawnmarket.ApprovalStatus.APPROVED;
-            case NOT_APPROVED -> com.respawnmarket.ApprovalStatus.NOT_APPROVED;
+            case REVIEWING -> com.respawnmarket.ApprovalStatus.REVIEWING;
             case REJECTED -> com.respawnmarket.ApprovalStatus.REJECTED;
         };
     }
