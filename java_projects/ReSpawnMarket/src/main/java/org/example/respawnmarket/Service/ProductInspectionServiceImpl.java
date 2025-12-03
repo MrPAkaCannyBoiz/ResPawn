@@ -83,7 +83,7 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
     public void verifyProduct(ProductVerificationRequest request,
                               StreamObserver<ProductVerificationResponse> responseObserver)
     {
-        ProductEntity product = productRepository.findReviewingProductById(request.getProductId());
+        ProductEntity product = productRepository.findById(request.getProductId()).orElse(null);
         ResellerEntity resellerWhoChecks = resellerRepository.
                 findById(request.getResellerId()).orElse(null);
         checkNull(product, resellerWhoChecks, responseObserver);
