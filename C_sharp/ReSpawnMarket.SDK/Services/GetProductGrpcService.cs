@@ -101,4 +101,25 @@ public class GetProductGrpcService : IGetProductService
             throw new Exception($"gRPC Error: {ex.Status.Detail}", ex);
         }
     }
+
+    public async Task<GetAllReviewingProductsResponse> GetAllReviewingProductsAsync(GetAllReviewingProductsRequest request,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            return await _grpcClient.GetAllReviewingProductsAsync(request, cancellationToken: ct);
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
+        {
+            throw new KeyNotFoundException($"All reviewing products not found : {ex.Message}", ex);
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.FailedPrecondition)
+        {
+            throw new KeyNotFoundException($"Relations incompleted : {ex.Message}", ex);
+        }
+        catch (RpcException ex)
+        {
+            throw new Exception($"gRPC Error: {ex.Status.Detail}", ex);
+        }
+    }
 }

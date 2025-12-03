@@ -15,4 +15,6 @@ public interface IGetProductService
           , CancellationToken ct = default);
     Task<GetAllAvailableProductsResponse> GetAllAvailableProductsAsync(GetAllAvailableProductsRequest request
           , CancellationToken ct = default);
+    Task<GetAllReviewingProductsResponse> GetAllReviewingProductsAsync(GetAllReviewingProductsRequest request
+          , CancellationToken ct = default);
 }

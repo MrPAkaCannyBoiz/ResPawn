@@ -30,6 +30,7 @@ public class InspectionEntity
     @Column(name = "is_accepted", nullable = false)
     private boolean isAccepted;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "approval_stage", nullable = false)
     private ApprovalStatusEnum approvalStage;
 

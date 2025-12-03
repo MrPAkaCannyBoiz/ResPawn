@@ -147,7 +147,42 @@ public class GetProductController: ControllerBase
         return Ok(responseDtoList);
     }
 
-   
+    [HttpGet("reviewing")]
+    [ProducesResponseType(typeof(IQueryable<ProductWithFirstImageDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<ProductWithFirstImageDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetAllReviewingProductsAsync(CancellationToken ct)
+    {
+        var grpcRequest = new GetAllReviewingProductsRequest
+        {
+        };
+        var grpcResponse = await _getProductService.GetAllReviewingProductsAsync(grpcRequest, ct);
+        var responseDtoList = grpcResponse.Products
+            .Select(p => new ProductWithFirstImageDto
+            {
+                Id = p.Product.Id,
+                Price = p.Product.Price,
+                Sold = p.Product.Sold,
+                Condition = p.Product.Condition,
+                ApprovalStatus = p.Product.ApprovalStatus.ToString(),
+                Name = p.Product.Name,
+                Category = p.Product.Category.ToString(),
+                Description = p.Product.Description,
+                SoldByCustomerId = p.Product.SoldByCustomerId,
+                RegisterDate = p.Product.RegisterDate.ToDateTime(),
+                OtherCategory = p.Product.OtherCategory,
+                Image = new ImageDto
+                {
+                    Id = p.FirstImage.Id,
+                    Url = p.FirstImage.Url,
+                    ProductId = p.FirstImage.ProductId
+                }
+            })
+            .ToList() ?? []; // Return empty list of ProductDto if null
+        return Ok(responseDtoList);
+    }
+
+
     private DetailedProductDto toDetailedDto(GetProductResponse response)
     {
         var images = response.Images.Select(img => new ImageDto()

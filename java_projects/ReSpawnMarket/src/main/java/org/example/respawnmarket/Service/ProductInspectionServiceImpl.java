@@ -91,6 +91,7 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
                 (product, resellerWhoChecks, request.getComments(), request.getIsAccepted());
         inspection.setApprovalStage(ApprovalStatusEnum.APPROVED);
         inspectionRepository.save(inspection);
+        assert product != null;
         if (request.getIsAccepted()) //true -> reviewing
         {
             product.setApprovalStatus(ApprovalStatusEnum.APPROVED);
