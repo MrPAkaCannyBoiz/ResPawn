@@ -22,9 +22,14 @@ else
     <div class="card mb-3">
         <div class="row g-0">
             <div class="col-md-4">
-                @if (!string.IsNullOrWhiteSpace(product.PhotoUrl))
+                 @if (product.Images != null && product.Images.Any())
                 {
-                    <img class="img-fluid rounded-start" src="@product.PhotoUrl" alt="@product.Name" />
+                    @foreach (var img in product.Images)
+                    {
+                        <img class="img-fluid rounded-start mb-2"
+                             src="@img.Url"
+                             alt="@product.Name" />
+                    }
                 }
             </div>
             <div class="col-md-8">
@@ -88,9 +93,7 @@ else
                 @onclick="@(() => Nav.NavigateTo("/reseller/pending-products"))">
             Back to list
         </button>
-    </EditForm>
-}
-
+        </EditForm>
 @code {
     [Parameter] public int ProductId { get; set; }
 
@@ -117,7 +120,7 @@ else
                 ResellerId = 1,     // TODO: derive from logged-in reseller
                 PawnshopId = product.PawnshopId,
                 Comments = "",
-                IsAccepted = true   // default to approve
+                IsAccepted = true  
             };
         }
         catch (Exception ex)
@@ -153,5 +156,29 @@ else
         {
             busy = false;
         }
+    }
+
+    // Try common property names at runtime so the Razor compiles even if the DTO uses a different name (PhotoUrl, images, Images, etc.)
+    @* private string? GetProductImage(DetailedProductDto? p)
+    {
+        if (p == null) return null;
+
+        var type = p.GetType();
+        string[] names = new[] { "PhotoUrl", "Photo", "Images", "images", "ImageUrl", "Image", "PhotoUrls" };
+
+        foreach (var name in names)
+        {
+            var prop = type.GetProperty(name);
+            if (prop != null)
+            {
+                var val = prop.GetValue(p) as string;
+                if (!string.IsNullOrWhiteSpace(val)) return val;
+            }
+        }
+
+        return null;
+    }
+}           busy = false;
+        } *@
     }
 }

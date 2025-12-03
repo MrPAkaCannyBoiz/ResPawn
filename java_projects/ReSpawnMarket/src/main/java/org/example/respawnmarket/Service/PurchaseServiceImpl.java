@@ -128,7 +128,6 @@ public class PurchaseServiceImpl extends PurchaseServiceGrpc.PurchaseServiceImpl
         .setCondition(p.getCondition())
         .setApprovalStatus(mapApprovalStatus(p.getApprovalStatus()))
         .setName(p.getName())
-        .setPhotoUrl(p.getPhotoUrl() == null ? "" : p.getPhotoUrl())
         .setCategory(mapCategory(p.getCategory()))
         .setDescription(p.getDescription())
         .setSoldByCustomerId(p.getSeller().getId())

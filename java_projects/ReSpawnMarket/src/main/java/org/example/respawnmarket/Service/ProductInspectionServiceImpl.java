@@ -7,6 +7,7 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import jakarta.transaction.Transactional;
 import org.example.respawnmarket.entities.InspectionEntity;
+import org.example.respawnmarket.entities.PawnshopEntity;
 import org.example.respawnmarket.entities.ProductEntity;
 import org.example.respawnmarket.entities.ResellerEntity;
 import org.example.respawnmarket.entities.enums.ApprovalStatusEnum;
@@ -62,79 +63,78 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
         int resellerId = request.getResellerId();
         int pawnshopId = request.getPawnshopId();
 
-        // 1) Load product
+        // Load product
         ProductEntity product = productRepository.findById(productId)
             .orElseThrow(() -> Status.NOT_FOUND
                 .withDescription("Product not found: " + productId)
                 .asRuntimeException());
 
-        // 2) Load reseller
-        ResellerEntity resellerWhoChecks = resellerRepository.findById(resellerId)
+        //  Load reseller
+        ResellerEntity reseller = resellerRepository.findById(resellerId)
             .orElseThrow(() -> Status.NOT_FOUND
                 .withDescription("Reseller not found: " + resellerId)
                 .asRuntimeException());
 
-        // 3) Only load pawnshop if APPROVED
-        //    (for rejected products we keep pawnshop = null)
-        var pawnshop = request.getIsAccepted()
-            ? pawnshopRepository.findById(pawnshopId)
-            .orElseThrow(() -> Status.NOT_FOUND
-                .withDescription("Pawnshop not found: " + pawnshopId)
-                .asRuntimeException())
-            : null;
 
-        // 4) Save inspection row
+        PawnshopEntity pawnshop = null;
+        if (request.getIsAccepted())
+        {
+          pawnshop = pawnshopRepository.findById(pawnshopId)
+              .orElseThrow(() -> Status.NOT_FOUND
+                  .withDescription("Pawnshop not found: " + pawnshopId)
+                  .asRuntimeException());
+        }
+
+        //  Save inspection
         InspectionEntity inspection = new InspectionEntity(
             product,
-            resellerWhoChecks,
+            reseller,
             request.getComments(),
             request.getIsAccepted()
         );
         inspectionRepository.save(inspection);
 
-        // 5) Update product state
-        product.setApprovalStatus(
-            request.getIsAccepted()
-                ? ApprovalStatusEnum.APPROVED
-                : ApprovalStatusEnum.REJECTED
-        );
-
+        // Update product
         if (request.getIsAccepted())
         {
-            product.setApprovalStatus(ApprovalStatusEnum.APPROVED);
-            product.setPawnshop(pawnshopRepository.findById(request.getPawnshopId()).orElse(null));
-            productRepository.save(product);
-            productRepository.flush();
-        }
-        else // false -> rejected
-        {
-            product.setApprovalStatus(ApprovalStatusEnum.REJECTED);
-            productRepository.save(product);
-            productRepository.flush();
-        }
+          product.setApprovalStatus(ApprovalStatusEnum.APPROVED);
           product.setPawnshop(pawnshop);
         }
         else
         {
-          product.setPawnshop(null); // no pawnshop for rejected products
+          product.setApprovalStatus(ApprovalStatusEnum.REJECTED);
+          product.setPawnshop(null); // rejected => no pawnshop
         }
 
         productRepository.save(product);
 
+        //  response
         ProductInspectionResponse response = ProductInspectionResponse.newBuilder()
             .setProductId(product.getId())
             .setApprovalStatus(toProtoApprovalStatus(product.getApprovalStatus()))
             .setPawnshopId(product.getPawnshop() != null
                 ? product.getPawnshop().getId()
-                : 0) // 0 = "no pawnshop"
+                : 0)
             .build();
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
+      }
+      catch (StatusRuntimeException e)
+      {
+
+        responseObserver.onError(e);
+      }
+      catch (Exception e)
+      {
+        responseObserver.onError(
+            Status.INTERNAL
+                .withDescription("Failed to review product")
+                .withCause(e)
+                .asRuntimeException()
+        );
+      }
     }
-
-
-
     private Category toProtoCategory(CategoryEnum entityCategory)
     {
         if (entityCategory == null)
@@ -166,7 +166,5 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
             case OTHER -> Category.OTHER;
         };
     }
-
-
 }
 

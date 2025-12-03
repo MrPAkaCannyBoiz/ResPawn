@@ -3,8 +3,6 @@ using BlazorApp.Components;
 using BlazorApp.Services;
 using BlazorApp.Services.Concrete;
 using BlazorApp.Services.Interface;
-using BlazorApp.Services.Concrete;
-using BlazorApp.Services.Interface;
 using Microsoft.AspNetCore.Components.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);

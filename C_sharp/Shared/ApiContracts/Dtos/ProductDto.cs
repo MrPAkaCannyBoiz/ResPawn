@@ -17,5 +17,5 @@ public class ProductDto
     public required string Description { get; set; }
     public required int SoldByCustomerId { get; set; }
     public required DateTime RegisterDate { get; set; }
-    public required List<ImageDto> Images { get; set; }
+    public  List<ImageDto> Images { get; set; } = new();
 }

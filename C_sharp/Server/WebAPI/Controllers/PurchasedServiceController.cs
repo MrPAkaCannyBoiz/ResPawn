@@ -87,7 +87,7 @@ Console.WriteLine(
                 Condition = p.Condition,
                 ApprovalStatus = p.ApprovalStatus.ToString(),
                 Name = p.Name,
-                PhotoUrl = p.PhotoUrl,
+               
                 Category = p.Category.ToString(),
                 Description = p.Description,
                 SoldByCustomerId = p.SoldByCustomerId,

@@ -87,8 +87,12 @@ public class GetProductController: ControllerBase
         {
         };
         var grpcResponse = await _getProductService.GetPendingProductsAsync(grpcRequest, ct);
-        var responseDtoList = grpcResponse.Products
-            .Select(p => new ProductWithFirstImageDto
+       
+         var responseDtoList = grpcResponse.Products
+         // testing purposes
+            .Select(p =>
+            {
+          var dto = new ProductDto
             {
                 Id = p.Product.Id,
                 Price = p.Product.Price,
@@ -100,16 +104,23 @@ public class GetProductController: ControllerBase
                 Description = p.Product.Description,
                 SoldByCustomerId = p.Product.SoldByCustomerId,
                 RegisterDate = p.Product.RegisterDate.ToDateTime(),
-                OtherCategory = p.Product.OtherCategory,
-                Image = new ImageDto
+                Images = new List<ImageDto>()
+            };
+            if (p.FirstImage != null)
+            {
+                dto.Images.Add(new ImageDto
                 {
                     Id = p.FirstImage.Id,
                     Url = p.FirstImage.Url,
                     ProductId = p.FirstImage.ProductId
-                }
-            })
-            .ToList() ?? []; // Return empty list of ProductDto if null
-        return Ok(responseDtoList);
+                });
+            }
+
+            return dto;
+        })
+        .ToList() ?? new List<ProductDto>();
+
+    return Ok(responseDtoList);
     }
 
     [HttpGet("available")]
@@ -157,6 +168,10 @@ public class GetProductController: ControllerBase
             ProductId = img.ProductId
         }).ToList();
 
+        // testing purposes 
+        var Pawnshop = response.Pawnshop;
+        var PawnshopAddress = response.PawnshopAddress;
+        var PawnshopPostal = response.PawnshopPostal;
         return new DetailedProductDto
         {
             ProductId = response.Product.Id,
@@ -169,18 +184,22 @@ public class GetProductController: ControllerBase
             Description = response.Product.Description,
             SoldByCustomerId = response.Product.SoldByCustomerId,
             RegisterDate = response.Product.RegisterDate.ToDateTime(),
+
             SellerId = response.Product.SoldByCustomerId,
             SellerFirstName = response.Customer.FirstName,
             SellerLastName = response.Customer.LastName,
             SellerEmail = response.Customer.Email,
             SellerPhoneNumber = response.Customer.PhoneNumber,
-            PawnshopId = response.Pawnshop.Id,
-            PawnshopName = response.Pawnshop.Name,
-            PawnshopAddressId = response.Pawnshop.AddressId,
-            PawnshopStreetName = response.PawnshopAddress.StreetName,
-            PawnshopSecondaryUnit = response.PawnshopAddress.SecondaryUnit,
-            PawnshopPostalCode = response.PawnshopAddress.PostalCode,
-            PawnshopCity = response.PawnshopPostal.City,
+            //pending products should not have pawnshopId so it can be null 
+
+            PawnshopId = Pawnshop?.Id ?? 0,
+            PawnshopName = Pawnshop?.Name ?? string.Empty,
+            PawnshopAddressId = PawnshopAddress?.Id ?? 0,
+            PawnshopStreetName =  PawnshopAddress?.StreetName ?? string.Empty,
+            PawnshopSecondaryUnit = PawnshopAddress?.SecondaryUnit ?? string.Empty,
+            PawnshopPostalCode = PawnshopAddress?.PostalCode ?? 0,
+            PawnshopCity = PawnshopPostal?.City ?? string.Empty,
+
             Images = images
         };
     }
