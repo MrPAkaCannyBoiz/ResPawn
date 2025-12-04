@@ -87,40 +87,29 @@ public class GetProductController: ControllerBase
         {
         };
         var grpcResponse = await _getProductService.GetPendingProductsAsync(grpcRequest, ct);
-       
-         var responseDtoList = grpcResponse.Products
-         // testing purposes
-            .Select(p =>
-            {
-          var dto = new ProductDto
-            {
-                Id = p.Product.Id,
-                Price = p.Product.Price,
-                Sold = p.Product.Sold,
-                Condition = p.Product.Condition,
-                ApprovalStatus = p.Product.ApprovalStatus.ToString(),
-                Name = p.Product.Name,
-                Category = p.Product.Category.ToString(),
-                Description = p.Product.Description,
-                SoldByCustomerId = p.Product.SoldByCustomerId,
-                RegisterDate = p.Product.RegisterDate.ToDateTime(),
-                Images = new List<ImageDto>()
-            };
-            if (p.FirstImage != null)
-            {
-                dto.Images.Add(new ImageDto
-                {
-                    Id = p.FirstImage.Id,
-                    Url = p.FirstImage.Url,
-                    ProductId = p.FirstImage.ProductId
-                });
-            }
-
-            return dto;
-        })
-        .ToList() ?? new List<ProductDto>();
-
-    return Ok(responseDtoList);
+        var responseDtoList = grpcResponse.Products
+           .Select(p => new ProductWithFirstImageDto
+           {
+               Id = p.Product.Id,
+               Price = p.Product.Price,
+               Sold = p.Product.Sold,
+               Condition = p.Product.Condition,
+               ApprovalStatus = p.Product.ApprovalStatus.ToString(),
+               Name = p.Product.Name,
+               Category = p.Product.Category.ToString(),
+               Description = p.Product.Description,
+               SoldByCustomerId = p.Product.SoldByCustomerId,
+               RegisterDate = p.Product.RegisterDate.ToDateTime(),
+               OtherCategory = p.Product.OtherCategory,
+               Image = new ImageDto
+               {
+                   Id = p.FirstImage.Id,
+                   Url = p.FirstImage.Url,
+                   ProductId = p.FirstImage.ProductId
+               }
+           })
+           .ToList() ?? []; // Return empty list of ProductDto if null
+        return Ok(responseDtoList);
     }
 
     [HttpGet("available")]

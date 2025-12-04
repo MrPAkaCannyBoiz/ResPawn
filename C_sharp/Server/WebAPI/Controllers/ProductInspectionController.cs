@@ -75,7 +75,7 @@ public class ProductInspectionController : ControllerBase
         {
             var response = await service.VerifyProductAsync(request, ct);
             
-            var resultDto = new ProductInspectionResultDto
+            var resultDto = new ProductVerificationResultDto
             {
                 ProductId = response.ProductId,
                 ApprovalStatus = ToDtoApprovalStatus(response.ApprovalStatus)
