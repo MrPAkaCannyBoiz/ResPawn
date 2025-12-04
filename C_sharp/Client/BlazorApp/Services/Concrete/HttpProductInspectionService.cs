@@ -68,5 +68,21 @@ public class HttpProductInspectionService : IProductInspectionService
         return JsonSerializer.Deserialize<ProductInspectionResultDto>(text, JsonOpts)
                ?? throw new Exception("Failed to deserialize ProductInspectionResultDto.");
     }
-    }
+
+      public async Task<ProductVerificationResultDto> VerifyProductAsync(int productId, ProductVerificationDto dto)
+        {
+            HttpResponseMessage http = await client.PostAsJsonAsync(
+                $"inspection/product/verify/{productId}", dto);
+            string text = await http.Content.ReadAsStringAsync();
+            if (!http.IsSuccessStatusCode)
+            {
+                throw new Exception(
+                    $"Error verifying product: {text}");
+            }
+            ProductVerificationResultDto resultDto =
+                JsonSerializer.Deserialize<ProductVerificationResultDto>(
+                    text, JsonCaseInsensitiveExtension.MakeJsonCaseInsensitive())!;
+            return resultDto;
+        }
+}
 

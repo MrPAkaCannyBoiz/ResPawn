@@ -3,6 +3,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
+import org.example.respawnmarket.entities.enums.ApprovalStatusEnum;
 
 @Entity
 @Table(name = "inspection")
@@ -23,12 +24,15 @@ public class InspectionEntity
     @Column(name = "inspection_date", nullable = false)
     private LocalDateTime inspectionDate;
 
-
     @Column(name = "comments", nullable = true)
     private String comment;
 
     @Column(name = "is_accepted", nullable = false)
     private boolean isAccepted;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "approval_stage", nullable = false)
+    private ApprovalStatusEnum approvalStage;
 
     public InspectionEntity() {}
 
@@ -39,6 +43,7 @@ public class InspectionEntity
         this.inspectionDate = LocalDateTime.now();
         this.comment = comment;
         this.isAccepted = isAccepted;
+        this.approvalStage = ApprovalStatusEnum.REVIEWING;
     }
 
     public int getId() {
@@ -88,4 +93,15 @@ public class InspectionEntity
     public void setAccepted(boolean accepted) {
         isAccepted = accepted;
     }
+
+    public ApprovalStatusEnum getApprovalStage()
+    {
+        return approvalStage;
+    }
+
+    public void setApprovalStage(ApprovalStatusEnum approvalStage)
+    {
+        this.approvalStage = approvalStage;
+    }
+
 }

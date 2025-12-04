@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using ApiContracts.Dtos;
 using Com.Respawnmarket;
@@ -38,18 +39,10 @@ public class ProductInspectionController : ControllerBase
         try
         {
             var response = await service.ReviewProductAsync(request, ct);
-            ApiContracts.Dtos.Enums.ApprovalStatus approvalStatus = response.ApprovalStatus switch
-            {
-                ApprovalStatus.Approved => ApiContracts.Dtos.Enums.ApprovalStatus.APPROVED,
-                ApprovalStatus.NotApproved => ApiContracts.Dtos.Enums.ApprovalStatus.NOT_APPROVED,
-                ApprovalStatus.Rejected => ApiContracts.Dtos.Enums.ApprovalStatus.REJECTED,
-                ApprovalStatus.Pending => ApiContracts.Dtos.Enums.ApprovalStatus.PENDING,
-                _ => throw new NotImplementedException(),
-            };
             var resultDto = new ProductInspectionResultDto
             {
                 ProductId = response.ProductId,
-                ApprovalStatus = approvalStatus,
+                ApprovalStatus = ToDtoApprovalStatus(response.ApprovalStatus),
                 PawnshopId = response.PawnshopId
             };
             return Ok(resultDto);
@@ -64,5 +57,51 @@ public class ProductInspectionController : ControllerBase
         }
     }
 
+    [HttpPost("product/verify/{productId}")]
+    [ProducesResponseType(typeof(UploadProductDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
+    public async Task<IActionResult> VerifyProductAsync (int productId,
+        ProductVerificationDto dto, CancellationToken ct)
+    {
+        var request = new ProductVerificationRequest
+        {
+            ProductId = productId,
+            ResellerId = dto.ResellerId,
+            Comments = dto.Comments,
+            IsAccepted = dto.IsAccepted
+        };
+        try
+        {
+            var response = await service.VerifyProductAsync(request, ct);
+            
+            var resultDto = new ProductVerificationResultDto
+            {
+                ProductId = response.ProductId,
+                ApprovalStatus = ToDtoApprovalStatus(response.ApprovalStatus)
+            };
+            return Ok(resultDto);
+        }
+        catch (NotImplementedException ex)
+        {
+            return StatusCode(StatusCodes.Status502BadGateway, new ProblemDetails
+            {
+                Title = "Service Not Implemented",
+                Detail = ex.Message
+            });
+        }
+    }
+
+    private ApiContracts.Dtos.Enums.ApprovalStatus ToDtoApprovalStatus(ApprovalStatus status)
+    {
+        return status switch
+        {
+            ApprovalStatus.Approved => ApiContracts.Dtos.Enums.ApprovalStatus.APPROVED,
+            ApprovalStatus.Reviewing => ApiContracts.Dtos.Enums.ApprovalStatus.REVIEWING,
+            ApprovalStatus.Rejected => ApiContracts.Dtos.Enums.ApprovalStatus.REJECTED,
+            ApprovalStatus.Pending => ApiContracts.Dtos.Enums.ApprovalStatus.PENDING,
+            _ => throw new NotImplementedException(),
+        };
+    }
 
 }

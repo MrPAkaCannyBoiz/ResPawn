@@ -3,7 +3,7 @@ package org.example.respawnmarket.entities.enums;
 public enum ApprovalStatusEnum
 {
     PENDING,
+    REVIEWING,
     APPROVED,
-    NOT_APPROVED,
     REJECTED
 }

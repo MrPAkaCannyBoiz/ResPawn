@@ -10,9 +10,25 @@
     private string _password;
     private string _loginMessage;
 
+    private bool IsValidEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return false;
+        return System.Text.RegularExpressions.Regex.IsMatch(
+            email,
+            @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase
+        );
+    }
+
     private async Task LoginAsync()
     {
         _loginMessage = string.Empty;
+        if (!IsValidEmail(_email))
+        {
+            _loginMessage = "Please enter a valid email address.";
+            return;
+        }
         try
         {
             await ((SimpleAuthProvider)AuthStateProvider).CustomerLoginAsync(_email, _password);
@@ -23,6 +39,9 @@
             _loginMessage = ex.Message;
         }
     }
+
+
+
 }
 
 <h3>Login</h3>
@@ -32,7 +51,13 @@
         <h3>Please login</h3>
 		<label>Email:</label>
 		<input type="text" @bind="_email" />
-		<label>Password:</label>
+        @if (!IsValidEmail(_email))
+        {
+            <label style="color: red">
+				Invaild email format.
+            </label>
+        }
+        <label>Password:</label>
 		<input type="password" @bind="_password" />
 		@if (!string.IsNullOrEmpty(_loginMessage))
 		{

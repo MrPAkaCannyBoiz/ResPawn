@@ -18,15 +18,36 @@ public class ProductInspectionGrpcService : IProductInspectionService
         _grpcClient = grpcClient;
     }
 
-    public Task<ProductInspectionResponse> ReviewProductAsync(ProductInspectionRequest request, CancellationToken cancellationToken = default)
+    public async Task<ProductInspectionResponse> ReviewProductAsync(ProductInspectionRequest request,
+        CancellationToken cancellationToken = default)
     {
         try
         {
-            return _grpcClient.ReviewProductAsync(request, cancellationToken: cancellationToken).ResponseAsync;
+            return await _grpcClient.ReviewProductAsync(request, cancellationToken: cancellationToken);
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
+        {
+            throw new KeyNotFoundException($"Product with ID {request.ProductId} not found.", ex);
         }
         catch (RpcException ex)
         {
-            // Handle gRPC-specific exceptions
+            throw new Exception($"gRPC Error: {ex.Status.Detail}", ex);
+        }
+    }
+
+    public async Task<ProductVerificationResponse> VerifyProductAsync(ProductVerificationRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _grpcClient.VerifyProductAsync(request, cancellationToken: cancellationToken);
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
+        {
+            throw new KeyNotFoundException($"Product with ID {request.ProductId} not found.", ex);
+        }
+        catch (RpcException ex)
+        {
             throw new Exception($"gRPC Error: {ex.Status.Detail}", ex);
         }
     }

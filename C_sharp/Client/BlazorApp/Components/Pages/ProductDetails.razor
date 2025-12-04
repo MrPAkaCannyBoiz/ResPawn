@@ -1,0 +1,79 @@
+﻿@page "/products/{ProductId:int}"
+@using ApiContracts.Dtos
+@using BlazorApp.Services.Interface
+@rendermode InteractiveServer
+@inject IGetProductService GetProductService
+
+<link href="css/ProductDetails.css" rel="stylesheet" />
+
+<h3>Product Details</h3>
+
+@if (_loading)
+{
+    <p>Loading product details...</p>
+}
+else if (!string.IsNullOrEmpty(_error))
+{
+    <div class="alert alert-danger">@_error</div>
+}
+else if (_product is null)
+{
+    <p>Product not found.</p>
+}
+else
+{
+    <div class="product-details-container">
+        <h4>@_product.Name (@_product.Price.ToString("0.00") DKK)</h4>
+        <div class="product-details-info">
+            <p><strong>Condition:</strong> @_product.Condition</p>
+            <p><strong>Category:</strong> @_product.Category</p>
+            <p><strong>Description:</strong> @_product.Description</p>
+            <p><strong>Registered:</strong> @_product.RegisterDate.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</p>
+            @if (_product.Images != null && _product.Images.Any())
+            {
+                <div class="product-details-images">
+                    @foreach (var img in _product.Images)
+                    {
+                        <img src="@img.Url" alt="@_product.Name" class="product-image-large" />
+                    }
+                </div>
+            }
+            else
+            {
+                <p>No images available.</p>
+            }
+            <p><strong>Seller:</strong> @_product.SellerFirstName @_product.SellerLastName</p>
+            <p><strong>Seller Email:</strong> @_product.SellerEmail</p>
+            <p><strong>Seller Phone:</strong> @_product.SellerPhoneNumber</p>
+            <p><strong>Pawnshop:</strong> @_product.PawnshopName, @_product.PawnshopStreetName @_product.PawnshopSecondaryUnit, @_product.PawnshopPostalCode @_product.PawnshopCity</p>
+            <p><strong>Status:</strong> @_product.ApprovalStatus</p>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int ProductId { get; set; }
+    private DetailedProductDto? _product;
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+        _error = null;
+        _product = null;
+
+        try
+        {
+            _product = await GetProductService.GetSingleAsync(ProductId);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

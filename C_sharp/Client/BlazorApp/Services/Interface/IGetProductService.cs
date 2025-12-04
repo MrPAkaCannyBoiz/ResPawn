@@ -8,4 +8,5 @@ public interface IGetProductService
     public Task<IQueryable<ProductWithFirstImageDto>> GetAllAsync();
     public Task<IQueryable<ProductWithFirstImageDto>> GetAllPendingAsync();
     public Task<IQueryable<ProductWithFirstImageDto>> GetAllAvailableAsync();
+    public Task<IQueryable<ProductWithFirstImageDto>> GetAllReviewingAsync();
 }

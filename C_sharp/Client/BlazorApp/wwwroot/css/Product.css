@@ -32,6 +32,12 @@
     margin-right: 16px;
 }
 
+.product-image-large {
+    width: 450px;
+    height: auto;
+    margin-right: 16px;
+}
+
 .product-details {
     flex: 1;
 }

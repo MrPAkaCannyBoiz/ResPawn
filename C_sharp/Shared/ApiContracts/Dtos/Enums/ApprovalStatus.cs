@@ -8,6 +8,6 @@ public enum ApprovalStatus
 {
     PENDING = 0,
     APPROVED = 1,
-    NOT_APPROVED = 2,
+    REVIEWING = 2,
     REJECTED = 3,
 }

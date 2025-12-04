@@ -1,6 +1,6 @@
 using System;
 using System.Text.Json;
-using ApiContracts;
+using ApiContracts.Dtos;
 using BlazorApp.Services.Interface;
 
 namespace BlazorApp.Services;

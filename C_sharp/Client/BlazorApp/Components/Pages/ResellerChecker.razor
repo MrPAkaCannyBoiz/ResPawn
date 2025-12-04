@@ -3,38 +3,41 @@
 @inject BlazorApp.Services.Interface.IProductInspectionService InspectionService
 @rendermode InteractiveServer
 @inject NavigationManager Nav
+@inject BlazorApp.Services.Interface.IGetProductService GetProductService
 @using System.Linq
 
 <h3>Pending Products</h3>
 
-@if (loading)
+@if (_loading)
 {
     <p><em>Loading pending products...</em></p>
 }
-else if (!string.IsNullOrEmpty(error))
+else if (!string.IsNullOrEmpty(_error))
 {
-    <div class="alert alert-danger">@error</div>
+    <div class="alert alert-danger">@_error</div>
 }
-else if (products is null || products.Count == 0)
+else if (_products is null || _products.Count() == 0)
 {
     <p>No products awaiting inspection </p>
 }
 else
 {
     <div class="row row-cols-1 row-cols-md-2 g-3">
-        @foreach (var p in products)
+        <select @onchange="OnProductListChanged" class="form-select mb-3">
+            <option value="pending">Pending</option>
+            <option value="reviewing">Reviewing</option>
+        </select>
+        @foreach (var p in _products)
         {
             <div class="col">
                 <div class="card h-100">
                     @{
-                        var firstImageUrl = p.Images != null && p.Images.Any()
-        ? p.Images.First().Url  
-        : null;
+                        var firstImageUrl = p.Image;      
                     }
 
-                    @if (!string.IsNullOrWhiteSpace(firstImageUrl))
+                    @if (!string.IsNullOrWhiteSpace(firstImageUrl.Url))
                     {
-                        <img src="@firstImageUrl" class="card-img-top" alt="@p.Name" />
+                        <img src="@firstImageUrl.Url" class="card-img-top" alt="@p.Name" />
                     }
 
                     <div class="card-body">
@@ -42,6 +45,7 @@ else
                         <p class="card-text">
                             <strong>Condition:</strong> @p.Condition<br />
                             <strong>Category:</strong> @p.Category<br />
+                            <strong>Status:</strong> @p.ApprovalStatus<br />
                             <strong>Uploaded:</strong> @p.RegisterDate.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
                         </p>
 
@@ -57,35 +61,72 @@ else
 }
 
 @code {
-    private List<ProductDto>? products;
-    private bool loading = true;
-    private string? error;
+    private IQueryable<ProductWithFirstImageDto>? _products;
+    private bool _loading = true;
+    private string? _error;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            loading = true;
-            error = null;
+            _loading = true;
+            _error = null;
+            _products = (await GetProductService.GetAllPendingAsync()).OrderBy(p => p.RegisterDate);
 
-            var list = await InspectionService.GetPendingProductsAsync();
-            // oldest first
-            products = list
-                .OrderBy(p => p.RegisterDate)
-                .ToList();
         }
         catch (Exception ex)
         {
-            error = ex.Message;
+            _error = ex.Message;
         }
         finally
         {
-            loading = false;
+            _loading = false;
         }
     }
 
     private void GoToDetails(int id)
     {
         Nav.NavigateTo($"/reseller/product/{id}");
+    }
+
+    private async Task OnProductListChanged(ChangeEventArgs e)
+    {
+        var selected = e.Value?.ToString();
+        switch (selected)
+        {
+            case "available":
+                await switchToAvailableProducts();
+                break;
+            case "reviewing":
+                await switchToReviewingProduct();
+                break;
+            case "all":
+                await switchToAllProducts();
+                break;
+            case "pending":
+            default:
+                await switchToPendingProduct();
+                break;
+        }
+    }
+
+    private async Task switchToAvailableProducts()
+    {
+        _products = (await GetProductService.GetAllAvailableAsync()).OrderBy(p => p.RegisterDate);
+    }
+
+    private async Task switchToReviewingProduct()
+    {
+        _products = (await GetProductService.GetAllReviewingAsync()).OrderBy(p => p.RegisterDate);
+    }
+
+    private async Task switchToPendingProduct()
+    {
+        _products = (await GetProductService.GetAllPendingAsync()).OrderBy(p => p.RegisterDate);
+    }
+
+    private async Task switchToAllProducts()
+    {
+        _products = (await GetProductService.GetAllAsync()).OrderBy(p => p.RegisterDate);
     }
 }
