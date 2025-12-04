@@ -14,6 +14,7 @@ message Customer
   string email = 4;
   string password = 5;
   string phone_number = 6;
+  string can_sell = 7;
 }
 
 message Address
@@ -166,13 +167,7 @@ message GetCustomerRequest
 
 message GetCustomerResponse
 {
-  int32 id = 1;
-  string first_name = 2;
-  string last_name = 3;
-  string email = 4;
-  string phone_number = 5;
-  repeated Address addresses = 6;
-  repeated Postal postals = 7;
+  NonSensitiveCustomerInfo customer = 1;
 }
 
 message Empty { }
@@ -191,6 +186,7 @@ message NonSensitiveCustomerInfo
   string phone_number = 5;
   repeated Address addresses = 6;
   repeated Postal postals = 7;
+  bool can_sell = 8;
 }
 
 message GetAllCustomersResponse

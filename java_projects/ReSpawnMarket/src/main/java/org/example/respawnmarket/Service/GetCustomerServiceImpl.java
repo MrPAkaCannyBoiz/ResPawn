@@ -1,6 +1,8 @@
 package org.example.respawnmarket.Service;
 
 import com.respawnmarket.*;
+import io.grpc.stub.StreamObserver;
+import org.example.respawnmarket.entities.CustomerEntity;
 import org.example.respawnmarket.repositories.AddressRepository;
 import org.example.respawnmarket.repositories.CustomerAddressRepository;
 import org.example.respawnmarket.repositories.CustomerRepository;
@@ -31,19 +33,68 @@ public class GetCustomerServiceImpl extends GetCustomerServiceGrpc.GetCustomerSe
     // use case for getting customer info (admin only)
     @Override
     public void getCustomer(GetCustomerRequest request,
-                                io.grpc.stub.StreamObserver<GetCustomerResponse> responseObserver)
+                                StreamObserver<GetCustomerResponse> responseObserver)
     {
-        var givenCustomer = customerRepository.findById(request.getCustomerId()).orElse(null);
+        CustomerEntity givenCustomer = customerRepository.findById(request.getCustomerId())
+                .orElse(null);
+        throwGrpcNotFoundIfNull(givenCustomer, responseObserver);
         assert givenCustomer != null;
-        Customer customerDto = Customer.newBuilder()
+
+        List<Address> addresses = getAddressesForCustomer(request.getCustomerId());
+        List<Postal> postals = getPostalsForCustomer(request.getCustomerId());
+        NonSensitiveCustomerInfo customerDto = NonSensitiveCustomerInfo.newBuilder()
                 .setId(givenCustomer.getId())
                 .setFirstName(givenCustomer.getFirstName())
                 .setLastName(givenCustomer.getLastName())
                 .setEmail(givenCustomer.getEmail())
                 .setPhoneNumber(givenCustomer.getPhoneNumber())
+                .addAllAddresses(addresses)
+                .addAllPostals(postals)
+                .setCanSell(givenCustomer.isCanSell())
                 .build();
 
-        List<Address> addresses = addressRepository.findAddressByCustomerId(request.getCustomerId())
+        GetCustomerResponse response = GetCustomerResponse.newBuilder().setCustomer(customerDto).build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getAllCustomers(GetAllCustomersRequest request,
+                                StreamObserver<GetAllCustomersResponse> responseObserver)
+    {
+        List<CustomerEntity> customers = customerRepository.findAll();
+        if (customers.isEmpty()) {
+            responseObserver.onError(
+                    io.grpc.Status.NOT_FOUND
+                            .withDescription("No customers found")
+                            .asRuntimeException()
+            );
+            return;
+        }
+        List<NonSensitiveCustomerInfo> customerDtos = customerRepository.findAll()
+                .stream()
+                .map(customerEntity -> NonSensitiveCustomerInfo.newBuilder()
+                        .setId(customerEntity.getId())
+                        .setFirstName(customerEntity.getFirstName())
+                        .setLastName(customerEntity.getLastName())
+                        .setEmail(customerEntity.getEmail())
+                        .setPhoneNumber(customerEntity.getPhoneNumber())
+                        .setCanSell(customerEntity.isCanSell())
+                        .addAllAddresses(getAddressesForCustomer(customerEntity.getId()))
+                        .addAllPostals(getPostalsForCustomer(customerEntity.getId()))
+                        .build())
+                .toList();
+
+        GetAllCustomersResponse response = GetAllCustomersResponse.newBuilder()
+                .addAllCustomers(customerDtos)
+                .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    private List<Address> getAddressesForCustomer(int customerId)
+    {
+        return addressRepository.findAddressByCustomerId(customerId)
                 .stream()
                 .map(addressEntity -> Address.newBuilder()
                         .setId(addressEntity.getId())
@@ -52,27 +103,28 @@ public class GetCustomerServiceImpl extends GetCustomerServiceGrpc.GetCustomerSe
                         .setPostalCode(addressEntity.getPostal().getPostalCode())
                         .build())
                 .toList();
-        
-        List<Postal> postals = postalRepository.findByCustomerId(request.getCustomerId())
+    }
+
+    private List<Postal> getPostalsForCustomer(int customerId)
+    {
+        return postalRepository.findByCustomerId(customerId)
                 .stream()
                 .map(postalEntity -> Postal.newBuilder()
                         .setPostalCode(postalEntity.getPostalCode())
                         .setCity(postalEntity.getCity())
                         .build())
                 .toList();
-
-        GetCustomerResponse response = GetCustomerResponse.newBuilder()
-                .setId(customerDto.getId())
-                .setFirstName(customerDto.getFirstName())
-                .setLastName(customerDto.getLastName())
-                .setEmail(customerDto.getEmail())
-                .setPhoneNumber(customerDto.getPhoneNumber())
-                .addAllAddresses(addresses)
-                .addAllPostals(postals)
-                .build();
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
     }
 
-
+    private void throwGrpcNotFoundIfNull(CustomerEntity customerEntity, StreamObserver<?> responseObserver)
+    {
+        if (customerEntity == null)
+        {
+            responseObserver.onError(
+                    io.grpc.Status.NOT_FOUND
+                            .withDescription("Customer not found")
+                            .asRuntimeException()
+            );
+        }
+    }
 }
