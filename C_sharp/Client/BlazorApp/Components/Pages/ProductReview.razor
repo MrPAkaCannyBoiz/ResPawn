@@ -71,9 +71,13 @@ else
 
       <div class="mb-3 form-check">
     <InputCheckbox class="form-check-input" @bind-Value="form.IsAccepted" />
-    <label class="form-check-label">
-        Approve this product
-    </label>
+        <label class="form-check-label">
+            @(
+               product?.ApprovalStatus?.Equals("reviewing", StringComparison.OrdinalIgnoreCase) == true
+               ? "Accept this product for selling"
+               : "Confirm this product for reviewing in the pawnshop"
+             )
+        </label>
 </div>
 
         <div class="mb-3">
@@ -86,9 +90,13 @@ else
             <InputTextArea class="form-control" @bind-Value="form.Comments" />
         </div>
 
-        <button class="btn btn-primary" type="submit" disabled="@busy">
-            @(busy ? "Submitting..." : "Submit review")
-        </button>
+    <button class="btn btn-primary" type="button"
+        disabled="@(busy || cooldownActive)"
+        @onclick="HandleActionWithCooldown">
+        @(busy
+            ? (IsReviewing ? "Verifying..." : "Submitting...")
+            : (IsReviewing ? "Verify Product" : "Submit Review"))
+    </button>
         <button class="btn btn-secondary ms-2" type="button"
                 @onclick="@(() => Nav.NavigateTo("/reseller/pending-products"))">
             Back to list
@@ -99,10 +107,14 @@ else
 
     private DetailedProductDto? product;
     private ProductInspectionDto form = new(); 
+	private ProductVerificationDto verificationForm = new();
     private bool loading = true;
     private bool busy;
+    private bool cooldownActive = false;
     private string? error;
     private string? successMessage;
+	private bool IsReviewing => product?.ApprovalStatus?
+                    .Equals("reviewing", StringComparison.OrdinalIgnoreCase) == true;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -120,8 +132,14 @@ else
                 ResellerId = 1,     // TODO: derive from logged-in reseller
                 PawnshopId = product.PawnshopId,
                 Comments = "",
-                IsAccepted = true  
+                IsAccepted = true
             };
+            verificationForm = new ProductVerificationDto
+            {
+                ResellerId = 1,     // TODO: derive from logged-in verifier
+                Comments = "",
+                IsAccepted = true
+			};
         }
         catch (Exception ex)
         {
@@ -131,6 +149,29 @@ else
         {
             loading = false;
         }
+    }
+
+    private async Task HandleActionAsync()
+    {
+        if (IsReviewing)
+        {
+            await VerifyProduct();
+        }
+        else
+        {
+            await SubmitReview();
+        }
+    }
+
+    private async Task HandleActionWithCooldown()
+    {
+        await HandleActionAsync();
+
+        cooldownActive = true;
+        StateHasChanged();
+        await Task.Delay(5000); // 5 sec
+        cooldownActive = false;
+        StateHasChanged();
     }
 
     private async Task SubmitReview()
@@ -145,8 +186,29 @@ else
 
             successMessage =
                 $"Review saved. ProductId={result.ProductId}, New status={result.ApprovalStatus}, PawnshopId={result.PawnshopId}";
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
 
-        
+    private async Task VerifyProduct()
+    {
+        busy = true;
+        error = null;
+        successMessage = null;
+
+        try
+        {
+            var result = await inspectionService.VerifyProductAsync(ProductId, verificationForm);
+
+            successMessage =
+                $"Product Verified. ProductId={result.ProductId}, New status={result.ApprovalStatus}";
         }
         catch (Exception ex)
         {

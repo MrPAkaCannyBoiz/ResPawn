@@ -69,7 +69,7 @@ public class HttpProductInspectionService : IProductInspectionService
                ?? throw new Exception("Failed to deserialize ProductInspectionResultDto.");
     }
 
-      public async Task<ProductInspectionResultDto> VerifyProductAsync(int productId, ProductVerificationDto dto)
+      public async Task<ProductVerificationResultDto> VerifyProductAsync(int productId, ProductVerificationDto dto)
         {
             HttpResponseMessage http = await client.PostAsJsonAsync(
                 $"inspection/product/verify/{productId}", dto);
@@ -79,8 +79,8 @@ public class HttpProductInspectionService : IProductInspectionService
                 throw new Exception(
                     $"Error verifying product: {text}");
             }
-            ProductInspectionResultDto resultDto =
-                JsonSerializer.Deserialize<ProductInspectionResultDto>(
+            ProductVerificationResultDto resultDto =
+                JsonSerializer.Deserialize<ProductVerificationResultDto>(
                     text, JsonCaseInsensitiveExtension.MakeJsonCaseInsensitive())!;
             return resultDto;
         }

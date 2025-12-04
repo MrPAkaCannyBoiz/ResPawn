@@ -9,4 +9,6 @@ public interface IProductInspectionService
     public Task<DetailedProductDto> GetProductDetailsAsync(int productId);
 
     public Task<ProductInspectionResultDto> ReviewProductAsync(int productId, ProductInspectionDto dto);
+
+    public Task<ProductVerificationResultDto> VerifyProductAsync(int productId, ProductVerificationDto dto);
 }

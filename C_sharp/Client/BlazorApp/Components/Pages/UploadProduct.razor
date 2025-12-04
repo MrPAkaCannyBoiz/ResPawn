@@ -27,9 +27,12 @@
 	private string? _uploadProductMessage;
 	private bool _ispriceValid => _price >= 0;
 	private bool _isStringValid(string? str) => !string.IsNullOrWhiteSpace(str);
+	private bool _isBusy;
 
 	private async Task UploadNewProduct()
 	{
+		_uploadProductMessage = null;
+		_isBusy = true;
 		try
 		{
 			if (!(_isStringValid(_name)
@@ -66,6 +69,10 @@
 		catch (Exception ex)
 		{
 			_uploadProductMessage = $"Error uploading item: {ex.Message}";
+		}
+		finally
+		{
+			_isBusy = false;
 		}
 	}
 
@@ -118,9 +125,9 @@
 
 	<label for="photoUrl" class="form-label">Photo URL (up to 5)</label>
 	<input type="text" class="form-control" id="photoUrl" @bind="_photoUrl0" />
-	@if (!IsValidPhotoUrl(_photoUrl0))
+	@if (!IsFirstUrlFilled())
 	{
-		<div class="text-danger">Photo URL is not valid.</div>
+		<div class="text-danger">Photo URL must be filled / URL is invalid</div>
 	}
 	@if (!string.IsNullOrWhiteSpace(_photoUrl0) && IsValidPhotoUrl(_photoUrl0))
 	{
@@ -134,7 +141,7 @@
 		</div>
 	}
 	<input type="text" class="form-control" id="photoUrl" @bind="_photoUrl1" />
-	@if (!IsValidPhotoUrl(_photoUrl1))
+	@if (!string.IsNullOrWhiteSpace(_photoUrl1) && !IsValidPhotoUrl(_photoUrl1))
 	{
 		<div class="text-danger">Photo URL is not valid.</div>
 	}
@@ -150,7 +157,7 @@
 		</div>
 	}
 	<input type="text" class="form-control" id="photoUrl" @bind="_photoUrl2" />
-	@if (!IsValidPhotoUrl(_photoUrl2))
+	@if (!string.IsNullOrWhiteSpace(_photoUrl2) && !IsValidPhotoUrl(_photoUrl2))
 	{
 		<div class="text-danger">Photo URL is not valid.</div>
 	}
@@ -166,7 +173,7 @@
 		</div>
 	}
 	<input type="text" class="form-control" id="photoUrl" @bind="_photoUrl3" />
-	@if (!IsValidPhotoUrl(_photoUrl3))
+	@if (!string.IsNullOrWhiteSpace(_photoUrl3) && !IsValidPhotoUrl(_photoUrl3))
 	{
 		<div class="text-danger">Photo URL is not valid.</div>
 	}
@@ -182,7 +189,7 @@
 		</div>
 	}
 	<input type="text" class="form-control" id="photoUrl" @bind="_photoUrl4" />
-	@if (!IsValidPhotoUrl(_photoUrl4))
+	@if (!string.IsNullOrWhiteSpace(_photoUrl4) && !IsValidPhotoUrl(_photoUrl4))
 	{
 		<div class="text-danger">Photo URL is not valid.</div>
 	}
@@ -221,7 +228,10 @@
 	<input type="number" class="form-control" id="userId" @bind="_userIdToUpload" />
 </div>
 
-<button class="btn btn-primary" @onclick="UploadNewProduct">Upload</button>
+		<button class="btn btn-primary" disabled="@_isBusy" 
+		@onclick="UploadNewProduct">
+		@(_isBusy ? "uploading..." : "upload")
+		</button>
 
 @if (!string.IsNullOrWhiteSpace(_uploadProductMessage))
 {
