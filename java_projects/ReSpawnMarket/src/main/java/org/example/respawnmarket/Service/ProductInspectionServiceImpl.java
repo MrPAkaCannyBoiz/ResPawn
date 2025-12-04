@@ -91,7 +91,7 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
         // Update product
         if (request.getIsAccepted())
         {
-          product.setApprovalStatus(ApprovalStatusEnum.APPROVED);
+          product.setApprovalStatus(ApprovalStatusEnum.REVIEWING);
           product.setPawnshop(pawnshop);
         }
         else
@@ -149,7 +149,7 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
         inspection.setApprovalStage(ApprovalStatusEnum.APPROVED);
         inspectionRepository.save(inspection);
         assert product != null;
-        if (request.getIsAccepted()) //true -> reviewing
+        if (request.getIsAccepted()) //true -> approved
         {
             product.setApprovalStatus(ApprovalStatusEnum.APPROVED);
         }
