@@ -1,7 +1,6 @@
 using System;
-using ApiContracts.Dtos;
 
-namespace ApiContracts;
+namespace ApiContracts.Dtos;
 
 public class BuyProductRequestDto
 {
