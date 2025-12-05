@@ -6,18 +6,16 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BlazorApp.Services.Concrete;
 
-public class HttpCustomerService : ICustomerServices
+public class HttpRegisterCustomerService : IRegisterCustomerService
 {
     private readonly HttpClient client;
     private static readonly JsonSerializerOptions JsonOpts =
         new() { PropertyNameCaseInsensitive = true };
 
-    public HttpCustomerService(HttpClient client)
+    public HttpRegisterCustomerService(HttpClient client)
     {
         this.client = client;
     }
-
-
 
  public async Task<CustomerDto> AddCustomerAsync(CreateCustomerDto request)
     {
@@ -35,19 +33,4 @@ public class HttpCustomerService : ICustomerServices
         })!;
     }
 
-    public async Task<CustomerDto> GetSingleAsync(int id)
-    {
-        var http = await client.GetAsync($"api/customers/{id}");
-        var text = await http.Content.ReadAsStringAsync();
-
-        if (!http.IsSuccessStatusCode)
-            throw new Exception(string.IsNullOrWhiteSpace(text)
-                ? $"Request failed: {(int)http.StatusCode} {http.ReasonPhrase}"
-                : text);
-
-        return JsonSerializer.Deserialize<CustomerDto>(text, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        })!;
-    }
 }

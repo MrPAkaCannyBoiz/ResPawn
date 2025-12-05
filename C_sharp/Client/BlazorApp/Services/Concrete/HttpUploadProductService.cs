@@ -16,7 +16,7 @@ public class HttpUploadProductService : Interface.IUploadProductService
 
     public async Task<ProductDto> UploadProductAsync(int customerId, UploadProductDto request)
     {
-       var apiRequest = await _client.PostAsJsonAsync($"products/customers/{customerId}", request);
+       var apiRequest = await _client.PostAsJsonAsync($"api/products/customers/{customerId}", request);
        string apiStringResponse = await apiRequest.Content.ReadAsStringAsync();
        if (!apiRequest.IsSuccessStatusCode)
        {
