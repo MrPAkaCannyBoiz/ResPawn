@@ -3,7 +3,7 @@ using BlazorApp.Services.Interface;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace BlazorApp.Services
+namespace BlazorApp.Services.Concrete
 {
     public class CartService : ICartService
     {
@@ -15,7 +15,7 @@ namespace BlazorApp.Services
 
         public double TotalPrice => _items.Sum(i => i.Price * i.Quantity);
 
-        public void AddItem(int productId, string name, Double price, string? imageUrl)
+        public void AddItem(int productId, string name, double price, string? imageUrl)
         {
             var existing = _items.FirstOrDefault(i => i.ProductId == productId);
             if (existing is not null)

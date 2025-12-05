@@ -26,6 +26,12 @@ builder.Services.AddScoped<IProductInspectionService, HttpProductInspectionServi
 builder.Services.AddScoped<IGetCustomerService, HttpGetCustomerService>();
 builder.Services.AddScoped<ICustomerInspectionService, HttpCustomerInspectionService>();
 builder.Services.AddScoped<AuthenticationStateProvider, SimpleAuthProvider>();
+builder.Services.AddScoped<ICartService, CartService>();
+
+
+builder.Services.AddServerSideBlazor()
+    .AddCircuitOptions(o => o.DetailedErrors = true);
+builder.Services.AddAuthorizationCore();
 
 builder.Services.AddHttpService();
 
