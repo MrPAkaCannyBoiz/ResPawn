@@ -2,8 +2,8 @@
 @using ApiContracts
 @attribute [Authorize(Roles = "Customer")]
 @using ApiContracts.Dtos
-@using BlazorApp.Services.Interface
 @using System.Security.Claims
+@using global::BlazorApp.Services.Interface
 @rendermode InteractiveServer
 @inject AuthenticationStateProvider AuthStateProvider
 

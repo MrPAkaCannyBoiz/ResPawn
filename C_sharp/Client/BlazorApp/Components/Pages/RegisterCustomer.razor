@@ -4,7 +4,7 @@
 @using ApiContracts.Dtos
 @using Microsoft.AspNetCore.Components.Forms
 @using global::BlazorApp.Services.Interface
-@inject ICustomerServices CustomerServices
+@inject IRegisterCustomerService registerCustomerService
 
 <PageTitle>Create Account</PageTitle>
 
@@ -46,7 +46,6 @@
 
         <div class="col-md-6">
             <label class="form-label">Repeat password</label>
-            <!-- 🔥 IMPORTANT: use @bind-Value, NOT Value= -->
             <InputText class="form-control" type="password" @bind-Value="confirmPassword" />
         </div>
 
@@ -98,7 +97,7 @@
         SecondaryUnit = null
     };
 
-    // extra field just for repeat password
+    
     private string confirmPassword = "";
 
     private EditContext? editContext;
@@ -120,7 +119,7 @@
 
         try
         {
-            // ✅ minimal check: both password fields must match
+
             if (form.Password != confirmPassword)
             {
                 success = false;
@@ -129,7 +128,7 @@
                 return;
             }
 
-            var created = await CustomerServices.AddCustomerAsync(form);
+            var created = await registerCustomerService.AddCustomerAsync(form);
             success = true;
             message = $"Customer '{created.FirstName} {created.LastName}' created successfully!";
 
