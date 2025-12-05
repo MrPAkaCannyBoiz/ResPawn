@@ -1,6 +1,7 @@
 ﻿using Com.Respawnmarket;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using ReSpawnMarket.SDK.ServiceInterfaces;
 
 namespace ReSpawnMarket.SDK;
 
@@ -34,6 +35,10 @@ public static class ServiceCollectionExtension
             options.Address = new Uri(_grpcServerAddress);
         });
         services.AddGrpcClient<CustomerLoginService.CustomerLoginServiceClient>(options =>
+        {
+            options.Address = new Uri(_grpcServerAddress);
+        });
+        services.AddGrpcClient<ResellerLoginService.ResellerLoginServiceClient>(options =>
         {
             options.Address = new Uri(_grpcServerAddress);
         });

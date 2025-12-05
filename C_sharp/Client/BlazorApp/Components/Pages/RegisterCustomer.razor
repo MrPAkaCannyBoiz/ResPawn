@@ -45,6 +45,11 @@
         </div>
 
         <div class="col-md-6">
+            <label class="form-label">Repeat password</label>
+            <InputText class="form-control" type="password" @bind-Value="confirmPassword" />
+        </div>
+
+        <div class="col-md-6">
             <label class="form-label">Street</label>
             <InputText class="form-control" @bind-Value="form.StreetName" />
             <ValidationMessage For="@(() => form.StreetName)" />
@@ -87,10 +92,19 @@
 @code {
     private CreateCustomerDto form = new()
     {
-        FirstName = "", LastName = "", Email = "", Password = "",
-        PhoneNumber = "", StreetName = "", City = "", PostalCode = 0,
+        FirstName = "",
+        LastName = "",
+        Email = "",
+        Password = "",
+        PhoneNumber = "",
+        StreetName = "",
+        City = "",
+        PostalCode = 0,
         SecondaryUnit = null
     };
+
+    // extra field just for repeat password
+    private string confirmPassword = "";
 
     private EditContext? editContext;
 
@@ -98,11 +112,9 @@
     {
         editContext = new EditContext(form);
     }
-
     private string? message;
     private bool success;
     private bool busy;
-
     private async Task CreateCustomer()
     {
         busy = true;
@@ -111,17 +123,32 @@
 
         try
         {
+            // ✅ minimal check: both password fields must match
+            if (form.Password != confirmPassword)
+            {
+                success = false;
+                message = "Passwords do not match.";
+                busy = false;
+                return;
+            }
+
             var created = await CustomerServices.AddCustomerAsync(form);
             success = true;
             message = $"Customer '{created.FirstName} {created.LastName}' created successfully!";
 
-            
             form = new CreateCustomerDto
             {
-                FirstName = "", LastName = "", Email = "", Password = "",
-                PhoneNumber = "", StreetName = "", City = "", PostalCode = 0,
+                FirstName = "",
+                LastName = "",
+                Email = "",
+                Password = "",
+                PhoneNumber = "",
+                StreetName = "",
+                City = "",
+                PostalCode = 0,
                 SecondaryUnit = null
             };
+            confirmPassword = "";
             editContext = new EditContext(form);
         }
         catch (Exception ex)
@@ -134,15 +161,21 @@
             busy = false;
         }
     }
-
     private void ResetForm()
     {
         form = new CreateCustomerDto
         {
-            FirstName = "", LastName = "", Email = "", Password = "",
-            PhoneNumber = "", StreetName = "", City = "", PostalCode = 0,
+            FirstName = "",
+            LastName = "",
+            Email = "",
+            Password = "",
+            PhoneNumber = "",
+            StreetName = "",
+            City = "",
+            PostalCode = 0,
             SecondaryUnit = null
         };
+        confirmPassword = "";
         editContext = new EditContext(form);
     }
 }

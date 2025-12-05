@@ -1,4 +1,5 @@
 ﻿@page "/resellercheck"
+@attribute [Authorize(Roles = "Reseller")]
 @using ApiContracts.Dtos
 @inject BlazorApp.Services.Interface.IProductInspectionService InspectionService
 @rendermode InteractiveServer

@@ -4,6 +4,7 @@
 @rendermode InteractiveServer
 @inject IGetProductService GetProductService
 @inject NavigationManager NavigationManager
+@inject ICartService CartService
 
 @code 
 {
@@ -16,10 +17,10 @@
 		_products = await GetProductService.GetAllAvailableAsync();
 	}
 
-	private void AddProductToCart(int productId)
+	private void AddProductToCart(ProductWithFirstImageDto product)
 	{
-		// implement cart addition logic here
-		_addToCartMessage = $"Product with ID {productId} added to cart. (not implemented)";
+		CartService.AddItem(product.Id, product.Name, product.Price, product.Image?.Url);
+		_addToCartMessage = $"'{product.Name}' added to cart.";
 	}
 }
 
@@ -54,7 +55,11 @@ else
 					</div>
 					<div class="product-price">@product.Price DKK</div>
 				</NavLink>
-				<div class="add-to-cart" @onclick="() => AddProductToCart(product.Id)">Add to cart</div>
+				<AuthorizeView Roles="Customer">
+					<Authorized>
+						<div class="add-to-cart" @onclick="() => AddProductToCart(product)">Add to cart</div>
+					</Authorized>
+				</AuthorizeView>
 			</div>
 		}
 	</div>
