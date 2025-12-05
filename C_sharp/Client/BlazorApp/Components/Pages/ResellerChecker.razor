@@ -1,11 +1,9 @@
 ﻿@page "/resellercheck"
-@attribute [Authorize(Roles = "Reseller")]
 @using ApiContracts.Dtos
 @inject BlazorApp.Services.Interface.IProductInspectionService InspectionService
 @rendermode InteractiveServer
 @inject NavigationManager Nav
 @inject BlazorApp.Services.Interface.IGetProductService GetProductService
-
 @using System.Linq
 
 <h3>Pending Products</h3>

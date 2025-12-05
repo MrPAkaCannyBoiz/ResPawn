@@ -1,5 +1,4 @@
-﻿using ApiContracts;
-using ApiContracts.Dtos;
+﻿using ApiContracts.Dtos;
 using BlazorApp.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
@@ -48,8 +47,6 @@ public class SimpleAuthProvider : AuthenticationStateProvider
             new Claim(ClaimTypes.NameIdentifier, responseDto.CustomerId.ToString()),
             new Claim(ClaimTypes.Email, responseDto.Email),
             new Claim(ClaimTypes.Name, responseDto.FirstName + " " + responseDto.LastName),
-            new Claim(ClaimTypes.Role, "Customer")
-            new Claim(ClaimTypes.Name, responseDto.FirstName + " " + responseDto.LastName),
             new Claim("CanSell", responseDto.CanSell.ToString()) // custom claim for selling permission
         };
 
@@ -86,9 +83,6 @@ public class SimpleAuthProvider : AuthenticationStateProvider
             new Claim(ClaimTypes.NameIdentifier, customerDto.CustomerId.ToString()),
             new Claim(ClaimTypes.Email, customerDto.Email),
             new Claim(ClaimTypes.Name, customerDto.FirstName + " " + customerDto.LastName),
-             new Claim(ClaimTypes.Role, "Customer")
-
-            new Claim(ClaimTypes.Name, customerDto.FirstName + " " + customerDto.LastName),
             new Claim("CanSell", customerDto.CanSell.ToString())
         };
         ClaimsIdentity identity = new(claims, "customerapiauth");
@@ -105,49 +99,6 @@ public class SimpleAuthProvider : AuthenticationStateProvider
         NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_currentClaimsPrincipal)));
     }
 
-public async Task ResellerLoginAsync(string username, string password)
-    {
-           HttpResponseMessage response = await _httpClient.PostAsJsonAsync("reseller/login",
-            new ResellerLoginDto()
-            {
-                Username = username,
-                Password = password
-            });
-        string content = await response.Content.ReadAsStringAsync();
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new Exception($"Login failed: {response.StatusCode}, {content}");
-        }
-
-        ResellerLoginResponseDto responseDto = JsonSerializer.Deserialize<ResellerLoginResponseDto>(
-            content, JsonCaseInsensitiveExtension.MakeJsonCaseInsensitive())!;
-
-        string serializedData = JsonSerializer.Serialize(responseDto);
-        await _jSRuntime.InvokeVoidAsync("sessionStorage.setItem", "currentCustomer", serializedData);
-        _primaryCacheUserJson = serializedData;
-
-        List<Claim> claims = new()
-        {
-            // claim should be unique (depend what we have in database)
-            new Claim(ClaimTypes.NameIdentifier, responseDto.Id.ToString()),
-            new Claim(ClaimTypes.Name, responseDto.Username),
-            new Claim(ClaimTypes.Role, "Reseller")
-        };
-
-        ClaimsIdentity identity = new(claims, "resellerapiauth");
-        _currentClaimsPrincipal = new ClaimsPrincipal(identity);
-
-        // Notify the authentication state has changed, then Blazor will update the UI accordingly.
-        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_currentClaimsPrincipal)));
-
-    }
-        public async Task ResellerLogoutAsync()
-    {
-        await _jSRuntime.InvokeVoidAsync("sessionStorage.setItem", "currentReseller", "");
-        _primaryCacheUserJson = null;
-        _currentClaimsPrincipal = new();
-        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_currentClaimsPrincipal)));
-    }
     public async Task UpdateCurrentCustomerCanSellAsync(bool canSell)
     {
         // Read current customer session
