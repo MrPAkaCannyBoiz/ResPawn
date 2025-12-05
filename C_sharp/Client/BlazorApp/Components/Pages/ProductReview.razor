@@ -1,6 +1,4 @@
 ﻿@page "/reseller/product/{ProductId:int}"
-@attribute [Authorize(Roles = "Reseller")]
-
 @using ApiContracts.Dtos
 @rendermode InteractiveServer
 @inject BlazorApp.Services.Interface.IProductInspectionService inspectionService
