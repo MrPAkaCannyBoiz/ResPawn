@@ -1,71 +1,35 @@
 ﻿@page "/purchase"
 @using ApiContracts
-@attribute [Authorize(Roles = "Customer")]
 @using ApiContracts.Dtos
-@using BlazorApp.Services.Interface
-@using System.Security.Claims
 @rendermode InteractiveServer
-@inject AuthenticationStateProvider AuthStateProvider
+@inject BlazorApp.Services.Interface.IPurchaseService PurchaseService
 
- @inject IPurcharseService PurchaseService
-@inject ICartService CartService
+<PageTitle>Purchase</PageTitle>
 
-<h3>Shopping Cart</h3>
+<h3>Purchase</h3>
 
-@if (!CartService.Items.Any())
-{
-    <p>Your cart is empty.</p>
-}
-else
-{
-
-
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Product</th>
-                <th style="width: 120px;">Price</th>
-                <th style="width: 120px;">Quantity</th>
-                <th style="width: 140px;">Subtotal</th>
-                <th style="width: 80px;"></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in CartService.Items)
-            {
-                <tr>
-                    <td>@item.Name</td>
-                    <td>@item.Price DKK</td>
-                    <td>
-                        <input type="number"
-                               class="form-control"
-                               min="1"
-                               value="@item.Quantity"
-                               @onchange="e => ChangeQuantity(item.ProductId, e)" />
-                    </td>
-                    <td>@(item.Price * item.Quantity) DKK</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-danger"
-                                @onclick="() => RemoveItem(item.ProductId)">
-                            X
-                        </button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-
-    <p><strong>Total: @CartService.TotalPrice DKK</strong></p>
-
-    <div class="mt-3 d-flex gap-2">
-        <button class="btn btn-primary" @onclick="Buy" disabled="@busy">
-            @(busy ? "Buying..." : "Buy")
-        </button>
-        <button class="btn btn-outline-secondary" @onclick="ClearCart" disabled="@busy">
-            Clear cart
-        </button>
+<div class="row g-3">
+    <div class="col-md-4">
+        <label class="form-label">Customer Id</label>
+        <input type="number" class="form-control" @bind="CustomerId" />
     </div>
-}
+
+    <div class="col-md-4">
+        <label class="form-label">Product Id</label>
+        <input type="number" class="form-control" @bind="ProductId" />
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label">Quantity</label>
+        <input type="number" class="form-control" @bind="Quantity" />
+    </div>
+</div>
+
+<div class="mt-3 d-flex gap-2">
+    <button class="btn btn-primary" @onclick="Buy" disabled="@busy">
+        @(busy ? "Buying..." : "Buy")
+    </button>
+</div>
 
 @if (!string.IsNullOrEmpty(message))
 {
@@ -79,57 +43,19 @@ else
     <hr />
     <h5>Raw result (debug)</h5>
     <pre>@System.Text.Json.JsonSerializer.Serialize(
-            Result,
-            new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
+        Result,
+        new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
 }
 
 @code {
     private int CustomerId { get; set; }
+    private int ProductId  { get; set; }
+    private int Quantity   { get; set; } = 1;
 
     private BuyProductsResultDto? Result;
     private string? message;
     private bool success;
     private bool busy;
-
-    private void ChangeQuantity(int productId, ChangeEventArgs e)
-    {
-        if (int.TryParse(e.Value?.ToString(), out var quantity))
-        {
-            CartService.SetQuantity(productId, quantity);
-        }
-    }
-    protected override async Task OnInitializedAsync()
-{
-    try
-    {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-
-        if (user.Identity?.IsAuthenticated == true)
-        {
-            var idClaim = user.FindFirst(ClaimTypes.NameIdentifier);
-            if (idClaim != null && int.TryParse(idClaim.Value, out var id))
-            {
-                CustomerId = id;
-            }
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"[Purchase] Error in OnInitializedAsync: {ex}");
-    }
-}
-
-
-    private void RemoveItem(int productId)
-    {
-        CartService.RemoveItem(productId);
-    }
-
-    private void ClearCart()
-    {
-        CartService.Clear();
-    }
 
     private async Task Buy()
     {
@@ -138,49 +64,38 @@ else
         success = false;
         Result = null;
 
-        if (!CartService.Items.Any())
-        {
-            message = "Your cart is empty.";
-            busy = false;
-            return;
-        }
-
-        if (CustomerId <= 0)
-        {
-            message = "Please enter a valid Customer Id.";
-            busy = false;
-            return;
-        }
-
-        Console.WriteLine($"[Purchase] BUY clicked C={CustomerId}, Items={CartService.Items.Count}");
+        // debug line – shows in browser dev tools console (F12 → Console)
+        Console.WriteLine($"[Purchase] BUY clicked C={CustomerId}, P={ProductId}, Q={Quantity}");
 
         var dto = new BuyProductRequestDto
         {
             CustomerId = CustomerId,
-            Items = CartService.Items
-                .Select(i => new CartItemDto
+            Items = new List<CartItemDto>
+            {
+                new CartItemDto
                 {
-                    ProductId = i.ProductId,
-                    Quantity = i.Quantity
-                })
-                .ToList()
+                    ProductId = ProductId,
+                    Quantity  = Quantity
+                }
+            }
         };
 
         try
         {
-             Result = await PurchaseService.BuyProductsAsync(dto);
+            Result = await PurchaseService.BuyProductsAsync(dto);
 
             success = true;
             message = $"Purchase completed. TransactionId = {Result.Transaction.Id}, " +
                       $"Total = {Result.ShoppingCart.TotalPrice}.";
-
-            CartService.Clear();
         }
         catch (Exception ex)
         {
             success = false;
-            message = $"Error: {ex.Message}";
-            Console.WriteLine($"[Purchase] Error in Buy(): {ex}");
+
+            // if you want short message:
+            // message = $"Error: {ex.Message}";
+            // if you want full stack trace (like your big error text):
+            message = $"Error: {ex}";
         }
         finally
         {

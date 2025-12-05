@@ -2,9 +2,9 @@
 @rendermode InteractiveServer
 @using ApiContracts
 @using ApiContracts.Dtos
+@using BlazorApp.Services.Interface
 @using Microsoft.AspNetCore.Components.Forms
-@using global::BlazorApp.Services.Interface
-@inject ICustomerServices CustomerServices
+@inject IRegisterCustomerService CustomerServices
 
 <PageTitle>Create Account</PageTitle>
 
@@ -42,12 +42,6 @@
             <label class="form-label">Password</label>
             <InputText class="form-control" type="password" @bind-Value="form.Password" />
             <ValidationMessage For="@(() => form.Password)" />
-        </div>
-
-        <div class="col-md-6">
-            <label class="form-label">Repeat password</label>
-            <!-- 🔥 IMPORTANT: use @bind-Value, NOT Value= -->
-            <InputText class="form-control" type="password" @bind-Value="confirmPassword" />
         </div>
 
         <div class="col-md-6">
@@ -98,9 +92,6 @@
         SecondaryUnit = null
     };
 
-    // extra field just for repeat password
-    private string confirmPassword = "";
-
     private EditContext? editContext;
 
     protected override void OnInitialized()
@@ -120,26 +111,17 @@
 
         try
         {
-            // ✅ minimal check: both password fields must match
-            if (form.Password != confirmPassword)
-            {
-                success = false;
-                message = "Passwords do not match.";
-                busy = false;
-                return;
-            }
-
             var created = await CustomerServices.AddCustomerAsync(form);
             success = true;
             message = $"Customer '{created.FirstName} {created.LastName}' created successfully!";
 
+            
             form = new CreateCustomerDto
             {
                 FirstName = "", LastName = "", Email = "", Password = "",
                 PhoneNumber = "", StreetName = "", City = "", PostalCode = 0,
                 SecondaryUnit = null
             };
-            confirmPassword = "";
             editContext = new EditContext(form);
         }
         catch (Exception ex)
@@ -161,7 +143,6 @@
             PhoneNumber = "", StreetName = "", City = "", PostalCode = 0,
             SecondaryUnit = null
         };
-        confirmPassword = "";
         editContext = new EditContext(form);
     }
 }
