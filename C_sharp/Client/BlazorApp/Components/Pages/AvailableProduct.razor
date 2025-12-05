@@ -1,10 +1,9 @@
 ﻿@page "/available-product"
 @using ApiContracts.Dtos
-@using global::BlazorApp.Services.Interface
+@using BlazorApp.Services.Interface
 @rendermode InteractiveServer
 @inject IGetProductService GetProductService
 @inject NavigationManager NavigationManager
-@inject ICartService CartService
 
 @code 
 {
@@ -17,10 +16,10 @@
 		_products = await GetProductService.GetAllAvailableAsync();
 	}
 
-	private void AddProductToCart(ProductWithFirstImageDto product)
+	private void AddProductToCart(int productId)
 	{
-		CartService.AddItem(product.Id, product.Name, product.Price, product.Image?.Url);
-        _addToCartMessage = $"'{product.Name}' added to cart.";
+		// implement cart addition logic here
+		_addToCartMessage = $"Product with ID {productId} added to cart. (not implemented)";
 	}
 }
 
@@ -40,27 +39,23 @@ else
 		@foreach (var product in _products)
 		{
 			<div class="product-row">
-	<NavLink class="product-card" href="@($"/products/{product.Id}")">
-		@if (product.Image != null)
-		{
-			<img class="product-image" src="@product.Image.Url" alt="@product.Name" />
-		}
-		else
-		{
-			<span class="product-image">No Image</span>
-		}
-		<div class="product-details">
-			<div><strong>@product.Name</strong></div>
-			<div>@product.Description</div>
-		</div>
-		<div class="product-price">@product.Price DKK</div>
-	</NavLink>
-	<AuthorizeView Roles="Customer">
-		<Authorized>
-			<div class="add-to-cart" @onclick="() => AddProductToCart(product)">Add to cart</div>
-		</Authorized>
-	</AuthorizeView>
-</div>
+				<NavLink class="product-card" href="@($"/products/{product.Id}")">
+					@if (product.Image != null)
+					{
+						<img class="product-image" src="@product.Image.Url" alt="@product.Name" />
+					}
+					else
+					{
+						<span class="product-image">No Image</span>
+					}
+					<div class="product-details">
+						<div><strong>@product.Name</strong></div>
+						<div>@product.Description</div>
+					</div>
+					<div class="product-price">@product.Price DKK</div>
+				</NavLink>
+				<div class="add-to-cart" @onclick="() => AddProductToCart(product.Id)">Add to cart</div>
+			</div>
 		}
 	</div>
 }

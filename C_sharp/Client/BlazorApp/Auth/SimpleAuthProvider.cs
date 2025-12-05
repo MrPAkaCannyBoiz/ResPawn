@@ -23,7 +23,7 @@ public class SimpleAuthProvider : AuthenticationStateProvider
 
     public async Task CustomerLoginAsync(string email, string password)
     {
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync("api/customers/login", 
+        HttpResponseMessage response = await _httpClient.PostAsJsonAsync("api/customers/login",
             new CustomerLoginDto() 
             { 
                 Email = email, 
