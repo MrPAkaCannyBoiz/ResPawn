@@ -8,18 +8,15 @@ namespace WebAPI.Controllers;
 
 // TODO : Introduce second address for customer and its dto at some point 
 // TODO : handle exceptions for gRPC calls (email already exists, etc.)
-[Route("api/customers")]
+[Route("/api/customers")]
 [ApiController]
-public class CustomerRegisterServiceController : ControllerBase
+public class CustomerRegisterController : ControllerBase
 {
     private readonly IRegisterCustomerService _registerCustomerService;
 
-    private readonly IGetCustomerService _getCustomerService;
-
-    public CustomerRegisterServiceController(IRegisterCustomerService registerCustomerService, IGetCustomerService getCustomerService)
+    public CustomerRegisterController(IRegisterCustomerService registerCustomerService)
     {
         _registerCustomerService = registerCustomerService;
-        _getCustomerService = getCustomerService;
     }
 
 
@@ -59,37 +56,12 @@ public class CustomerRegisterServiceController : ControllerBase
         StreetName    = grpcRes.Address.StreetName,
         SecondaryUnit = string.IsNullOrWhiteSpace(grpcRes.Address.SecondaryUnit) ? null : grpcRes.Address.SecondaryUnit,
         PostalCode    = grpcRes.Postal.PostalCode,
-        City          = grpcRes.Postal.City
+        City          = grpcRes.Postal.City,
+        CanSell       = grpcRes.Customer.CanSell
     };
-
-    // Defensive: ensure we actually got a DB-generated id
-    if (api.Id <= 0) return StatusCode(502, "Upstream gRPC service did not return a valid customer id.");
-
-    // Use the named route
-    return CreatedAtRoute("GetCustomerById", new { id = api.Id }, api);
+        return Ok(api);
 }
     
 
-    // READ
-    [HttpGet("{id:int}", Name = "GetCustomerById")]
-    public async Task<ActionResult<CustomerDto>> GetByIdAsync(int id, CancellationToken ct)
-    {
-        var grpcReq = new GetCustomerRequest { CustomerId = id };
-        var grpcRes = await _getCustomerService.GetCustomerAsync(grpcReq, ct);
 
-        var dto = new CustomerDto
-        {
-            Id = grpcRes.Id,
-            FirstName = grpcRes.FirstName,
-            LastName = grpcRes.LastName,
-            Email = grpcRes.Email,
-            PhoneNumber = grpcRes.PhoneNumber,
-            StreetName = grpcRes.Addresses?.FirstOrDefault()?.StreetName ?? "",
-            SecondaryUnit = grpcRes.Addresses?.FirstOrDefault()?.SecondaryUnit,
-            PostalCode = grpcRes.Postals?.FirstOrDefault()?.PostalCode ?? 0,
-            City = grpcRes.Postals?.FirstOrDefault()?.City ?? ""
-        };
-
-        return Ok(dto);
-    }
 }

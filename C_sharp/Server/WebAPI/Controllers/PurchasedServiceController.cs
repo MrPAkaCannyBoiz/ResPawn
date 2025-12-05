@@ -9,7 +9,7 @@ using Grpc.Core;
 
 namespace WebAPI.Controllers
 {
-    [Route("api/purchases")]
+    [Route("/api/purchases")]
     [ApiController]
     public class PurchasedServiceController : ControllerBase
     {

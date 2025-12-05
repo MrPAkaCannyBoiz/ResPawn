@@ -11,7 +11,7 @@ using ReSpawnMarket.SDK.ServiceInterfaces;
 namespace WebAPI.Controllers;
 
 [ApiController]
-[Route("inspection")]
+[Route("/api/inspection")]
 public class ProductInspectionController : ControllerBase
 {
     private readonly IProductInspectionService service;
