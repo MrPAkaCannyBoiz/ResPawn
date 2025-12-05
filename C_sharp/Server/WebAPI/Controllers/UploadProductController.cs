@@ -5,7 +5,7 @@ using ReSpawnMarket.SDK.ServiceInterfaces;
 
 namespace WebAPI.Controllers;
 
-[Route("products")]
+[Route("/api/products")]
 [ApiController]
 public class UploadProductController : ControllerBase
 {

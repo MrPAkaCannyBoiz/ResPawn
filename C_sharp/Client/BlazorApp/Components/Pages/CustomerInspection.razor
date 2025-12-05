@@ -1,0 +1,154 @@
+﻿@page "/customer/{id:int}/inspection"
+@using ApiContracts.Dtos
+@using BlazorApp.Services.Interface
+@inject IGetCustomerService GetCustomerService
+@inject ICustomerInspectionService CustomerInspectionService
+@inject NavigationManager Nav
+
+<link href="css/Customer.css" rel="stylesheet" />
+
+<h3>Customer Inspection</h3>
+
+@if (_loading)
+{
+    <div class="customer-status customer-status-info">Loading...</div>
+}
+else if (_error is not null)
+{
+    <div class="customer-status customer-status-error">@_error</div>
+}
+else if (_customer is null)
+{
+    <div class="customer-status customer-status-warn">Customer not found.</div>
+}
+else
+{
+    @if (!string.IsNullOrWhiteSpace(_message))
+    {
+        <div class="customer-status customer-status-info">@_message</div>
+    }
+
+    <div class="customer-card">
+        <div class="customer-header">
+            <div class="customer-title">Customer #@_customer.Id</div>
+            <div class="customer-sub">@_customer.FirstName @_customer.LastName</div>
+        </div>
+
+        <div class="customer-grid">
+            <div class="customer-row">
+                <div class="customer-cell customer-cell-key">Email</div>
+                <div class="customer-cell customer-cell-val">@_customer.Email</div>
+            </div>
+            <div class="customer-row">
+                <div class="customer-cell customer-cell-key">Phone</div>
+                <div class="customer-cell customer-cell-val">@_customer.PhoneNumber</div>
+            </div>
+            <div class="customer-row">
+                <div class="customer-cell customer-cell-key">Street</div>
+                <div class="customer-cell customer-cell-val">@_customer.StreetName</div>
+            </div>
+            <div class="customer-row">
+                <div class="customer-cell customer-cell-key">Unit</div>
+                <div class="customer-cell customer-cell-val">@_customer.SecondaryUnit</div>
+            </div>
+            <div class="customer-row">
+                <div class="customer-cell customer-cell-key">Postal Code</div>
+                <div class="customer-cell customer-cell-val">@_customer.PostalCode</div>
+            </div>
+            <div class="customer-row">
+                <div class="customer-cell customer-cell-key">City</div>
+                <div class="customer-cell customer-cell-val">@_customer.City</div>
+            </div>
+            <div class="customer-row">
+                <div class="customer-cell customer-cell-key">Current Can Sell</div>
+                <div class="customer-cell customer-cell-val">
+                    @if (_customer.CanSell)
+                    {
+                        <span class="customer-badge customer-badge-ok">Yes</span>
+                    }
+                    else
+                    {
+                        <span class="customer-badge customer-badge-no">No</span>
+                    }
+                </div>
+            </div>
+
+            <!-- Desired state selector paired with action button -->
+            <div class="customer-row">
+                <div class="customer-cell customer-cell-key">Desired Selling State</div>
+                <div class="customer-cell customer-cell-val">
+                    <label>
+                        <input type="checkbox" @bind="_canSell" />
+                        <span class="customer-muted">Check to allow selling</span>
+                    </label>
+                    <button class="customer-btn customer-btn-primary" @onclick="ApplyDesiredCanSell">
+                        Double click to apply
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="customer-actions">
+            <button class="customer-btn" @onclick="@(() => Nav.NavigateTo($"/customer/{_customer.Id}"))">View Profile</button>
+            <button class="customer-btn customer-btn-primary" @onclick="@(() => Nav.NavigateTo($"/customer/{_customer.Id}/update"))">Update</button>
+        </div>
+    </div>
+}
+
+@code
+{
+    [Parameter] public int id { get; set; }
+
+    private CustomerDto? _customer;
+    private string? _error;
+    private bool _loading = true;
+    private string _message = string.Empty;
+
+    // Holds the state from the checkbox (paired with button)
+    private bool _canSell;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        _error = null;
+        _customer = null;
+        _message = string.Empty;
+
+        try
+        {
+            _customer = await GetCustomerService.GetCustomerByIdAsync(id);
+            _canSell = _customer?.CanSell ?? false; // initialize checkbox to current state
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task ApplyDesiredCanSell()
+    {
+        if (_customer is null)
+        {
+            _message = "No customer loaded.";
+            return;
+        }
+        await CustomerInspectionService.SetCanSellAsync(_customer.Id, new EnableSellDto() { CanSell = _canSell });
+        var previous = _customer.CanSell;
+        _customer.CanSell = _canSell;
+
+        _message = _canSell
+            ? $"Customer {_customer.Id} marked as allowed to sell."
+            : $"Customer {_customer.Id} marked as not allowed to sell.";
+		StateHasChanged();
+        
+        // Later: call backend to persist
+        // await CustomerUpdateService.SetCanSellAsync(_customer.Id, _desiredCanSell);
+        // then set message based on success/failure and possibly revert on failure.
+    }
+}
+
+

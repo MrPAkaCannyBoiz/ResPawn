@@ -20,7 +20,7 @@ public class HttpProductInspectionService : IProductInspectionService
     }
     public async Task<IReadOnlyList<ProductDto>> GetPendingProductsAsync()
     {
-      var http = await client.GetAsync("products/pending");
+      var http = await client.GetAsync("api/products/pending");
         var text = await http.Content.ReadAsStringAsync();
 
         if (!http.IsSuccessStatusCode)
@@ -36,7 +36,7 @@ public class HttpProductInspectionService : IProductInspectionService
 
     public async Task<DetailedProductDto> GetProductDetailsAsync(int productId)
     {
-        var http = await client.GetAsync($"products/{productId}");
+        var http = await client.GetAsync($"api/products/{productId}");
         var text = await http.Content.ReadAsStringAsync();
 
         if (!http.IsSuccessStatusCode)
@@ -53,7 +53,7 @@ public class HttpProductInspectionService : IProductInspectionService
     public async Task<ProductInspectionResultDto> ReviewProductAsync(int productId, ProductInspectionDto dto)
     {
        var http = await client.PostAsJsonAsync(
-            $"inspection/product/{productId}",
+            $"api/inspection/product/{productId}",
             dto);
 
         var text = await http.Content.ReadAsStringAsync();
@@ -72,7 +72,7 @@ public class HttpProductInspectionService : IProductInspectionService
       public async Task<ProductVerificationResultDto> VerifyProductAsync(int productId, ProductVerificationDto dto)
         {
             HttpResponseMessage http = await client.PostAsJsonAsync(
-                $"inspection/product/verify/{productId}", dto);
+                $"api/inspection/product/verify/{productId}", dto);
             string text = await http.Content.ReadAsStringAsync();
             if (!http.IsSuccessStatusCode)
             {

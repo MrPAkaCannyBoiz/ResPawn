@@ -2,128 +2,137 @@
 @using ApiContracts
 @using ApiContracts.Dtos
 @using BlazorApp.Services.Interface
-@inject BlazorApp.Services.Interface.ICustomerServices CustomerServices
+@inject IGetCustomerService GetCustomerServices
 @inject IUpdateCustomerService UpdateCustomerServices
+@inject NavigationManager Nav
 @rendermode InteractiveServer
 
 @code 
 {
 	[Parameter] public int id { get; set; } // Customer ID from route parameter
 
-	private CustomerDto? customerToUpdate;
-	private string updateMessage = string.Empty;
-	private string loadMessage = string.Empty;
-	private string FirstName = string.Empty;
-	private string LastName = string.Empty;
-	private string Email = string.Empty;
-	private string PhoneNumber = string.Empty;
-	private string StreetName = string.Empty;
-	private string SecondaryUnit = string.Empty;
-	private string City = string.Empty;
-	private int postalCode;
-	private bool showConfirmation = false;
+	private CustomerDto? _customerToUpdate;
+	private string _updateMessage = string.Empty;
+	private string _loadMessage = string.Empty;
+	private string _firstName = string.Empty;
+	private string _lastName = string.Empty;
+	private string _email = string.Empty;
+	private string _phoneNumber = string.Empty;
+	private string _streetName = string.Empty;
+	private string _secondaryUnit = string.Empty;
+	private string _city = string.Empty;
+	private int _postalCode;
+	private bool _showConfirmation = false;
 
 	protected override async Task OnInitializedAsync()
 	{
 		try
 		{
-			customerToUpdate = await CustomerServices.GetSingleAsync(id);
-			if (customerToUpdate != null) // Pre-fill form fields with existing customer data
+			_customerToUpdate = await GetCustomerServices.GetCustomerByIdAsync(id);
+			if (_customerToUpdate != null) // Pre-fill form fields with existing customer data
 			{
-				FirstName = customerToUpdate.FirstName;
-				LastName = customerToUpdate.LastName;
-				Email = customerToUpdate.Email;
-				PhoneNumber = customerToUpdate.PhoneNumber;
-				StreetName = customerToUpdate.StreetName;
-				SecondaryUnit = customerToUpdate.SecondaryUnit;
-				City = customerToUpdate.City;
-				postalCode = customerToUpdate.PostalCode;
+				_firstName = _customerToUpdate.FirstName;
+				_lastName = _customerToUpdate.LastName;
+				_email = _customerToUpdate.Email;
+				_phoneNumber = _customerToUpdate.PhoneNumber;
+				_streetName = _customerToUpdate.StreetName;
+				_secondaryUnit = _customerToUpdate.SecondaryUnit;
+				_city = _customerToUpdate.City;
+				_postalCode = _customerToUpdate.PostalCode;
 			}
 		}
 		catch (Exception ex)
 		{
-			loadMessage = $"Error loading customer: {ex.Message}";
+			_loadMessage = $"Error loading customer: {ex.Message}";
 		}
 	}
 
 	private async Task UpdateCustomerGivenId()
 	{
-		if (customerToUpdate == null)
+		if (_customerToUpdate == null)
 		{
-			updateMessage = "Customer data is not loaded.";
+			_updateMessage = "Customer data is not loaded.";
 			return;
 		}
 		var updateDto = new UpdateCustomerDto
 		{
-			FirstName = FirstName,
-			LastName = LastName,
-			Email = Email,
-			PhoneNumber = PhoneNumber,
-			StreetName = StreetName,
-			SecondaryUnit = SecondaryUnit,
-			City = City,
-			PostalCode = postalCode
+			FirstName = _firstName,
+			LastName = _lastName,
+			Email = _email,
+			PhoneNumber = _phoneNumber,
+			StreetName = _streetName,
+			SecondaryUnit = _secondaryUnit,
+			City = _city,
+			PostalCode = _postalCode
 		};
 		try
 		{
 			await UpdateCustomerServices.UpdateCustomerAsync(id, updateDto);
-			updateMessage = "Customer updated successfully.";
+			_updateMessage = "Customer updated successfully.";
 		}
 		catch (Exception ex)
 		{
-			updateMessage = $"Error updating customer: {ex.Message}";
+			_updateMessage = $"Error updating customer: {ex.Message}";
 		}
+	}
+
+	private void NavigateToCustomerDetails()
+	{
+		Nav.NavigateTo($"/customer/{id}");
 	}
 
 }
 
 <h3>Update Customer</h3>
-@if(customerToUpdate != null)
+<button class="btn btn-primary" @onclick="() => NavigateToCustomerDetails()">Back to Customer Details</button>
+@if(_customerToUpdate != null)
 {
 	<div>
 		<label>First Name:</label>
-		<input @bind="FirstName" />
+		<input @bind="_firstName" />
 	</div>
 	<div>
 		<label>Last Name:</label>
-		<input @bind="LastName" />
+		<input @bind="_lastName" />
 	</div>
 	<div>
 		<label>Email:</label>
-		<input @bind="Email" />
+		<input @bind="_email" />
 	</div>
 	<div>
 		<label>Phone Number:</label>
-		<input @bind="PhoneNumber" />
+		<input @bind="_phoneNumber" />
 	</div>
 	<div>
 		<label>Street Name:</label>
-		<input @bind="StreetName" />
+		<input @bind="_streetName" />
 	</div>
 	<div>
 		<label>Secondary Unit:</label>
-		<input @bind="SecondaryUnit" />
+		<input @bind="_secondaryUnit" />
 	</div>
 	<div>
 		<label>City:</label>
-		<input @bind="City" />
+		<input @bind="_city" />
 	</div>
 	<div>
 		<label>Postal Code:</label>
-		<input type="number" @bind="postalCode" />
+		<input type="number" @bind="_postalCode" />
 	</div>
-	<button @onclick="() => showConfirmation=true">Update Customer</button>
-	@if (showConfirmation)
+	<button class="btn btn-primary" @onclick="() => _showConfirmation = true">
+		Update Customer
+		</button>
+	@if (_showConfirmation)
 	{
 		<div class="confirmation-dialog">
-			<p>Are you sure you want to update this customer?</p>
-			<button @onclick="async () => { await UpdateCustomerGivenId(); showConfirmation = false; }">Yes</button>
-			<button @onclick="() => showConfirmation = false">No</button>
+			<p>Are you sure you want to update?</p>
+			<button @onclick="async () => { await UpdateCustomerGivenId(); _showConfirmation = false; }">Yes</button>
+			<button @onclick="() => _showConfirmation = false">No</button>
 		</div>
 	}
-	<p>@updateMessage</p>
+	<p>@_updateMessage</p>
 }
 else
 {
-	<p>@loadMessage</p>
+	<p>@_loadMessage</p>
 }

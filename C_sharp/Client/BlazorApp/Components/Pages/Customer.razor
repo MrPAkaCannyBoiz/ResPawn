@@ -2,58 +2,66 @@
 @using ApiContracts
 @using ApiContracts.Dtos
 @using BlazorApp.Services.Interface
-@inject ICustomerServices CustomerServices
+@inject IGetCustomerService GetCustomerService
+@inject NavigationManager Nav
 
 <h3>Customer</h3>
 
-@if (loading)
+@if (_loading)
 {
     <p>loading...</p>
 }
-else if (error is not null)
+else if (_error is not null)
 {
-    <div class="alert alert-danger">@error</div>
+    <div class="alert alert-danger">@_error</div>
 }
-else if (customer is null)
+else if (_customer is null)
 {
     <div class="alert alert-warning">Not found.</div>
 }
 else
 {
     <dl class="row">
-        <dt class="col-sm-3">Id</dt><dd class="col-sm-9">@customer.Id</dd>
-        <dt class="col-sm-3">Name</dt><dd class="col-sm-9">@customer.FirstName @customer.LastName</dd>
-        <dt class="col-sm-3">Email</dt><dd class="col-sm-9">@customer.Email</dd>
-        <dt class="col-sm-3">Phone</dt><dd class="col-sm-9">@customer.PhoneNumber</dd>
+        <dt class="col-sm-3">Id</dt><dd class="col-sm-9">@_customer.Id</dd>
+        <dt class="col-sm-3">Name</dt><dd class="col-sm-9">@_customer.FirstName @_customer.LastName</dd>
+        <dt class="col-sm-3">Email</dt><dd class="col-sm-9">@_customer.Email</dd>
+        <dt class="col-sm-3">Phone</dt><dd class="col-sm-9">@_customer.PhoneNumber</dd>
         <dt class="col-sm-3">Address</dt>
-        <dd class="col-sm-9">@customer.StreetName, @customer.SecondaryUnit<br/>@customer.PostalCode @customer.City</dd>
+        <dd class="col-sm-9">@_customer.StreetName, @_customer.SecondaryUnit<br/>@_customer.PostalCode @_customer.City</dd>
     </dl>
+	<button class="btn btn-primary" @onclick="NavigateToUpdateCustomer">Go To Update Customer</button>
 }
 
 @code {
     [Parameter] public int id { get; set; }
 
-    private CustomerDto? customer;
-    private string? error;
-    private bool loading = true;
+    private CustomerDto? _customer;
+    private string? _error;
+    private bool _loading = true;
 
-    protected override async Task OnParametersSetAsync()
+
+    protected override async Task OnInitializedAsync()
     {
-        loading = true;
-        error = null;
-        customer = null;
+        _loading = true;
+        _error = null;
+        _customer = null;
 
         try
         {
-            customer = await CustomerServices.GetSingleAsync(id);
+            _customer = await GetCustomerService.GetCustomerByIdAsync(id);
         }
         catch (Exception ex)
         {
-            error = ex.Message;
+            _error = ex.Message;
         }
         finally
         {
-            loading = false;
+            _loading = false;
         }
     }
+
+    private void NavigateToUpdateCustomer()
+    {
+        Nav.NavigateTo($"/customer/update/{id}");
+	}
 }

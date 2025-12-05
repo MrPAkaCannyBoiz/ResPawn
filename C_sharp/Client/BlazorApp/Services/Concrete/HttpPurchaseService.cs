@@ -5,7 +5,7 @@ using BlazorApp.Services.Interface;
 
 namespace BlazorApp.Services;
 
-public class HttpPurchaseService : IPurcharseService
+public class HttpPurchaseService : IPurchaseService
 {
     private readonly HttpClient client;
     private static readonly JsonSerializerOptions JsonOpts =
