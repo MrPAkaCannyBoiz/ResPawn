@@ -13,5 +13,6 @@ public class CustomerDto
     public int PostalCode { get; set; }
     public string City { get; set; } = string.Empty;
     public string SecondaryUnit { get; set; } = string.Empty;
+    public bool CanSell { get; set; } 
 
 }

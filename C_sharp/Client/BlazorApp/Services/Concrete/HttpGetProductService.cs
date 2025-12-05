@@ -13,7 +13,7 @@ public class HttpGetProductService : IGetProductService
     }
     public async Task<IQueryable<ProductWithFirstImageDto>> GetAllAsync()
     {
-       HttpResponseMessage httpResponse = await _httpClient.GetAsync("products");
+       HttpResponseMessage httpResponse = await _httpClient.GetAsync("api/products");
        string textResponse = await httpResponse.Content.ReadAsStringAsync();
        if (!httpResponse.IsSuccessStatusCode)
        {
@@ -27,7 +27,7 @@ public class HttpGetProductService : IGetProductService
 
     public async Task<IQueryable<ProductWithFirstImageDto>> GetAllPendingAsync()
     {
-        HttpResponseMessage httpResponse = await _httpClient.GetAsync("products/pending");
+        HttpResponseMessage httpResponse = await _httpClient.GetAsync("api/products/pending");
         string textResponse = await httpResponse.Content.ReadAsStringAsync();
         if (!httpResponse.IsSuccessStatusCode)
         {
@@ -41,7 +41,7 @@ public class HttpGetProductService : IGetProductService
 
     public async Task<DetailedProductDto> GetSingleAsync(int id)
     {
-       HttpResponseMessage httpResponse = await _httpClient.GetAsync($"products/{id}");
+       HttpResponseMessage httpResponse = await _httpClient.GetAsync($"api/products/{id}");
        string textResponse = await httpResponse.Content.ReadAsStringAsync();
        if (!httpResponse.IsSuccessStatusCode)
        {
@@ -52,7 +52,7 @@ public class HttpGetProductService : IGetProductService
     }
     public async Task<IQueryable<ProductWithFirstImageDto>> GetAllAvailableAsync()
     {
-        HttpResponseMessage httpResponse = await _httpClient.GetAsync("products/available");
+        HttpResponseMessage httpResponse = await _httpClient.GetAsync("api/products/available");
         string textResponse = await httpResponse.Content.ReadAsStringAsync();
 
         if (!httpResponse.IsSuccessStatusCode)
@@ -75,7 +75,7 @@ public class HttpGetProductService : IGetProductService
 
     public async Task<IQueryable<ProductWithFirstImageDto>> GetAllReviewingAsync()
     {
-        HttpResponseMessage httpResponse = await _httpClient.GetAsync("products/reviewing");
+        HttpResponseMessage httpResponse = await _httpClient.GetAsync("api/products/reviewing");
         string textResponse = await httpResponse.Content.ReadAsStringAsync();
 
         if (!httpResponse.IsSuccessStatusCode)

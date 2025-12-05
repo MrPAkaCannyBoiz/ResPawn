@@ -19,11 +19,14 @@ public class CustomerEntity
     @Column (name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column (name = "password", nullable = false, unique = true)
+    @Column (name = "password", nullable = false, unique = false)
     private String password;
 
-    @Column (name = "phone_number", nullable = true, unique = true)
+    @Column (name = "phone_number", nullable = false, unique = true)
     private String phoneNumber;
+
+    @Column (name = "can_sell" , nullable = false)
+    private boolean canSell = true;
 
     public CustomerEntity()
     {
@@ -99,4 +102,15 @@ public class CustomerEntity
     {
         this.password = password;
     }
+
+    public boolean isCanSell()
+    {
+        return canSell;
+    }
+
+    public void setCanSell(boolean canSell)
+    {
+        this.canSell = canSell;
+    }
+
 }

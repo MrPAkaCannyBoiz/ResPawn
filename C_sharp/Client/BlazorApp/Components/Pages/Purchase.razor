@@ -7,7 +7,7 @@
 @rendermode InteractiveServer
 @inject AuthenticationStateProvider AuthStateProvider
 
- @inject IPurcharseService PurchaseService 
+ @inject IPurcharseService PurchaseService
 @inject ICartService CartService
 
 <h3>Shopping Cart</h3>
@@ -168,7 +168,7 @@ else
 
         try
         {
-             Result = await PurchaseService.BuyProductsAsync(dto); 
+             Result = await PurchaseService.BuyProductsAsync(dto);
 
             success = true;
             message = $"Purchase completed. TransactionId = {Result.Transaction.Id}, " +

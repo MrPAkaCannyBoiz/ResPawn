@@ -14,6 +14,7 @@ message Customer
   string email = 4;
   string password = 5;
   string phone_number = 6;
+  bool can_sell = 7;
 }
 
 message Address
@@ -166,13 +167,7 @@ message GetCustomerRequest
 
 message GetCustomerResponse
 {
-  int32 id = 1;
-  string first_name = 2;
-  string last_name = 3;
-  string email = 4;
-  string phone_number = 5;
-  repeated Address addresses = 6;
-  repeated Postal postals = 7;
+  NonSensitiveCustomerInfo customer = 1;
 }
 
 message Empty { }
@@ -191,6 +186,7 @@ message NonSensitiveCustomerInfo
   string phone_number = 5;
   repeated Address addresses = 6;
   repeated Postal postals = 7;
+  bool can_sell = 8;
 }
 
 message GetAllCustomersResponse
@@ -357,14 +353,12 @@ message ProductInspectionRequest
   bool is_accepted = 4;
   int32 pawnshop_id = 5;
 }
-
 message ProductInspectionResponse
 {
   int32 product_id = 1;
   ApprovalStatus approvalStatus = 2;
   int32 pawnshop_id = 3;
 }
-
 message ProductVerificationRequest
 {
   int32 product_id = 1;
@@ -372,13 +366,11 @@ message ProductVerificationRequest
   bool is_accepted = 3;
   string comments = 4;
 }
-
 message ProductVerificationResponse
 {
   int32 product_id = 1;
   ApprovalStatus approvalStatus = 2;
 }
-
 service ProductInspectionService {
   rpc ReviewProduct (ProductInspectionRequest) returns (ProductInspectionResponse);
   rpc VerifyProduct (ProductVerificationRequest) returns (ProductVerificationResponse);
@@ -396,7 +388,6 @@ message CustomerLoginRequest
   string email = 1;
   string password = 2;
 }
-
 message CustomerLoginResponse
 {
   int32 customer_id = 1;
@@ -404,8 +395,8 @@ message CustomerLoginResponse
   string last_name = 3;
   string email = 4;
   string phone_number = 5;
+  bool can_sell = 6;
 }
-
 service CustomerLoginService
 {
   rpc Login(CustomerLoginRequest) returns (CustomerLoginResponse);
@@ -427,4 +418,20 @@ message ResellerLoginResponse
 service ResellerLoginService
 {
   rpc Login(ResellerLoginRequest) returns (ResellerLoginResponse);
+}
+
+// use case for customer to enable selling ("inspect customer details")
+message EnableSellingRequest
+{
+  int32 customer_id = 1;
+  bool can_sell = 2;
+}
+message EnableSellingResponse
+{
+  int32 customer_id = 1;
+  bool can_sell = 2;
+}
+service CustomerInspectionService
+{
+  rpc SetCanSell(EnableSellingRequest) returns (EnableSellingResponse);
 }

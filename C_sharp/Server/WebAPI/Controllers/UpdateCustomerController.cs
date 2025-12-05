@@ -8,13 +8,13 @@ namespace WebAPI.Controllers;
 
 // TODO : Introduce second address for customer and its dto at some point 
 // TODO : handle exceptions for gRPC calls (email already exists, etc.)
-[Route("api/customers")]
+[Route("/api/customers")]
 [ApiController]
-public class UpdateCustomerServiceController : ControllerBase
+public class UpdateCustomerController : ControllerBase
 {
     private readonly IUpdateCustomerService _updateCustomerService;
 
-    public UpdateCustomerServiceController(IUpdateCustomerService updateCustomerService)
+    public UpdateCustomerController(IUpdateCustomerService updateCustomerService)
     {
         _updateCustomerService = updateCustomerService;
     }

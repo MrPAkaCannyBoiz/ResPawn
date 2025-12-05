@@ -6,7 +6,7 @@ using ReSpawnMarket.SDK.ServiceInterfaces;
 namespace WebAPI.Controllers;
 
 [ApiController]
-[Route("products")]
+[Route("/api/products")]
 public class GetProductController: ControllerBase
 {
     private readonly IGetProductService _getProductService;

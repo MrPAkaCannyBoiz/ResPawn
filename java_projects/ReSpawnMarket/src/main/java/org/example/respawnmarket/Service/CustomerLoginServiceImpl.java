@@ -41,12 +41,13 @@ public class CustomerLoginServiceImpl extends CustomerLoginServiceGrpc.CustomerL
           return;
         }
         CustomerLoginResponse response = CustomerLoginResponse.newBuilder()
-            .setCustomerId(loginCustomer.getId())
-            .setFirstName(loginCustomer.getFirstName())
-            .setLastName(loginCustomer.getLastName())
-            .setEmail(loginCustomer.getEmail())
-            .setPhoneNumber(loginCustomer.getPhoneNumber())
-            .build();
+                .setCustomerId(loginCustomer.getId())
+                .setFirstName(loginCustomer.getFirstName())
+                .setLastName(loginCustomer.getLastName())
+                .setEmail(loginCustomer.getEmail())
+                .setPhoneNumber(loginCustomer.getPhoneNumber())
+                .setCanSell(loginCustomer.isCanSell())
+                .build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }

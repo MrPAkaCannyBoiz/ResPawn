@@ -47,6 +47,10 @@ else
             <p><strong>Seller Phone:</strong> @_product.SellerPhoneNumber</p>
             <p><strong>Pawnshop:</strong> @_product.PawnshopName, @_product.PawnshopStreetName @_product.PawnshopSecondaryUnit, @_product.PawnshopPostalCode @_product.PawnshopCity</p>
             <p><strong>Status:</strong> @_product.ApprovalStatus</p>
+            <NavLink class="btn btn-primary" href="@($"/customer/{_product.SellerId}/inspection")">
+                Inspect Customer
+                </NavLink>
+
         </div>
     </div>
 }

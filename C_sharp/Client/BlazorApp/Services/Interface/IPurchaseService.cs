@@ -3,7 +3,7 @@ using ApiContracts.Dtos;
 
 namespace BlazorApp.Services.Interface;
 
-public interface IPurcharseService
+public interface IPurchaseService
 {
     public Task<BuyProductsResultDto> BuyProductsAsync(BuyProductRequestDto request);
 

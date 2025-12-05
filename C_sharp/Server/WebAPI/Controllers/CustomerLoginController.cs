@@ -8,7 +8,7 @@ using ReSpawnMarket.SDK.ServiceInterfaces;
 namespace WebAPI.Controllers;
 
 [ApiController]
-[Route("customers/login")]
+[Route("/api/customers/login")]
 public class CustomerLoginController : ControllerBase
 {
     private readonly ICustomerLoginService _customerLoginService;
@@ -38,7 +38,8 @@ public class CustomerLoginController : ControllerBase
                 FirstName = grpcRes.FirstName,
                 LastName = grpcRes.LastName,
                 Email = grpcRes.Email,
-                PhoneNumber = grpcRes.PhoneNumber
+                PhoneNumber = grpcRes.PhoneNumber,
+                CanSell = grpcRes.CanSell
             };
             return Ok(api);
         }

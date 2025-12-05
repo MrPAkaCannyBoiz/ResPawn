@@ -8,7 +8,7 @@ public static class HttpsServiceExtensions
     public static void AddHttpService(this IServiceCollection services)
     {
         var address = new Uri("https://localhost:6760/");
-        services.AddHttpClient<HttpCustomerService>(c =>
+        services.AddHttpClient<HttpRegisterCustomerService>(c =>
         {
             c.BaseAddress = address;
         });
@@ -25,6 +25,14 @@ public static class HttpsServiceExtensions
             c.BaseAddress = address;
         });
         services.AddHttpClient<HttpGetProductService>(c =>
+        {
+            c.BaseAddress = address;
+        });
+        services.AddHttpClient<HttpGetCustomerService>(c =>
+        {
+            c.BaseAddress = address;
+        });
+        services.AddHttpClient<HttpCustomerInspectionService>(c =>
         {
             c.BaseAddress = address;
         });
