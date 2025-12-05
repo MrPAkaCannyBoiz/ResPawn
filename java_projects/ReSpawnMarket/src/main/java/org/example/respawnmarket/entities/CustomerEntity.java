@@ -19,7 +19,7 @@ public class CustomerEntity
     @Column (name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column (name = "password", nullable = false)
+    @Column (name = "password", nullable = false, unique = false)
     private String password;
 
     @Column (name = "phone_number", nullable = false, unique = true)
