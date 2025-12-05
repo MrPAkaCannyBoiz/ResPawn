@@ -1,8 +1,8 @@
 ﻿@page "/customer/update/{id:int}"
 @using ApiContracts
 @using ApiContracts.Dtos
-@using BlazorApp.Services.Interface
-@inject BlazorApp.Services.Interface.ICustomerServices CustomerServices
+@using global::BlazorApp.Services.Interface
+@inject ICustomerServices CustomerServices
 @inject IUpdateCustomerService UpdateCustomerServices
 @rendermode InteractiveServer
 

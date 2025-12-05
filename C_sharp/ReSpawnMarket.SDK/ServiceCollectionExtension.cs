@@ -37,6 +37,10 @@ public static class ServiceCollectionExtension
         {
             options.Address = new Uri(_grpcServerAddress);
         });
+          services.AddGrpcClient<ResellerLoginService.ResellerLoginServiceClient>(options =>
+        {
+            options.Address = new Uri(_grpcServerAddress);
+        });
         services.AddGrpcClient<UpdateCustomerService.UpdateCustomerServiceClient>(options =>
         {
             options.Address = new Uri(_grpcServerAddress);

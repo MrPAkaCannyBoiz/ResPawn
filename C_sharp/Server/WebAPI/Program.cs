@@ -34,6 +34,7 @@ builder.Services.AddScoped<IUpdateCustomerService, UpdateCustomerGrpcService>();
 builder.Services.AddScoped<IProductInspectionService, ProductInspectionGrpcService>();
 builder.Services.AddScoped<IGetProductService, GetProductGrpcService>();
 builder.Services.AddScoped<ICustomerLoginService, CustomerLoginGrpcService>();
+builder.Services.AddScoped<IResellerLoginService, ResellerLoginGrpcService>();
 
 
 // adding custom extension(static) grpc sdk services

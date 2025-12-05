@@ -410,3 +410,21 @@ service CustomerLoginService
 {
   rpc Login(CustomerLoginRequest) returns (CustomerLoginResponse);
 }
+
+
+message ResellerLoginRequest
+{
+  string username =1;
+  string password =2;
+}
+
+message ResellerLoginResponse
+{
+  int32 id = 1;
+  string username =2;
+}
+
+service ResellerLoginService
+{
+  rpc Login(ResellerLoginRequest) returns (ResellerLoginResponse);
+}

@@ -32,6 +32,11 @@ builder.Services.AddScoped<IUpdateCustomerService, HttpUpdateCustomerService>();
 builder.Services.AddScoped<IGetProductService, HttpGetProductService>();
 builder.Services.AddScoped<AuthenticationStateProvider, SimpleAuthProvider>();
 
+builder.Services.AddServerSideBlazor()
+    .AddCircuitOptions(o => o.DetailedErrors = true);
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddAuthorizationCore();
+
 builder.Services.AddHttpService();
 
 var app = builder.Build();
