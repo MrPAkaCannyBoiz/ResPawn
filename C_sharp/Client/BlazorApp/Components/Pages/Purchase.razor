@@ -2,11 +2,12 @@
 @using ApiContracts
 @attribute [Authorize(Roles = "Customer")]
 @using ApiContracts.Dtos
-@using BlazorApp.Services.Interface
 @using System.Security.Claims
+@using global::BlazorApp.Services.Interface
 @rendermode InteractiveServer
 @inject AuthenticationStateProvider AuthStateProvider
-@inject IPurchaseService PurchaseService
+
+ @inject IPurchaseService PurchaseService
 @inject ICartService CartService
 
 <h3>Shopping Cart</h3>
@@ -17,6 +18,8 @@
 }
 else
 {
+
+
     <table class="table">
         <thead>
             <tr>
@@ -40,7 +43,7 @@ else
                                value="@item.Quantity"
                                @onchange="e => ChangeQuantity(item.ProductId, e)" />
                     </td>
-                    <td>@(item.Price* item.Quantity) DKK</td>
+                    <td>@(item.Price * item.Quantity) DKK</td>
                     <td>
                         <button class="btn btn-sm btn-outline-danger"
                                 @onclick="() => RemoveItem(item.ProductId)">
@@ -70,13 +73,14 @@ else
         @message
     </div>
 }
+
 @if (Result is not null)
 {
     <hr />
     <h5>Raw result (debug)</h5>
     <pre>@System.Text.Json.JsonSerializer.Serialize(
-                            Result,
-                            new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
+            Result,
+            new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
 }
 
 @code {
@@ -95,26 +99,26 @@ else
         }
     }
     protected override async Task OnInitializedAsync()
+{
+    try
     {
-        try
-        {
-            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-            var user = authState.User;
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
 
-            if (user.Identity?.IsAuthenticated == true)
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var idClaim = user.FindFirst(ClaimTypes.NameIdentifier);
+            if (idClaim != null && int.TryParse(idClaim.Value, out var id))
             {
-                var idClaim = user.FindFirst(ClaimTypes.NameIdentifier);
-                if (idClaim != null && int.TryParse(idClaim.Value, out var id))
-                {
-                    CustomerId = id;
-                }
+                CustomerId = id;
             }
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[Purchase] Error in OnInitializedAsync: {ex}");
-        }
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[Purchase] Error in OnInitializedAsync: {ex}");
+    }
+}
 
 
     private void RemoveItem(int productId)
@@ -164,7 +168,7 @@ else
 
         try
         {
-            Result = await PurchaseService.BuyProductsAsync(dto);
+             Result = await PurchaseService.BuyProductsAsync(dto);
 
             success = true;
             message = $"Purchase completed. TransactionId = {Result.Transaction.Id}, " +

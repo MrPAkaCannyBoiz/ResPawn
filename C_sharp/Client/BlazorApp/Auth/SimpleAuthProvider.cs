@@ -23,7 +23,7 @@ public class SimpleAuthProvider : AuthenticationStateProvider
 
     public async Task CustomerLoginAsync(string email, string password)
     {
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync("api/customers/login", 
+        HttpResponseMessage response = await _httpClient.PostAsJsonAsync("api/customers/login",
             new CustomerLoginDto() 
             { 
                 Email = email, 
@@ -42,7 +42,7 @@ public class SimpleAuthProvider : AuthenticationStateProvider
         await _jSRuntime.InvokeVoidAsync("sessionStorage.setItem", "currentCustomer", serializedData);
         _primaryCacheUserJson = serializedData;
 
-        List<Claim> claims = new()
+        List<Claim> claims = new List<Claim>()
         {
             // claim should be unique (depend what we have in database)
             new Claim(ClaimTypes.NameIdentifier, responseDto.CustomerId.ToString()),
@@ -69,23 +69,25 @@ public class SimpleAuthProvider : AuthenticationStateProvider
         }
         catch (InvalidOperationException)
         {
-            var emptyState = new AuthenticationState(new());
+            var emptyState = new AuthenticationState(new ClaimsPrincipal());
             return emptyState;
         }
         if (string.IsNullOrEmpty(customerAsJson))
         {
-            var emptyState = new AuthenticationState(new());
+            var emptyState = new AuthenticationState(new ClaimsPrincipal());
             return emptyState;
         }
 
         CustomerLoginResponseDto? customerDto = JsonSerializer.Deserialize<CustomerLoginResponseDto>(
             customerAsJson, JsonCaseInsensitiveExtension.MakeJsonCaseInsensitive())!;
-        List<Claim> claims = new()
+        List<Claim> claims = new List<Claim>()
         {
             new Claim(ClaimTypes.NameIdentifier, customerDto.CustomerId.ToString()),
             new Claim(ClaimTypes.Email, customerDto.Email),
             new Claim(ClaimTypes.Name, customerDto.FirstName + " " + customerDto.LastName),
-            new Claim(ClaimTypes.Role, "Customer"),
+             new Claim(ClaimTypes.Role, "Customer"),
+
+            new Claim(ClaimTypes.Name, customerDto.FirstName + " " + customerDto.LastName),
             new Claim("CanSell", customerDto.CanSell.ToString())
         };
         ClaimsIdentity identity = new(claims, "customerapiauth");
@@ -98,10 +100,53 @@ public class SimpleAuthProvider : AuthenticationStateProvider
     {
         await _jSRuntime.InvokeVoidAsync("sessionStorage.setItem", "currentCustomer", "");
         _primaryCacheUserJson = null;
-        _currentClaimsPrincipal = new();
+        _currentClaimsPrincipal = new ClaimsPrincipal();
         NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_currentClaimsPrincipal)));
     }
 
+public async Task ResellerLoginAsync(string username, string password)
+    {
+           HttpResponseMessage response = await _httpClient.PostAsJsonAsync("reseller/login",
+            new ResellerLoginDto()
+            {
+                Username = username,
+                Password = password
+            });
+        string content = await response.Content.ReadAsStringAsync();
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new Exception($"Login failed: {response.StatusCode}, {content}");
+        }
+
+        ResellerLoginResponseDto responseDto = JsonSerializer.Deserialize<ResellerLoginResponseDto>(
+            content, JsonCaseInsensitiveExtension.MakeJsonCaseInsensitive())!;
+
+        string serializedData = JsonSerializer.Serialize(responseDto);
+        await _jSRuntime.InvokeVoidAsync("sessionStorage.setItem", "currentCustomer", serializedData);
+        _primaryCacheUserJson = serializedData;
+
+        List<Claim> claims = new()
+        {
+            // claim should be unique (depend what we have in database)
+            new Claim(ClaimTypes.NameIdentifier, responseDto.Id.ToString()),
+            new Claim(ClaimTypes.Name, responseDto.Username),
+            new Claim(ClaimTypes.Role, "Reseller")
+        };
+
+        ClaimsIdentity identity = new(claims, "resellerapiauth");
+        _currentClaimsPrincipal = new ClaimsPrincipal(identity);
+
+        // Notify the authentication state has changed, then Blazor will update the UI accordingly.
+        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_currentClaimsPrincipal)));
+
+    }
+        public async Task ResellerLogoutAsync()
+    {
+        await _jSRuntime.InvokeVoidAsync("sessionStorage.setItem", "currentReseller", "");
+        _primaryCacheUserJson = null;
+        _currentClaimsPrincipal = new ClaimsPrincipal();
+        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_currentClaimsPrincipal)));
+    }
     public async Task UpdateCurrentCustomerCanSellAsync(bool canSell)
     {
         // Read current customer session
@@ -135,50 +180,6 @@ public class SimpleAuthProvider : AuthenticationStateProvider
         _currentClaimsPrincipal = new ClaimsPrincipal(identity);
 
         // Notify Blazor to refresh UI immediately
-        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_currentClaimsPrincipal)));
-    }
-
-    public async Task ResellerLoginAsync(string username, string password)
-    {
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync("reseller/login",
-         new ResellerLoginDto()
-         {
-             Username = username,
-             Password = password
-         });
-        string content = await response.Content.ReadAsStringAsync();
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new Exception($"Login failed: {response.StatusCode}, {content}");
-        }
-
-        ResellerLoginResponseDto responseDto = JsonSerializer.Deserialize<ResellerLoginResponseDto>(
-            content, JsonCaseInsensitiveExtension.MakeJsonCaseInsensitive())!;
-
-        string serializedData = JsonSerializer.Serialize(responseDto);
-        await _jSRuntime.InvokeVoidAsync("sessionStorage.setItem", "currentCustomer", serializedData);
-        _primaryCacheUserJson = serializedData;
-
-        List<Claim> claims = new()
-        {
-            // claim should be unique (depend what we have in database)
-            new Claim(ClaimTypes.NameIdentifier, responseDto.Id.ToString()),
-            new Claim(ClaimTypes.Name, responseDto.Username),
-            new Claim(ClaimTypes.Role, "Reseller")
-        };
-
-        ClaimsIdentity identity = new(claims, "resellerapiauth");
-        _currentClaimsPrincipal = new ClaimsPrincipal(identity);
-
-        // Notify the authentication state has changed, then Blazor will update the UI accordingly.
-        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_currentClaimsPrincipal)));
-
-    }
-    public async Task ResellerLogoutAsync()
-    {
-        await _jSRuntime.InvokeVoidAsync("sessionStorage.setItem", "currentReseller", "");
-        _primaryCacheUserJson = null;
-        _currentClaimsPrincipal = new();
         NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_currentClaimsPrincipal)));
     }
 }
