@@ -1,0 +1,76 @@
+﻿@page "/reseller-login"
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using global::BlazorApp.Auth
+
+@inject AuthenticationStateProvider AuthStateProvider
+
+<h3>Reseller Login</h3>
+
+<AuthorizeView Roles="Reseller">
+    <NotAuthorized>
+        <h3>Please login as reseller</h3>
+
+        <label>Username:</label>
+        <input type="text" @bind="_username" />
+        @if (!IsValidUsername(_username))
+        {
+            <label style="color: red">
+                Username is required.
+            </label>
+        }
+
+        <label>Password:</label>
+        <input type="password" @bind="_password" />
+
+        @if (!string.IsNullOrEmpty(_loginMessage))
+        {
+            <label style="color: red">
+                @_loginMessage
+            </label>
+        }
+
+        <button @onclick="LoginAsync">Login</button>
+    </NotAuthorized>
+
+    <Authorized>
+        <h3>Hello reseller, @context.User.Identity!.Name</h3>
+        <button @onclick="LogoutAsync">Logout</button>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    private string _username;
+    private string _password;
+    private string _loginMessage;
+
+    private bool IsValidUsername(string username)
+        => !string.IsNullOrWhiteSpace(username);
+
+    private async Task LoginAsync()
+    {
+        _loginMessage = string.Empty;
+
+        if (!IsValidUsername(_username))
+        {
+            _loginMessage = "Please enter a username.";
+            return;
+        }
+
+        try
+        {
+            await ((SimpleAuthProvider)AuthStateProvider).ResellerLoginAsync(_username, _password);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Login failed: {ex.Message}");
+            _loginMessage = ex.Message;
+        }
+    }
+
+    private async Task LogoutAsync()
+    {
+        await ((SimpleAuthProvider)AuthStateProvider).ResellerLogoutAsync();
+    }
+}
