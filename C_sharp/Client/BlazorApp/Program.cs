@@ -21,7 +21,7 @@ builder.Services.AddScoped<IRegisterCustomerService, HttpRegisterCustomerService
 builder.Services.AddScoped<IUploadProductService, HttpUploadProductService>();
 builder.Services.AddScoped<IUpdateCustomerService, HttpUpdateCustomerService>();
 builder.Services.AddScoped<IGetProductService, HttpGetProductService>();
-builder.Services.AddScoped<IPurcharseService, HttpPurchaseService>();
+builder.Services.AddScoped<IPurchaseService, HttpPurchaseService>();
 builder.Services.AddScoped<IProductInspectionService, HttpProductInspectionService>();
 builder.Services.AddScoped<IGetCustomerService, HttpGetCustomerService>();
 builder.Services.AddScoped<ICustomerInspectionService, HttpCustomerInspectionService>();
