@@ -26,27 +26,52 @@
             </NavLink>
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="new_product">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Upload New Item
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="purchase">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Test Buy
-            </NavLink>
-        </div>
+        <AuthorizeView Roles="Customer">
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="new_product">
+                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Upload New Item
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="resellercheck">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Check Quality and Price
-            </NavLink>
-        </div>
+        <AuthorizeView Roles="Customer">
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="purchase">
+                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Cart
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="Reseller">
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="resellercheck">
+                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Check Quality and Price
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
 
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="available-product">
                 <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Buy the product
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="customer-login">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> customer-login
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="Reseller-login">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Resseler-login
             </NavLink>
         </div>
 

@@ -1,5 +1,7 @@
 using Grpc.Net.Client;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop.Infrastructure;
 using ReSpawnMarket.SDK;
 using ReSpawnMarket.SDK.ServiceInterfaces;
@@ -33,11 +35,31 @@ builder.Services.AddScoped<IUpdateCustomerService, UpdateCustomerGrpcService>();
 builder.Services.AddScoped<IProductInspectionService, ProductInspectionGrpcService>();
 builder.Services.AddScoped<IGetProductService, GetProductGrpcService>();
 builder.Services.AddScoped<ICustomerLoginService, CustomerLoginGrpcService>();
+builder.Services.AddScoped<IResellerLoginService, ResellerLoginGrpcService>();
 builder.Services.AddScoped<ICustomerInspectionService, CustomerInspectionGrpcService>();
 
 
 // adding custom extension(static) grpc sdk services
 builder.Services.AddGrpcSdk();
+
+// Bind jwt settings from appsettings.json
+var jwtSettingsSection = builder.Configuration.GetSection("Jwt");
+builder.Services.AddAuthentication()
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+{
+    options.TokenValidationParameters = new()
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettingsSection["Issuer"],
+        ValidAudience = jwtSettingsSection["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(
+            System.Text.Encoding.UTF8.GetBytes(jwtSettingsSection["Key"] ?? ""))
+    };
+});
+builder.Services.AddAuthorization(); // this is needed for jwt auth, remove if jwt is not used/doesn't work
 
 // Configure Kestrel to use HTTPS with the specified .pfx certificate
 // install the certificate to trusted root authorities
@@ -70,7 +92,7 @@ else
 }
 
 
-
+app.UseAuthentication(); // this is needed for jwt auth, remove if jwt is not used/doesn't work
 app.UseAuthorization();
 
 app.MapControllers();
