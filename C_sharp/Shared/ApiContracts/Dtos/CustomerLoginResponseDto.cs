@@ -12,5 +12,6 @@ public class CustomerLoginResponseDto
     public required string Email { get; set; }
     public string PhoneNumber { get; set; } = string.Empty;
     public bool CanSell { get; set; }
+    public string JwtToken { get; set; } = string.Empty;
 
 }
