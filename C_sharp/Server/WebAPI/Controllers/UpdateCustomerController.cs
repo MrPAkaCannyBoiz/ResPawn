@@ -7,7 +7,7 @@ using ReSpawnMarket.SDK.ServiceInterfaces;
 namespace WebAPI.Controllers;
 
 // TODO : Introduce second address for customer and its dto at some point 
-// TODO : handle exceptions for gRPC calls (email already exists, etc.)
+// TODO : handle exceptions for gRPC calls like the other class does
 [Route("/api/customers")]
 [ApiController]
 public class UpdateCustomerController : ControllerBase

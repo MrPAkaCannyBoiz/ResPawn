@@ -36,15 +36,6 @@ public class CustomerLoginController : ControllerBase
         try
         {
             var grpcRes = await _customerLoginService.LoginCustomerAsync(grpcReq, ct);
-            var jwtToken = GenerateJwt(new CustomerLoginResponseDto
-            {
-                CustomerId = grpcRes.CustomerId,
-                FirstName = grpcRes.FirstName,
-                LastName = grpcRes.LastName,
-                Email = grpcRes.Email,
-                PhoneNumber = grpcRes.PhoneNumber,
-                CanSell = grpcRes.CanSell
-            });
             var api = new CustomerLoginResponseDto
             {
                 CustomerId = grpcRes.CustomerId,
@@ -53,8 +44,9 @@ public class CustomerLoginController : ControllerBase
                 Email = grpcRes.Email,
                 PhoneNumber = grpcRes.PhoneNumber,
                 CanSell = grpcRes.CanSell,
-                JwtToken = jwtToken
             };
+            var jwtToken = GenerateJwt(api);
+            api.JwtToken = jwtToken; // set JWT token
             return Ok(api);
         }
         catch (InvalidLoginException ex)
@@ -75,7 +67,8 @@ public class CustomerLoginController : ControllerBase
     private string GenerateJwt(CustomerLoginResponseDto dto)
     {
         JwtSecurityTokenHandler tokenHandler = new();
-        var key = Encoding.ASCII.GetBytes(config["Jwt:Key"] ?? "");
+        var key = Encoding.ASCII.GetBytes(config["Jwt:Key"] 
+            ?? throw new InvalidLoginException("Jwt key is not configured"));
 
         List<Claim> claims = GenerateClaims(dto);
 
@@ -96,13 +89,15 @@ public class CustomerLoginController : ControllerBase
     {
         var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, config["Jwt:Subject"] ?? ""),
+            new Claim(JwtRegisteredClaimNames.Sub, config["Jwt:Subject"] 
+            ?? throw new InvalidOperationException("JWT Subject is not configured")),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
             new Claim(ClaimTypes.NameIdentifier, dto.CustomerId.ToString()),
             new Claim(ClaimTypes.GivenName, dto.FirstName),
             new Claim(ClaimTypes.Surname, dto.LastName),
-            new Claim(ClaimTypes.Email, dto.Email)
+            new Claim(ClaimTypes.Email, dto.Email),
+            new Claim(ClaimTypes.Role, "Customer")
         };
         if (!string.IsNullOrEmpty(dto.PhoneNumber))
         {
