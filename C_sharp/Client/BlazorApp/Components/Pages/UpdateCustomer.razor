@@ -1,17 +1,20 @@
-﻿@page "/customer/update/{id:int}"
+﻿@page "/customer/update"
 @using ApiContracts
 @using ApiContracts.Dtos
 @using BlazorApp.Services.Interface
+@using System.Security.Claims
+@attribute [Authorize (Roles = "Customer")]
 @inject IGetCustomerService GetCustomerServices
 @inject IUpdateCustomerService UpdateCustomerServices
+@inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Nav
+
 @rendermode InteractiveServer
 
 @code 
 {
-	[Parameter] public int id { get; set; } // Customer ID from route parameter
-
 	private CustomerDto? _customerToUpdate;
+	private int id = 0; // customer ID is soon obtained from the token
 	private string _updateMessage = string.Empty;
 	private string _loadMessage = string.Empty;
 	private string _firstName = string.Empty;
@@ -26,6 +29,27 @@
 
 	protected override async Task OnInitializedAsync()
 	{
+		var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+
+		// If not authenticated, redirect to login
+		if (!user.Identity?.IsAuthenticated ?? false)
+		{
+			Nav.NavigateTo("/customer-login", forceLoad: true);
+			return;
+		}
+		// Read the ID claim from the token
+		var idClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+					  ?? user.FindFirst("sub")?.Value; // fallback if you used "sub"
+		if (string.IsNullOrWhiteSpace(idClaim) || !int.TryParse(idClaim, out var customerIdFromToken))
+		{
+			// No usable id in token -> deny
+			_loadMessage = "Unauthorized: missing customer identifier.";
+			Nav.NavigateTo("/customer-login", forceLoad: true);
+			return;
+		}
+		id = customerIdFromToken;
+
 		try
 		{
 			_customerToUpdate = await GetCustomerServices.GetCustomerByIdAsync(id);

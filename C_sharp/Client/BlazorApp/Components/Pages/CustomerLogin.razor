@@ -1,11 +1,14 @@
 ﻿@page "/customer-login"
 @rendermode InteractiveServer
-@using BlazorApp.Auth
+@using BlazorApp.Services.Interface
 @using Microsoft.AspNetCore.Components.Authorization
-@inject AuthenticationStateProvider AuthStateProvider
+@using ApiContracts.Dtos
+@using System.Security.Claims
+@inject ICustomerAuthService customerAuthService
 
 @code 
 {
+
     private string _email;
     private string _password;
     private string _loginMessage;
@@ -31,7 +34,12 @@
         }
         try
         {
-            await ((SimpleAuthProvider)AuthStateProvider).CustomerLoginAsync(_email, _password);
+            CustomerLoginDto loginDto = new CustomerLoginDto
+            {
+                Email = _email,
+                Password = _password
+            };
+            await customerAuthService.LoginAsync(loginDto);
         }
         catch (Exception ex)
         {
@@ -39,6 +47,22 @@
             _loginMessage = ex.Message;
         }
     }
+
+    private async Task LogoutAsync()
+    {
+        try
+        {
+            await customerAuthService.LogoutAsync();
+			_email = string.Empty;
+			_password = string.Empty;
+            _loginMessage = "You have been logged out";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Logout failed: {ex.Message}");
+            _loginMessage = ex.Message;
+        }
+	}
 
 
 
@@ -68,6 +92,11 @@
         <button @onclick="() => LoginAsync()">Login</button>
     </NotAuthorized>
     <Authorized>
-        <h3>Hello, @context.User.Identity!.Name</h3>
+        <h3>
+            Hello,
+            @context.User.FindFirst(ClaimTypes.GivenName)?.Value
+            @context.User.FindFirst(ClaimTypes.Surname)?.Value
+			<button @onclick="() => LogoutAsync()">Logout</button>
+        </h3>
     </Authorized>
 </AuthorizeView>

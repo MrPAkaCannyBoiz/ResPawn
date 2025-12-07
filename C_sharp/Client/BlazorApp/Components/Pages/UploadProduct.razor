@@ -1,10 +1,15 @@
-﻿@page "/new_product"
+﻿@page "/customer/new-product"
 @*TODO: Remove the user id input, and replace it with proper login system*@
 @using ApiContracts.Dtos
 @using ApiContracts.Dtos.Enums
 @using BlazorApp.Services.Interface
+@using System.Security.Claims
+@attribute [Authorize(Roles = "Customer")]
+@attribute [Authorize(Policy = "CanSellProduct")]
 @rendermode InteractiveServer
 @inject IUploadProductService UploadProductService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
 
 
 @code 
@@ -28,6 +33,27 @@
 	private bool _ispriceValid => _price >= 0;
 	private bool _isStringValid(string? str) => !string.IsNullOrWhiteSpace(str);
 	private bool _isBusy;
+
+	protected override async Task OnInitializedAsync()
+	{
+		var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+		// If not authenticated, redirect to login
+		if (!user.Identity?.IsAuthenticated ?? false)
+		{
+			Nav.NavigateTo("/customer-login", forceLoad: true);
+			return;
+		}
+		// Read the ID claim from the token
+		var idClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+					  ?? user.FindFirst("sub")?.Value; // fallback if you used "sub"
+		if (string.IsNullOrWhiteSpace(idClaim) || !int.TryParse(idClaim, out var userIdFromToken))
+		{
+			Nav.NavigateTo("/customer-login", forceLoad: true);
+			return;
+		}
+		_userIdToUpload = userIdFromToken;
+	}
 
 	private async Task UploadNewProduct()
 	{
@@ -73,6 +99,17 @@
 		finally
 		{
 			_isBusy = false;
+			_price = 0;
+			_condition = "";
+			_description = "";
+			_name = "";
+			_photoUrl0 = "";
+			_photoUrl1 = "";
+			_photoUrl2 = "";
+			_photoUrl3 = "";
+			_photoUrl4 = "";
+			_category = Category.CATEGORY_UNSPECIFIED;
+			_otherCategory = "";
 		}
 	}
 
@@ -81,8 +118,17 @@
 		if (string.IsNullOrWhiteSpace(url)) return false;
 		if (url.Length > 1024) return false;
 		// Basic check; extend as needed.
-		return url.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
-			|| url.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+		bool correctImageExtension = url.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
+			|| url.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase)
+			|| url.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
+			|| url.EndsWith(".gif", StringComparison.OrdinalIgnoreCase)
+			|| url.EndsWith(".bmp", StringComparison.OrdinalIgnoreCase)
+			|| url.EndsWith(".webp", StringComparison.OrdinalIgnoreCase);
+
+		return (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+			|| url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+			) && correctImageExtension;
+			
 	}
 
 	private bool IsFirstUrlFilled()
@@ -224,8 +270,6 @@
 		}
 	}
 
-	<label for="userId" class="form-label>">User ID (for testing purposes)</label>
-	<input type="number" class="form-control" id="userId" @bind="_userIdToUpload" />
 </div>
 
 		<button class="btn btn-primary" disabled="@_isBusy" 
