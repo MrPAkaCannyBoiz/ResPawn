@@ -19,7 +19,15 @@ public PurchaseGrpcService(PurchaseService.PurchaseServiceClient GrpcClient)
         {
             return await  GrpcClient.BuyProductsAsync(request, cancellationToken: ct);
         }
-        catch(RpcException ex)
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
+        {
+            throw new KeyNotFoundException("One or more products not found.", ex);
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.FailedPrecondition)
+        {
+            throw new InvalidOperationException("Purchase failed.", ex);
+        }
+        catch (RpcException ex)
         {
             throw new ApplicationException($"gRPC {ex.StatusCode}: {ex.Status.Detail}", ex);
         }

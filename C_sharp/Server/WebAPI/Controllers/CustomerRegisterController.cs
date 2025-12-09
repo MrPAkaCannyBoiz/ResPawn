@@ -28,39 +28,55 @@ public class CustomerRegisterController : ControllerBase
     {
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
-    var grpcReq = new RegisterCustomerRequest
-    {
-        FirstName    = dto.FirstName,
-        LastName     = dto.LastName,
-        Email        = dto.Email,
-        Password     = dto.Password,
-        PhoneNumber  = dto.PhoneNumber,
-        StreetName   = dto.StreetName,
-        SecondaryUnit= dto.SecondaryUnit ?? string.Empty,
-        PostalCode   = dto.PostalCode,
-        City         = dto.City
-    };
+        var grpcReq = new RegisterCustomerRequest
+        {
+            FirstName    = dto.FirstName,
+            LastName     = dto.LastName,
+            Email        = dto.Email,
+            Password     = dto.Password,
+            PhoneNumber  = dto.PhoneNumber,
+            StreetName   = dto.StreetName,
+            SecondaryUnit= dto.SecondaryUnit ?? string.Empty,
+            PostalCode   = dto.PostalCode,
+            City         = dto.City
+        };
 
-    var grpcRes = await _registerCustomerService.RegisterCustomerAsync(grpcReq, ct);
+        try
+        {
+           var grpcRes = await _registerCustomerService.RegisterCustomerAsync(grpcReq, ct);
 
-    if (grpcRes?.Customer is null || grpcRes.Address is null || grpcRes.Postal is null)
-        return StatusCode(502, "Upstream gRPC service returned an incomplete response.");
+           if (grpcRes?.Customer is null || grpcRes.Address is null || grpcRes.Postal is null)
+           return StatusCode(502, "Upstream gRPC service returned an incomplete response.");
 
-    var api = new CustomerDto
-    {
-        Id            = grpcRes.Customer.Id,
-        FirstName     = grpcRes.Customer.FirstName,
-        LastName      = grpcRes.Customer.LastName,
-        Email         = grpcRes.Customer.Email,
-        PhoneNumber   = grpcRes.Customer.PhoneNumber,
-        StreetName    = grpcRes.Address.StreetName,
-        SecondaryUnit = string.IsNullOrWhiteSpace(grpcRes.Address.SecondaryUnit) ? null : grpcRes.Address.SecondaryUnit,
-        PostalCode    = grpcRes.Postal.PostalCode,
-        City          = grpcRes.Postal.City,
-        CanSell       = grpcRes.Customer.CanSell
-    };
-        return Ok(api);
-}
+           var api = new CustomerDto
+           {
+              Id = grpcRes.Customer.Id,
+              FirstName = grpcRes.Customer.FirstName,
+              LastName = grpcRes.Customer.LastName,
+              Email = grpcRes.Customer.Email,
+              PhoneNumber = grpcRes.Customer.PhoneNumber,
+              StreetName = grpcRes.Address.StreetName,
+              SecondaryUnit = string.IsNullOrWhiteSpace(grpcRes.Address.SecondaryUnit) ? null : grpcRes.Address.SecondaryUnit,
+              PostalCode = grpcRes.Postal.PostalCode,
+              City = grpcRes.Postal.City,
+              CanSell = grpcRes.Customer.CanSell
+           };
+           return Ok(api);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (RpcException rpcEx)
+        {
+           // Log the exception details here as needed
+           return StatusCode(502, $"Upstream gRPC service error: {rpcEx.Status.Detail}");
+        }
+    }
     
 
 

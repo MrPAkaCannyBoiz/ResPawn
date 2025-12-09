@@ -22,9 +22,9 @@ public class ProductInspectionController : ControllerBase
     }
 
     [HttpPost("product/{productId}")]
-    [ProducesResponseType(typeof(UploadProductDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
+    [ProducesResponseType(typeof(ProductInspectionResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(KeyNotFoundException), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ArgumentException), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ReviewProductAsync(int productId, 
         ProductInspectionDto dto ,CancellationToken ct)
     {
@@ -36,31 +36,20 @@ public class ProductInspectionController : ControllerBase
             IsAccepted = dto.IsAccepted,
             PawnshopId = dto.PawnshopId
         };
-        try
+        var response = await service.ReviewProductAsync(request, ct);
+        var resultDto = new ProductInspectionResultDto
         {
-            var response = await service.ReviewProductAsync(request, ct);
-            var resultDto = new ProductInspectionResultDto
-            {
-                ProductId = response.ProductId,
-                ApprovalStatus = ToDtoApprovalStatus(response.ApprovalStatus),
-                PawnshopId = response.PawnshopId
-            };
-            return Ok(resultDto);
-        }
-        catch (NotImplementedException ex)
-        {
-            return StatusCode(StatusCodes.Status502BadGateway, new ProblemDetails
-            {
-                Title = "Service Not Implemented",
-                Detail = ex.Message
-            });
-        }
+            ProductId = response.ProductId,
+            ApprovalStatus = ToDtoApprovalStatus(response.ApprovalStatus),
+            PawnshopId = response.PawnshopId
+        };
+        return Ok(resultDto);
     }
 
     [HttpPost("product/verify/{productId}")]
-    [ProducesResponseType(typeof(UploadProductDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
+    [ProducesResponseType(typeof(ProductVerificationResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(KeyNotFoundException), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ArgumentException), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> VerifyProductAsync (int productId,
         ProductVerificationDto dto, CancellationToken ct)
     {
@@ -71,25 +60,14 @@ public class ProductInspectionController : ControllerBase
             Comments = dto.Comments,
             IsAccepted = dto.IsAccepted
         };
-        try
+        var response = await service.VerifyProductAsync(request, ct);
+
+        var resultDto = new ProductVerificationResultDto
         {
-            var response = await service.VerifyProductAsync(request, ct);
-            
-            var resultDto = new ProductVerificationResultDto
-            {
-                ProductId = response.ProductId,
-                ApprovalStatus = ToDtoApprovalStatus(response.ApprovalStatus)
-            };
-            return Ok(resultDto);
-        }
-        catch (NotImplementedException ex)
-        {
-            return StatusCode(StatusCodes.Status502BadGateway, new ProblemDetails
-            {
-                Title = "Service Not Implemented",
-                Detail = ex.Message
-            });
-        }
+            ProductId = response.ProductId,
+            ApprovalStatus = ToDtoApprovalStatus(response.ApprovalStatus)
+        };
+        return Ok(resultDto);
     }
 
     private ApiContracts.Dtos.Enums.ApprovalStatus ToDtoApprovalStatus(ApprovalStatus status)

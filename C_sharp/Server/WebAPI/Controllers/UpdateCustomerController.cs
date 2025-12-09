@@ -2,6 +2,7 @@
 using Com.Respawnmarket;
 using Grpc.Core;
 using Microsoft.AspNetCore.Mvc;
+using ReSpawnMarket.SDK.ServiceExceptions;
 using ReSpawnMarket.SDK.ServiceInterfaces;
 
 namespace WebAPI.Controllers;
@@ -59,14 +60,17 @@ public class UpdateCustomerController : ControllerBase
             };
             customer = returnDto;
         }
-        catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.AlreadyExists)
+        catch (UpdateCustomerException ex)
         {
-            return Conflict(new ProblemDetails
-            {
-                Title = "Email Already Exists",
-                Detail = ex.Status.Detail,
-                Status = StatusCodes.Status409Conflict
-            });
+            return BadRequest(ex.Message);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (ApplicationException ex)
+        {
+            return StatusCode(StatusCodes.Status502BadGateway, ex.Message);
         }
         return Ok(customer);
     }

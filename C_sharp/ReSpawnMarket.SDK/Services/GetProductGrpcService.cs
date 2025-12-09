@@ -1,5 +1,6 @@
 ﻿using Com.Respawnmarket;
 using Grpc.Core;
+using ReSpawnMarket.SDK.ServiceExceptions;
 using ReSpawnMarket.SDK.ServiceInterfaces;
 using System;
 using System.Collections.Generic;
@@ -30,11 +31,11 @@ public class GetProductGrpcService : IGetProductService
         }
         catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
         {
-            throw new KeyNotFoundException($"All product not found : {ex.Message}", ex);
+            throw new ProductNotFoundException($"All product not found : {ex.Message}");
         }
         catch (RpcException ex)
         {
-            throw new Exception($"gRPC Error: {ex.Status.Detail}", ex);
+            throw new ApplicationException($"gRPC Error: {ex.Status.Detail}", ex);
         }
     }
 
@@ -51,11 +52,11 @@ public class GetProductGrpcService : IGetProductService
         }
         catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
         {
-            throw new KeyNotFoundException($"Pending product not found : {ex.Message}", ex);
+            throw new ProductNotFoundException($"Pending product not found : {ex.Message}");
         }
         catch (RpcException ex)
         {
-            throw new Exception($"gRPC Error: {ex.Status.Detail}", ex);
+            throw new ApplicationException($"gRPC Error: {ex.Status.Detail}", ex);
         }
     }
 
@@ -68,7 +69,7 @@ public class GetProductGrpcService : IGetProductService
         }
         catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
         {
-            throw new KeyNotFoundException($"Product with ID {request.ProductId} not found.", ex);
+            throw new ProductNotFoundException($"Product with ID {request.ProductId} not found.");
         }
         catch (RpcException ex) when (ex.StatusCode == StatusCode.FailedPrecondition)
         {
@@ -76,7 +77,7 @@ public class GetProductGrpcService : IGetProductService
         }
         catch (RpcException ex)
         {
-            throw new Exception($"gRPC Error: {ex.Status.Detail}", ex);
+            throw new ApplicationException($"gRPC Error: {ex.Status.Detail}", ex);
         }
     }
 
@@ -89,7 +90,7 @@ public class GetProductGrpcService : IGetProductService
         }
         catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
         {
-            throw new KeyNotFoundException($"All product sold out : {ex.Message}", ex);
+            throw new ProductNotFoundException($"All product sold out : {ex.Message}");
         }
         catch (RpcException ex) when (ex.StatusCode == StatusCode.FailedPrecondition)
         {
@@ -97,8 +98,7 @@ public class GetProductGrpcService : IGetProductService
         }
         catch (RpcException ex) 
         {
-
-            throw new Exception($"gRPC Error: {ex.Status.Detail}", ex);
+            throw new ApplicationException($"gRPC Error: {ex.Status.Detail}", ex);
         }
     }
 
@@ -111,7 +111,7 @@ public class GetProductGrpcService : IGetProductService
         }
         catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
         {
-            throw new KeyNotFoundException($"All reviewing products not found : {ex.Message}", ex);
+            throw new ProductNotFoundException($"All reviewing products not found : {ex.Message}");
         }
         catch (RpcException ex) when (ex.StatusCode == StatusCode.FailedPrecondition)
         {
@@ -119,7 +119,7 @@ public class GetProductGrpcService : IGetProductService
         }
         catch (RpcException ex)
         {
-            throw new Exception($"gRPC Error: {ex.Status.Detail}", ex);
+            throw new ApplicationException($"gRPC Error: {ex.Status.Detail}", ex);
         }
     }
 }

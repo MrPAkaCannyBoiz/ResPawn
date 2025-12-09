@@ -21,52 +21,74 @@ public class GetCustomerController : ControllerBase
     [ProducesResponseType(typeof(CustomerDto), StatusCodes.Status200OK)]
     //instead of try catch in controller, we use ExceptionMiddleware to catch unhandled exceptions globally
     [ProducesResponseType(typeof(KeyNotFoundException), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ApplicationException), StatusCodes.Status502BadGateway)]
+    [ProducesResponseType(typeof(ApplicationException), StatusCodes.Status500InternalServerError)]
     [ProducesErrorResponseType(typeof(Exception))]
     public async Task<IActionResult> GetCustomerAsync(int customerId, CancellationToken ct)
     {
-        var grpcReq = new GetCustomerRequest { CustomerId = customerId };
-        var grpcRes = await _getCustomerService.GetCustomerAsync(grpcReq, ct);
-        var dto = grpcRes.Customer;
-        var customerDto = new CustomerDto
+        try
         {
-            Id = dto.Id,
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
-            Email = dto.Email,
-            PhoneNumber = dto.PhoneNumber,
-            StreetName = dto.Addresses?.FirstOrDefault()?.StreetName ?? "",
-            SecondaryUnit = dto.Addresses?.FirstOrDefault()?.SecondaryUnit ?? "",
-            PostalCode = dto.Postals?.FirstOrDefault()?.PostalCode ?? 0,
-            City = dto.Postals?.FirstOrDefault()?.City ?? "",
-            CanSell = dto.CanSell
-        };
-        return Ok(customerDto);
+            var grpcReq = new GetCustomerRequest { CustomerId = customerId };
+            var grpcRes = await _getCustomerService.GetCustomerAsync(grpcReq, ct);
+            var dto = grpcRes.Customer;
+            var customerDto = new CustomerDto
+            {
+                Id = dto.Id,
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
+                Email = dto.Email,
+                PhoneNumber = dto.PhoneNumber,
+                StreetName = dto.Addresses?.FirstOrDefault()?.StreetName ?? "",
+                SecondaryUnit = dto.Addresses?.FirstOrDefault()?.SecondaryUnit ?? "",
+                PostalCode = dto.Postals?.FirstOrDefault()?.PostalCode ?? 0,
+                City = dto.Postals?.FirstOrDefault()?.City ?? "",
+                CanSell = dto.CanSell
+            };
+            return Ok(customerDto);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (ApplicationException ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
     }
 
     [HttpGet]
     [ProducesResponseType(typeof(List<CustomerDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(KeyNotFoundException), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ApplicationException), StatusCodes.Status502BadGateway)]
+    [ProducesResponseType(typeof(ApplicationException), StatusCodes.Status500InternalServerError)]
     [ProducesErrorResponseType(typeof(Exception))]
     public async Task<IActionResult> GetAllCustomersAsync(CancellationToken ct)
     {
-        var grpcReq = new GetAllCustomersRequest { };
-        var grpcRes = await _getCustomerService.GetAllCustomerAsync(grpcReq,  ct);
-        var dtoList = grpcRes.Customers.Select(grpcCustomer => new CustomerDto
+        try
         {
-            Id = grpcCustomer.Id,
-            FirstName = grpcCustomer.FirstName,
-            LastName = grpcCustomer.LastName,
-            Email = grpcCustomer.Email,
-            PhoneNumber = grpcCustomer.PhoneNumber,
-            StreetName = grpcCustomer.Addresses?.FirstOrDefault()?.StreetName ?? "",
-            SecondaryUnit = grpcCustomer.Addresses?.FirstOrDefault()?.SecondaryUnit ?? "",
-            PostalCode = grpcCustomer.Postals?.FirstOrDefault()?.PostalCode ?? 0,
-            City = grpcCustomer.Postals?.FirstOrDefault()?.City ?? "",
-            CanSell = grpcCustomer.CanSell
-        }).ToList() ?? []; // in case of null, return empty list
-        return Ok(dtoList);
+            var grpcReq = new GetAllCustomersRequest { };
+            var grpcRes = await _getCustomerService.GetAllCustomerAsync(grpcReq, ct);
+            var dtoList = grpcRes.Customers.Select(grpcCustomer => new CustomerDto
+            {
+                Id = grpcCustomer.Id,
+                FirstName = grpcCustomer.FirstName,
+                LastName = grpcCustomer.LastName,
+                Email = grpcCustomer.Email,
+                PhoneNumber = grpcCustomer.PhoneNumber,
+                StreetName = grpcCustomer.Addresses?.FirstOrDefault()?.StreetName ?? "",
+                SecondaryUnit = grpcCustomer.Addresses?.FirstOrDefault()?.SecondaryUnit ?? "",
+                PostalCode = grpcCustomer.Postals?.FirstOrDefault()?.PostalCode ?? 0,
+                City = grpcCustomer.Postals?.FirstOrDefault()?.City ?? "",
+                CanSell = grpcCustomer.CanSell
+            }).ToList() ?? []; // in case of null, return empty list
+            return Ok(dtoList);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (ApplicationException ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
     }
 
 
