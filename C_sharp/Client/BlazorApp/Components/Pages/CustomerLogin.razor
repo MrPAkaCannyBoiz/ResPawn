@@ -3,6 +3,7 @@
 @using BlazorApp.Auth
 @using Microsoft.AspNetCore.Components.Authorization
 @inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavManager  
 
 @code 
 {
@@ -40,8 +41,25 @@
         }
     }
 
+    private async Task LogoutAsync()
+    {
+        try
+        {
+            await ((SimpleAuthProvider)AuthStateProvider).CustomerLogoutAsync();
 
+           
+            _email = string.Empty;
+            _password = string.Empty;
+            _loginMessage = string.Empty;
 
+            
+            NavManager.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Logout failed: {ex.Message}");
+        }
+    }
 }
 
 <h3>Login</h3>
@@ -49,25 +67,26 @@
 <AuthorizeView>
     <NotAuthorized>
         <h3>Please login</h3>
-		<label>Email:</label>
-		<input type="text" @bind="_email" />
+        <label>Email:</label>
+        <input type="text" @bind="_email" />
         @if (!IsValidEmail(_email))
         {
             <label style="color: red">
-				Invaild email format.
+                Invaild email format.
             </label>
         }
         <label>Password:</label>
-		<input type="password" @bind="_password" />
-		@if (!string.IsNullOrEmpty(_loginMessage))
-		{
-			<label style="color: red">
-				@_loginMessage
-			</label>
-		}
-        <button @onclick="() => LoginAsync()">Login</button>
+        <input type="password" @bind="_password" />
+        @if (!string.IsNullOrEmpty(_loginMessage))
+        {
+            <label style="color: red">
+                @_loginMessage
+            </label>
+        }
+        <button @onclick="LoginAsync">Login</button>
     </NotAuthorized>
     <Authorized>
         <h3>Hello, @context.User.Identity!.Name</h3>
+        <button @onclick="LogoutAsync">Logout</button>
     </Authorized>
 </AuthorizeView>

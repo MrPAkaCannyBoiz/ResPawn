@@ -5,6 +5,8 @@
 @using BlazorApp.Services.Interface
 @rendermode InteractiveServer
 @inject IUploadProductService UploadProductService
+@using System.Security.Claims
+
 
 
 @code 
@@ -23,12 +25,37 @@
 	private string _otherCategory = "";
 	private UploadProductDto? _uploadProductDto; 
 	// down below is for binding/blazor purposes
-	private int _userIdToUpload; // TODO: Use this to get the logged in user id
+	private int _userIdToUpload; 
 	private string? _uploadProductMessage;
 	private bool _ispriceValid => _price >= 0;
 	private bool _isStringValid(string? str) => !string.IsNullOrWhiteSpace(str);
 	private bool _isBusy;
+[CascadingParameter]
+    private Task<AuthenticationState>? authenticationStateTask { get; set; }
+   
+	protected override async Task OnInitializedAsync()
+    {
+        if (authenticationStateTask is not null)
+        {
+            var authState = await authenticationStateTask;
+            var user = authState.User;
 
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                // Find the NameIdentifier claim, which holds the CustomerId
+                var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    _userIdToUpload = userId;
+                }
+                else
+                {
+                    // Handle case where user is logged in but ID claim is missing/invalid
+                    _uploadProductMessage = "Error: Could not retrieve logged-in user ID.";
+                }
+            }
+        }
+    }
 	private async Task UploadNewProduct()
 	{
 		_uploadProductMessage = null;
@@ -223,9 +250,6 @@
 			<div class="text-danger">Other Category cannot be empty.</div>
 		}
 	}
-
-	<label for="userId" class="form-label>">User ID (for testing purposes)</label>
-	<input type="number" class="form-control" id="userId" @bind="_userIdToUpload" />
 </div>
 
 		<button class="btn btn-primary" disabled="@_isBusy" 
@@ -237,3 +261,4 @@
 {
 	<div class="mt-3">@_uploadProductMessage</div>
 }
+

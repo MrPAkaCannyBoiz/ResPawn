@@ -13,7 +13,6 @@ import org.example.respawnmarket.entities.PawnshopEntity;
 import org.example.respawnmarket.entities.ProductEntity;
 import org.example.respawnmarket.entities.ResellerEntity;
 import org.example.respawnmarket.entities.enums.ApprovalStatusEnum;
-import org.example.respawnmarket.entities.enums.CategoryEnum;
 import org.example.respawnmarket.repositories.InspectionRepository;
 import org.example.respawnmarket.repositories.PawnshopRepository;
 import org.example.respawnmarket.repositories.ProductRepository;
@@ -21,7 +20,6 @@ import org.example.respawnmarket.repositories.ResellerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.google.protobuf.Timestamp;
 
 import io.grpc.stub.StreamObserver;
 
@@ -109,6 +107,7 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
             .setPawnshopId(product.getPawnshop() != null
                 ? product.getPawnshop().getId()
                 : 0)
+            .setComments(inspection.getComment())
             .build();
 
         responseObserver.onNext(response);
@@ -163,13 +162,55 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
         ProductVerificationResponse response = ProductVerificationResponse.newBuilder()
                 .setProductId(product.getId())
                 .setApprovalStatus(toProtoApprovalStatus(product.getApprovalStatus()))
+                .setComments(inspection.getComment())
                 .build();
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
 
+  @Override
+  @Transactional
+  public void getLatestInspection(GetLatestInspectionRequest request,
+      StreamObserver<ProductInspectionResponse> responseObserver)
+  {
+    try
+    {
+      int productId = request.getProductId();
 
+      ProductEntity product = productRepository.findById(productId)
+          .orElseThrow(() -> Status.NOT_FOUND
+              .withDescription("Product not found: " + productId)
+              .asRuntimeException());
 
+      InspectionEntity inspection = inspectionRepository
+          .findTopByProductIdOrderByIdDesc(productId)
+          .orElseThrow(() -> Status.NOT_FOUND
+              .withDescription("No inspections found for product: " + productId)
+              .asRuntimeException());
+
+      ProductInspectionResponse response = ProductInspectionResponse.newBuilder()
+          .setProductId(product.getId())
+          .setApprovalStatus(toProtoApprovalStatus(product.getApprovalStatus()))
+          .setPawnshopId(product.getPawnshop() != null ? product.getPawnshop().getId() : 0)
+          .setComments(inspection.getComment() != null ? inspection.getComment() : "")
+          .build();
+
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
+    }
+    catch (StatusRuntimeException e)
+    {
+      responseObserver.onError(e);
+    }
+    catch (Exception e)
+    {
+      responseObserver.onError(
+          Status.INTERNAL
+              .withDescription("Failed to get latest inspection")
+              .withCause(e)
+              .asRuntimeException());
+    }
+  }
 }
 

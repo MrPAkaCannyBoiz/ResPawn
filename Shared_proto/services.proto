@@ -358,6 +358,7 @@ message ProductInspectionResponse
   int32 product_id = 1;
   ApprovalStatus approvalStatus = 2;
   int32 pawnshop_id = 3;
+  string comments =4;
 }
 message ProductVerificationRequest
 {
@@ -366,14 +367,21 @@ message ProductVerificationRequest
   bool is_accepted = 3;
   string comments = 4;
 }
+
+message GetLatestInspectionRequest {
+  int32 product_id = 1;
+}
 message ProductVerificationResponse
 {
   int32 product_id = 1;
   ApprovalStatus approvalStatus = 2;
+  string comments = 3;
 }
 service ProductInspectionService {
   rpc ReviewProduct (ProductInspectionRequest) returns (ProductInspectionResponse);
   rpc VerifyProduct (ProductVerificationRequest) returns (ProductVerificationResponse);
+  // testing purpose
+   rpc GetLatestInspection(GetLatestInspectionRequest) returns (ProductInspectionResponse);
 }
 
 // use case for "Buy Products"

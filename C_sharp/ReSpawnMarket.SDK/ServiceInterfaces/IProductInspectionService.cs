@@ -16,5 +16,9 @@ namespace ReSpawnMarket.SDK.ServiceInterfaces
             ProductVerificationRequest request,
             CancellationToken cancellationToken = default);
 
+         Task<ProductInspectionResponse> GetLatestInspectionAsync(
+        GetLatestInspectionRequest request,
+        CancellationToken cancellationToken = default);
+
     }
 }

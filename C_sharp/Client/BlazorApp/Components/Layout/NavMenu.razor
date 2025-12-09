@@ -20,11 +20,7 @@
             </NavLink>
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
+     
 
         <AuthorizeView Roles="Customer">
             <Authorized>
@@ -62,6 +58,16 @@
                 <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Buy the product
             </NavLink>
         </div>
+        <AuthorizeView Roles="Customer">
+    <Authorized>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/inspect-product">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span>
+                My uploaded products
+            </NavLink>
+        </div>
+    </Authorized>
+</AuthorizeView>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="customer-login">
@@ -71,7 +77,7 @@
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="Reseller-login">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Resseler-login
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Resseler
             </NavLink>
         </div>
 

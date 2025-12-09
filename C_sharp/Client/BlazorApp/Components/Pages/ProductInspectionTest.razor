@@ -1,0 +1,55 @@
+﻿@page "/inspect-product"
+@using ApiContracts.Dtos
+@using BlazorApp.Services.Interface
+@inject IProductInspectionClient InspectionClient
+
+<h3>Inspect product (TEST page)</h3>
+
+<label>Product Id</label>
+<input type="number" @bind="ProductId" class="form-control" />
+<button class="btn btn-primary mt-2" @onclick="LoadLatestInspection">Get latest inspection</button>
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <div class="alert alert-danger mt-3">@_error</div>
+}
+else if (_latest != null)
+{
+    <div class="card mt-3">
+        <div class="card-body">
+            <h5>Latest inspection for product @_latest.ProductId</h5>
+            <p><strong>Approval status:</strong> @_latest.ApprovalStatus</p>
+            <p><strong>Pawnshop Id:</strong> @_latest.PawnshopId</p>
+            <p><strong>Comments:</strong> @_latest.Comments</p>
+        </div>
+    </div>
+}
+
+@code {
+    private int ProductId { get; set; }
+    private ProductInspectionResultDto? _latest;
+    private string? _error;
+
+    private async Task LoadLatestInspection()
+    {
+        _error = null;
+        _latest = null;
+
+        try
+        {
+            var dto = await InspectionClient.GetLatestInspectionAsync(ProductId);
+
+            if (dto is null)
+            {
+                _error = "No inspection found for this product.";
+                return;
+            }
+
+            _latest = dto;
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+    }
+}

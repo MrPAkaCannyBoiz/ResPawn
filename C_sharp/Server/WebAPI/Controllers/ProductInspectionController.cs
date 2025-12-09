@@ -43,7 +43,9 @@ public class ProductInspectionController : ControllerBase
             {
                 ProductId = response.ProductId,
                 ApprovalStatus = ToDtoApprovalStatus(response.ApprovalStatus),
-                PawnshopId = response.PawnshopId
+                PawnshopId = response.PawnshopId,
+                Comments = response.Comments
+               
             };
             return Ok(resultDto);
         }
@@ -78,7 +80,8 @@ public class ProductInspectionController : ControllerBase
             var resultDto = new ProductVerificationResultDto
             {
                 ProductId = response.ProductId,
-                ApprovalStatus = ToDtoApprovalStatus(response.ApprovalStatus)
+                ApprovalStatus = ToDtoApprovalStatus(response.ApprovalStatus),
+                Comments = response.Comments
             };
             return Ok(resultDto);
         }
@@ -103,5 +106,46 @@ public class ProductInspectionController : ControllerBase
             _ => throw new NotImplementedException(),
         };
     }
+[HttpGet("product/{productId}/latest")]
+[ProducesResponseType(typeof(ProductInspectionResultDto), StatusCodes.Status200OK)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
+public async Task<IActionResult> GetLatestInspectionAsync(int productId, CancellationToken ct)
+{
+    var request = new GetLatestInspectionRequest
+    {
+        ProductId = productId
+    };
+    try
+    {
+        var response = await service.GetLatestInspectionAsync(request, ct);
+
+        var resultDto = new ProductInspectionResultDto
+        {
+            ProductId = response.ProductId,
+            ApprovalStatus = ToDtoApprovalStatus(response.ApprovalStatus),
+            PawnshopId = response.PawnshopId,
+            Comments = response.Comments
+        };
+
+        return Ok(resultDto);
+    }
+    catch (KeyNotFoundException ex)
+    {
+        return NotFound(new ProblemDetails
+        {
+            Title = "Inspection not found",
+            Detail = ex.Message
+        });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(StatusCodes.Status502BadGateway, new ProblemDetails
+        {
+            Title = "Upstream gRPC error",
+            Detail = ex.Message
+        });
+    }
+}
 
 }

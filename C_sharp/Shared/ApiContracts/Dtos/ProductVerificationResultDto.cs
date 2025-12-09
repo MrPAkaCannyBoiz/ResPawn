@@ -9,4 +9,6 @@ public class ProductVerificationResultDto
 {
     public int ProductId { get; set; }
     public ApprovalStatus ApprovalStatus { get; set; }
+
+    public string Comments {get;set;} = string.Empty;
 }
