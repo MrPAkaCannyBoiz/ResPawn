@@ -68,6 +68,18 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(
             System.Text.Encoding.UTF8.GetBytes(section["Jwt:Key"] ?? ""))
     };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            // Read JWT from cookie if present
+            if (context.Request.Cookies.ContainsKey("JwtCookie"))
+            {
+                context.Token = context.Request.Cookies["JwtCookie"];
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 builder.Services.AddAuthorization(); // this is needed for jwt auth, remove if jwt is not used/doesn't work
 AuthorizationPolicies.AddPolicies(builder.Services); // add custom authorization policies
