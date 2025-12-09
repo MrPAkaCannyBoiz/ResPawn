@@ -7,7 +7,7 @@
 @rendermode InteractiveServer
 @inject AuthenticationStateProvider AuthStateProvider
 
- @inject IPurchaseService PurchaseService
+@inject IPurchaseService PurchaseService
 @inject ICartService CartService
 
 <h3>Shopping Cart</h3>
@@ -15,10 +15,11 @@
 @if (!CartService.Items.Any())
 {
     <p>Your cart is empty.</p>
+    <p>debugging: your customer id from claim is: @CustomerId </p>
 }
 else
 {
-
+    <p>debugging: your customer id from claim is: @CustomerId </p>
 
     <table class="table">
         <thead>
@@ -107,7 +108,7 @@ else
 
         if (user.Identity?.IsAuthenticated == true)
         {
-            var idClaim = user.FindFirst(ClaimTypes.NameIdentifier);
+            var idClaim = user.FindFirst("CustomerId");
             if (idClaim != null && int.TryParse(idClaim.Value, out var id))
             {
                 CustomerId = id;
@@ -145,12 +146,6 @@ else
             return;
         }
 
-        if (CustomerId <= 0)
-        {
-            message = "Please enter a valid Customer Id.";
-            busy = false;
-            return;
-        }
 
         Console.WriteLine($"[Purchase] BUY clicked C={CustomerId}, Items={CartService.Items.Count}");
 

@@ -45,7 +45,7 @@
 			return;
 		}
 		// Read the ID claim from the token
-		var idClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+		var idClaim = user.FindFirst("CustomerId")?.Value
 					  ?? user.FindFirst("sub")?.Value; // fallback if you used "sub"
 		if (string.IsNullOrWhiteSpace(idClaim) || !int.TryParse(idClaim, out var userIdFromToken))
 		{

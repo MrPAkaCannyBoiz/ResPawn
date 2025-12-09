@@ -26,9 +26,9 @@ builder.Services.AddScoped<IPurchaseService, HttpPurchaseService>();
 builder.Services.AddScoped<IProductInspectionService, HttpProductInspectionService>();
 builder.Services.AddScoped<IGetCustomerService, HttpGetCustomerService>();
 builder.Services.AddScoped<ICustomerInspectionService, HttpCustomerInspectionService>();
-builder.Services.AddScoped<AuthenticationStateProvider, SimpleAuthProvider>();
-builder.Services.AddScoped<AuthenticationStateProvider, CustomerAuthProvider>();
-builder.Services.AddScoped<ICustomerAuthService, HttpJwtCustomerAuthLoginService>();
+builder.Services.AddScoped<SimpleAuthProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthProvider>();
+builder.Services.AddScoped<IAuthService, HttpJwtCustomerAuthLoginService>();
 builder.Services.AddScoped<ICartService, CartService>();
 
 AuthorizationPolicies.AddPolicies(builder.Services); // add custom authorization policies
