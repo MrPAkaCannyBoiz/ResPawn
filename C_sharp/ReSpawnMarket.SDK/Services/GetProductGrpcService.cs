@@ -122,4 +122,20 @@ public class GetProductGrpcService : IGetProductService
             throw new ApplicationException($"gRPC Error: {ex.Status.Detail}", ex);
         }
     }
+
+    public async Task<GetLatestProductInspectionResponse> GetLatestProductInspection(GetLatestProductInspectionRequest request, CancellationToken ct)
+    {
+        try
+        {
+            return await _grpcClient.GetLatestInspectionAsync(request, cancellationToken: ct);
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
+        {
+            throw new ProductNotFoundException($"Selling product by customer id {request.CustomerId} not found");
+        }
+        catch (RpcException ex)
+        {
+            throw new ApplicationException($"gRPC Error: {ex.Status.Detail}", ex);
+        }
+    }
 }

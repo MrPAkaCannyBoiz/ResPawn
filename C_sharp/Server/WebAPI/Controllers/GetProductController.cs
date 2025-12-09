@@ -271,6 +271,54 @@ public class GetProductController: ControllerBase
         }
     }
 
+    [HttpGet("inspection/customer/{id}")]
+    public async Task<IActionResult> GetLatestProductInspection(int id, CancellationToken ct)
+    {
+        var grpcRequest = new GetLatestProductInspectionRequest()
+        {
+            CustomerId = id
+        };
+        try
+        {
+            var grpcResponse = await _getProductService.GetLatestProductInspection(grpcRequest, ct);
+            var responseDtoList = grpcResponse.Products
+                                .Select(p => new LatestProductFromInspectionDto()
+                                {
+                                    ProductWithFirstImage = new ProductWithFirstImageDto()
+                                    {
+                                        Id = p.Product.Product.Id,
+                                        Price = p.Product.Product.Price,
+                                        Sold = p.Product.Product.Sold,
+                                        Condition = p.Product.Product.Condition,
+                                        ApprovalStatus = p.Product.Product.ApprovalStatus.ToString(),
+                                        Name = p.Product.Product.Name,
+                                        Category = p.Product.Product.Category.ToString(),
+                                        Description = p.Product.Product.Description,
+                                        SoldByCustomerId = p.Product.Product.SoldByCustomerId,
+                                        RegisterDate = p.Product.Product.RegisterDate.ToDateTime(),
+                                        OtherCategory = p.Product.Product.OtherCategory,
+                                        Image = new ImageDto
+                                        {
+                                            Id = p.Product.FirstImage.Id,
+                                            Url = p.Product.FirstImage.Url,
+                                            ProductId = p.Product.FirstImage.ProductId
+                                        }
+                                    },
+                                    InspectionComment = p.InspectionComments
+                                }).ToList() ?? [];
+                                return Ok(responseDtoList); 
+        }
+        catch (ProductNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (ApplicationException ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
+
+    }
+
 
     private DetailedProductDto toDetailedDto(GetProductResponse response)
     {

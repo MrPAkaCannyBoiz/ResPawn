@@ -3,15 +3,14 @@ package org.example.respawnmarket.Service;
 import java.time.Instant;
 import java.util.List;
 
+import com.google.protobuf.Timestamp;
 import com.respawnmarket.*;
 import com.respawnmarket.*;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import jakarta.transaction.Transactional;
-import org.example.respawnmarket.entities.InspectionEntity;
-import org.example.respawnmarket.entities.PawnshopEntity;
-import org.example.respawnmarket.entities.ProductEntity;
-import org.example.respawnmarket.entities.ResellerEntity;
+import org.example.respawnmarket.dtos.ProductInspectionDTO;
+import org.example.respawnmarket.entities.*;
 import org.example.respawnmarket.entities.enums.ApprovalStatusEnum;
 import org.example.respawnmarket.repositories.InspectionRepository;
 import org.example.respawnmarket.repositories.PawnshopRepository;
@@ -24,6 +23,7 @@ import org.springframework.stereotype.Service;
 import io.grpc.stub.StreamObserver;
 
 import static org.example.respawnmarket.Service.ServiceExtensions.ApprovalStatusExtension.toProtoApprovalStatus;
+import static org.example.respawnmarket.Service.ServiceExtensions.CategoryExtension.toProtoCategory;
 
 @Service
 public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.ProductInspectionServiceImplBase
@@ -182,48 +182,9 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
         responseObserver.onCompleted();
     }
 
-  @Override
-  @Transactional
-  public void getLatestInspection(GetLatestInspectionRequest request,
-      StreamObserver<ProductInspectionResponse> responseObserver)
-  {
-    try
-    {
-      int productId = request.getProductId();
 
-      ProductEntity product = productRepository.findById(productId)
-          .orElseThrow(() -> Status.NOT_FOUND
-              .withDescription("Product not found: " + productId)
-              .asRuntimeException());
 
-      InspectionEntity inspection = inspectionRepository
-          .findTopByProductIdOrderByIdDesc(productId)
-          .orElseThrow(() -> Status.NOT_FOUND
-              .withDescription("No inspections found for product: " + productId)
-              .asRuntimeException());
-
-      ProductInspectionResponse response = ProductInspectionResponse.newBuilder()
-          .setProductId(product.getId())
-          .setApprovalStatus(toProtoApprovalStatus(product.getApprovalStatus()))
-          .setPawnshopId(product.getPawnshop() != null ? product.getPawnshop().getId() : 0)
-          .setComments(inspection.getComment() != null ? inspection.getComment() : "")
-          .build();
-
-      responseObserver.onNext(response);
-      responseObserver.onCompleted();
-    }
-    catch (StatusRuntimeException e)
-    {
-      responseObserver.onError(e);
-    }
-    catch (Exception e)
-    {
-      responseObserver.onError(
-          Status.INTERNAL
-              .withDescription("Failed to get latest inspection")
-              .withCause(e)
-              .asRuntimeException());
-    }
-  }
 }
+
+
 

@@ -17,4 +17,6 @@ public interface IGetProductService
           , CancellationToken ct = default);
     Task<GetAllReviewingProductsResponse> GetAllReviewingProductsAsync(GetAllReviewingProductsRequest request
           , CancellationToken ct = default);
+
+      Task<GetLatestProductInspectionResponse> GetLatestProductInspection(GetLatestProductInspectionRequest request, CancellationToken ct);
 }
