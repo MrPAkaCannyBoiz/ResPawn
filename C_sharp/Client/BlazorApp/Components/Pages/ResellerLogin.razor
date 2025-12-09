@@ -4,7 +4,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using global::BlazorApp.Auth
 
-@inject AuthenticationStateProvider AuthStateProvider
+@inject AuthenticationStateProvider SimpleAuthStateProvider
 
 <h3>Reseller Login</h3>
 
@@ -60,7 +60,7 @@
 
         try
         {
-            await ((SimpleAuthProvider)AuthStateProvider).ResellerLoginAsync(_username, _password);
+            await ((CustomAuthProvider)SimpleAuthStateProvider).ResellerLoginAsync(_username, _password);
         }
         catch (Exception ex)
         {
@@ -71,6 +71,6 @@
 
     private async Task LogoutAsync()
     {
-        await ((SimpleAuthProvider)AuthStateProvider).ResellerLogoutAsync();
+        await ((CustomAuthProvider)SimpleAuthStateProvider).ResellerLogoutAsync();
     }
 }

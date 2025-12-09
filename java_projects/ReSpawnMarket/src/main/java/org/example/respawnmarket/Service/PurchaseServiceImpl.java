@@ -2,6 +2,7 @@ package org.example.respawnmarket.Service;
 
 import com.google.protobuf.Timestamp;
 import com.respawnmarket.*;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import jakarta.transaction.Transactional;
 import org.example.respawnmarket.entities.*;
@@ -43,17 +44,41 @@ public class PurchaseServiceImpl extends PurchaseServiceGrpc.PurchaseServiceImpl
       StreamObserver<BuyProductsResponse> responseObserver)
   {
     // get customer
-    CustomerEntity customer = customerRepository.findById(request.getCustomerId()).orElseThrow(() -> new RuntimeException("Customer not found" + request.getCustomerId()));
+    CustomerEntity customer = customerRepository.findById(request.getCustomerId()).orElse(null);
+    if (customer == null)
+    {
+        responseObserver.onError(Status.NOT_FOUND.withDescription(
+                        "Customer not found with ID: " + request.getCustomerId())
+                .asRuntimeException());
+        return;
+    }
     // load product and process prices
     double totalPrice = 0.0;
     List<CartProductEntity> cartProductEntities  = new ArrayList<>();
     List<ProductEntity> purchasedProducts  = new ArrayList<>();
     for(CartItem item : request.getItemsList())
     {
-      ProductEntity product = productRepository.findById(item.getProductId()).orElseThrow(() -> new RuntimeException("Product not found" + item.getProductId()));
+      ProductEntity product = productRepository.findById(item.getProductId()).orElse(null);
+      if (product == null)
+      {
+          responseObserver.onError(Status.NOT_FOUND.withDescription(
+                            "Product not found with ID: " + item.getProductId())
+                    .asRuntimeException());
+          return;
+      }
+      if (product.getApprovalStatus() != ApprovalStatusEnum.APPROVED)
+      {
+        responseObserver.onError(Status.FAILED_PRECONDITION.withDescription(
+                        "Product is not approved for sale: " + item.getProductId())
+                .asRuntimeException());
+        return;
+      }
       if (product.isSold())
       {
-        throw new RuntimeException("Product already sold: " + item.getProductId());
+        responseObserver.onError(Status.FAILED_PRECONDITION.withDescription(
+                        "Product is already sold: " + item.getProductId())
+                .asRuntimeException());
+        return;
       }
       int quantity = item.getQuantity();
       totalPrice += product.getPrice() * quantity;

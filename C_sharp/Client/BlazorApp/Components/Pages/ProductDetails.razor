@@ -1,6 +1,7 @@
 ﻿@page "/products/{ProductId:int}"
 @using ApiContracts.Dtos
 @using BlazorApp.Services.Interface
+@using System.Linq
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Linq
 @rendermode InteractiveServer
@@ -54,7 +55,7 @@ else
             <p><strong>Pawnshop:</strong> @_product.PawnshopName, @_product.PawnshopStreetName @_product.PawnshopSecondaryUnit, @_product.PawnshopPostalCode @_product.PawnshopCity</p>
             <p><strong>Status:</strong> @_product.ApprovalStatus</p>
 
-           
+
             <AuthorizeView Roles="Reseller">
                 <Authorized>
                     <NavLink class="btn btn-primary" href="@($"/customer/{_product.SellerId}/inspection")">
@@ -63,7 +64,7 @@ else
                 </Authorized>
             </AuthorizeView>
 
-           
+
             <AuthorizeView Roles="Customer">
                 <Authorized>
                     <button class="btn btn-success" @onclick="AddToCart">
@@ -118,7 +119,7 @@ else
 
         var imageUrl = _product.Images?.FirstOrDefault()?.Url;
 
-        
+
         CartService.AddItem(
             ProductId,
             _product.Name,

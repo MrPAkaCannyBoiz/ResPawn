@@ -2,6 +2,7 @@ package org.example.respawnmarket.Service;
 
 import com.respawnmarket.*;
 import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import jakarta.transaction.Transactional;
 import org.example.respawnmarket.entities.PostalEntity;
@@ -15,6 +16,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+
+import static org.example.respawnmarket.Service.ServiceExtensions.CustomerExceptionExtension.mapDataIntegrityViolation;
 
 // TODO: add validation for each database constraint, so web api can catch errors properly
 // TODO: handle two addresses per customer
@@ -43,6 +46,13 @@ public class UpdateCustomerServiceImpl extends UpdateCustomerServiceGrpc.UpdateC
     {
         // find customer id to update
         var updatedCustomer = customerRepository.findById(request.getCustomerId()).orElse(null);
+        if (updatedCustomer == null)
+        {
+            responseObserver.onError(Status.NOT_FOUND
+                    .withDescription("Customer not found with ID: " + request.getCustomerId())
+                    .asRuntimeException());
+            return;
+        }
         assert updatedCustomer != null;
         // update fields of customer while checking for nulls or white spaces
         request.getFirstName();
@@ -101,12 +111,19 @@ public class UpdateCustomerServiceImpl extends UpdateCustomerServiceGrpc.UpdateC
             customerRepository.save(updatedCustomer);
             customerRepository.flush();
         }
-        catch (DataIntegrityViolationException e)
+        catch (DataIntegrityViolationException ex)
         {
-            responseObserver.onError(Status.ALREADY_EXISTS
-                    .withDescription("this email already exists in the system")
-                    .asRuntimeException());
-            return;
+            StatusRuntimeException statusEx = mapDataIntegrityViolation(ex);
+            responseObserver.onError(statusEx);
+        }
+        catch (Exception ex)
+        {
+            responseObserver.onError(
+                    Status.INTERNAL
+                            .withDescription("Unexpected error while registering customer")
+                            .withCause(ex)
+                            .asRuntimeException()
+            );
         }
         // the rest ain't have unique constraints, just save
         addressRepository.save(updatedAddress);

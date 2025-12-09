@@ -92,10 +92,16 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
           product.setApprovalStatus(ApprovalStatusEnum.REVIEWING);
           product.setPawnshop(pawnshop);
         }
-        else
+        else if (!request.getIsAccepted() && !request.getComments().isEmpty())
         {
           product.setApprovalStatus(ApprovalStatusEnum.REJECTED);
           product.setPawnshop(null); // rejected => no pawnshop
+        }
+        else
+        {
+            throw Status.INVALID_ARGUMENT
+                .withDescription("Comments must be provided when rejecting a product")
+                .asRuntimeException();
         }
 
         productRepository.save(product);
@@ -152,9 +158,16 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
         {
             product.setApprovalStatus(ApprovalStatusEnum.APPROVED);
         }
-        else // false -> rejected
+        else if (!request.getIsAccepted() && !request.getComments().isEmpty())
         {
             product.setApprovalStatus(ApprovalStatusEnum.REJECTED);
+            product.setPawnshop(null); // rejected => no pawnshop
+        }
+        else
+        {
+            throw Status.INVALID_ARGUMENT
+                    .withDescription("Comments must be provided when rejecting a product")
+                    .asRuntimeException();
         }
         productRepository.save(product); // update product status
         productRepository.flush();

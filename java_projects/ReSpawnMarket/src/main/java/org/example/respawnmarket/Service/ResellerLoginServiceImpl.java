@@ -24,10 +24,10 @@ public class ResellerLoginServiceImpl extends ResellerLoginServiceGrpc.ResellerL
     public void login(
             ResellerLoginRequest request, StreamObserver<ResellerLoginResponse> responseObserver)
     {
-        String usernarme = request.getUsername();
+        String username = request.getUsername();
         String password = request.getPassword();
 
-        ResellerEntity loginReseller = resellerRepository.findByUsername(usernarme);
+        ResellerEntity loginReseller = resellerRepository.findByUsername(username);
         if (loginReseller == null)
         {
             throwNotFoundIfInvalidCredentials(responseObserver);
@@ -52,7 +52,7 @@ public class ResellerLoginServiceImpl extends ResellerLoginServiceGrpc.ResellerL
             (StreamObserver<ResellerLoginResponse> responseObserver)
     {
         responseObserver.onError(Status.NOT_FOUND
-                .withDescription("Invalid email or password") // show vague error message for security
+                .withDescription("Invalid username or password") // show vague error message for security
                 .asRuntimeException());
     }
 }

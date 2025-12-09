@@ -1,12 +1,15 @@
-﻿@page "/new_product"
+﻿@page "/customer/new-product"
 @*TODO: Remove the user id input, and replace it with proper login system*@
 @using ApiContracts.Dtos
 @using ApiContracts.Dtos.Enums
 @using BlazorApp.Services.Interface
+@using System.Security.Claims
+@attribute [Authorize(Roles = "Customer")]
+@attribute [Authorize(Policy = "CanSellProduct")]
 @rendermode InteractiveServer
 @inject IUploadProductService UploadProductService
-@using System.Security.Claims
-
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
 
 
 @code 
@@ -25,37 +28,33 @@
 	private string _otherCategory = "";
 	private UploadProductDto? _uploadProductDto; 
 	// down below is for binding/blazor purposes
-	private int _userIdToUpload; 
+	private int _userIdToUpload;
 	private string? _uploadProductMessage;
 	private bool _ispriceValid => _price >= 0;
 	private bool _isStringValid(string? str) => !string.IsNullOrWhiteSpace(str);
 	private bool _isBusy;
-[CascadingParameter]
-    private Task<AuthenticationState>? authenticationStateTask { get; set; }
-   
-	protected override async Task OnInitializedAsync()
-    {
-        if (authenticationStateTask is not null)
-        {
-            var authState = await authenticationStateTask;
-            var user = authState.User;
 
-            if (user.Identity?.IsAuthenticated == true)
-            {
-                // Find the NameIdentifier claim, which holds the CustomerId
-                var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
-                {
-                    _userIdToUpload = userId;
-                }
-                else
-                {
-                    // Handle case where user is logged in but ID claim is missing/invalid
-                    _uploadProductMessage = "Error: Could not retrieve logged-in user ID.";
-                }
-            }
-        }
-    }
+	protected override async Task OnInitializedAsync()
+	{
+		var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+		// If not authenticated, redirect to login
+		if (!user.Identity?.IsAuthenticated ?? false)
+		{
+			Nav.NavigateTo("/customer-login", forceLoad: true);
+			return;
+		}
+		// Read the ID claim from the token
+		var idClaim = user.FindFirst("CustomerId")?.Value
+					  ?? user.FindFirst("sub")?.Value; // fallback if you used "sub"
+		if (string.IsNullOrWhiteSpace(idClaim) || !int.TryParse(idClaim, out var userIdFromToken))
+		{
+			Nav.NavigateTo("/customer-login", forceLoad: true);
+			return;
+		}
+		_userIdToUpload = userIdFromToken;
+	}
+
 	private async Task UploadNewProduct()
 	{
 		_uploadProductMessage = null;
@@ -100,6 +99,17 @@
 		finally
 		{
 			_isBusy = false;
+			_price = 0;
+			_condition = "";
+			_description = "";
+			_name = "";
+			_photoUrl0 = "";
+			_photoUrl1 = "";
+			_photoUrl2 = "";
+			_photoUrl3 = "";
+			_photoUrl4 = "";
+			_category = Category.CATEGORY_UNSPECIFIED;
+			_otherCategory = "";
 		}
 	}
 
@@ -108,8 +118,17 @@
 		if (string.IsNullOrWhiteSpace(url)) return false;
 		if (url.Length > 1024) return false;
 		// Basic check; extend as needed.
-		return url.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
-			|| url.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+		bool correctImageExtension = url.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
+			|| url.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase)
+			|| url.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
+			|| url.EndsWith(".gif", StringComparison.OrdinalIgnoreCase)
+			|| url.EndsWith(".bmp", StringComparison.OrdinalIgnoreCase)
+			|| url.EndsWith(".webp", StringComparison.OrdinalIgnoreCase);
+
+		return (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+			|| url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+			) && correctImageExtension;
+
 	}
 
 	private bool IsFirstUrlFilled()
@@ -250,6 +269,7 @@
 			<div class="text-danger">Other Category cannot be empty.</div>
 		}
 	}
+
 </div>
 
 		<button class="btn btn-primary" disabled="@_isBusy" 
@@ -261,4 +281,3 @@
 {
 	<div class="mt-3">@_uploadProductMessage</div>
 }
-
