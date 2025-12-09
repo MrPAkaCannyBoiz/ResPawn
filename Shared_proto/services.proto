@@ -249,18 +249,21 @@ message UploadProductRequest
   string other_category = 7;
   int32 sold_by_customer_id = 8;
 }
-
 message UploadProductResponse
 {
   Product product = 1;
   repeated Image images = 2;
+}
+// service for "Upload Product Details" and "Get Product Details"
+service UploadProductService
+{
+  rpc UploadProduct (UploadProductRequest) returns (UploadProductResponse);
 }
 
 message GetProductRequest
 {
   int32 product_id = 1;
 }
-
 message GetProductResponse
 {
   Product product = 1;
@@ -270,53 +273,50 @@ message GetProductResponse
   Address pawnshop_address = 5;
   Postal pawnshop_postal = 6;
 }
-
 message GetAllProductsRequest
 {
   Empty empty = 1;
 }
-
 message ProductWithFirstImage
 {
   Product product = 1;
   Image first_image = 2;
 }
-
 message GetAllProductsResponse
 {
   repeated ProductWithFirstImage products = 1;
 }
-
 message GetPendingProductsRequest {
   Empty empty = 1;
 }
-
 message GetPendingProductsResponse {
   repeated ProductWithFirstImage products = 1;
 }
-
 message GetAllAvailableProductsRequest {
   Empty empty = 1;
 }
-
 message GetAllAvailableProductsResponse {
   repeated ProductWithFirstImage products = 1;
 }
-
 message GetAllReviewingProductsRequest {
   Empty empty = 1;
 }
-
 message GetAllReviewingProductsResponse {
   repeated ProductWithFirstImage products = 1;
 }
-
-// service for "Upload Product Details" and "Get Product Details"
-service UploadProductService
+message GetLatestProductInspectionRequest
 {
-  rpc UploadProduct (UploadProductRequest) returns (UploadProductResponse);
+  int32 customer_id = 1;
 }
-
+message LatestProductFromInspection
+{
+  ProductWithFirstImage product = 1;
+  string inspection_comments = 2;
+}
+message GetLatestProductInspectionResponse
+{
+  repeated LatestProductFromInspection products = 1;
+}
 service GetProductService
 {
   rpc GetProduct (GetProductRequest) returns (GetProductResponse);
@@ -324,6 +324,7 @@ service GetProductService
   rpc GetPendingProducts (GetPendingProductsRequest) returns (GetPendingProductsResponse);
   rpc GetAllAvailableProducts (GetAllAvailableProductsRequest) returns (GetAllAvailableProductsResponse);
   rpc GetAllReviewingProducts (GetAllReviewingProductsRequest) returns (GetAllReviewingProductsResponse);
+  rpc GetLatestInspection(GetLatestProductInspectionRequest) returns (GetLatestProductInspectionResponse);
 }
 
 // use case for "Product Inspection by Reseller"
@@ -367,10 +368,6 @@ message ProductVerificationRequest
   bool is_accepted = 3;
   string comments = 4;
 }
-
-message GetLatestInspectionRequest {
-  int32 product_id = 1;
-}
 message ProductVerificationResponse
 {
   int32 product_id = 1;
@@ -380,8 +377,6 @@ message ProductVerificationResponse
 service ProductInspectionService {
   rpc ReviewProduct (ProductInspectionRequest) returns (ProductInspectionResponse);
   rpc VerifyProduct (ProductVerificationRequest) returns (ProductVerificationResponse);
-  // testing purpose
-   rpc GetLatestInspection(GetLatestInspectionRequest) returns (ProductInspectionResponse);
 }
 
 // use case for "Buy Products"

@@ -123,4 +123,25 @@ public class HttpGetProductService : IGetProductService
 
     return products ?? new List<ProductWithFirstImageDto>();
     }
+
+    public async Task<IQueryable<LatestProductFromInspectionDto>> GetAllLatestAsync(int id)
+    {
+        HttpResponseMessage httpResponse = await _httpClient.GetAsync($"api/products/inspection/customer/{id}");
+        string textResponse = await httpResponse.Content.ReadAsStringAsync();
+
+        if (!httpResponse.IsSuccessStatusCode)
+        {
+            throw new Exception($"Error getting products: {httpResponse.StatusCode}, {textResponse}");
+        }
+        if (string.IsNullOrWhiteSpace(textResponse))
+        {
+            return new List<LatestProductFromInspectionDto>().AsQueryable();
+        }
+
+        List<LatestProductFromInspectionDto> productDtos = JsonSerializer
+            .Deserialize<List<LatestProductFromInspectionDto>>(textResponse,
+            JsonCaseInsensitiveExtension.MakeJsonCaseInsensitive())!;
+
+        return productDtos.AsQueryable();
+    }
 }

@@ -5,8 +5,10 @@
 @using Microsoft.AspNetCore.Components.Authorization
 
 @inject IGetProductService ProductService
-@inject IProductInspectionClient InspectionClient
+@inject IGetCustomerService CustomerSerivce
 @inject AuthenticationStateProvider AuthStateProvider
+@inject IAuthService AuthService
+@inject NavigationManager Nav
 
 <h3>My Uploaded Products (TEST)</h3>
 
@@ -37,10 +39,10 @@ else
         @foreach (var row in _rows)
         {
             <tr>
-                <td>@row.ProductId</td>
-                <td>@row.Name</td>
-                <td>@row.ApprovalStatus</td>
-                <td>@row.LatestComments</td>
+               <td>@row.ProductWithFirstImage!.Id</td>
+               <td>@row.ProductWithFirstImage.Name</td>
+               <td>@row.ProductWithFirstImage.ApprovalStatus</td>
+               <td>@row.InspectionComment></td>
             </tr>
         }
         </tbody>
@@ -50,21 +52,13 @@ else
 @code {
     private bool _loading = true;
     private string? _error;
-    private List<CustomerProductStatusRow> _rows = new();
-
-    private class CustomerProductStatusRow
-    {
-        public int ProductId { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string? ApprovalStatus { get; set; } 
-        public string LatestComments { get; set; } = string.Empty;
-    }
-
+    private IQueryable<LatestProductFromInspectionDto>? _rows;
+    private int _customerId; // will be set by claim later
+   
     protected override async Task OnInitializedAsync()
     {
         _loading = true;
         _error = null;
-        _rows = new List<CustomerProductStatusRow>();
 
         try
         {
@@ -73,70 +67,19 @@ else
 
             if (!user.Identity?.IsAuthenticated ?? true)
             {
-                _error = "You must be logged in as a customer.";
+                Nav.NavigateTo("/customer-login", forceLoad: true);
                 return;
             }
 
             var idClaim = user.FindFirst("CustomerId");
-            if (idClaim is null || !int.TryParse(idClaim.Value, out var customerId))
+            if (idClaim is null || !int.TryParse(idClaim.Value, out var claimId))
             {
-                _error = "Could not determine your customer id.";
+                Nav.NavigateTo("/customer-login", forceLoad: true);
                 return;
             }
+            _customerId = claimId; // set claim id 
 
-            // 1. Get the customer's products
-            var products = await ProductService.GetCustomerProductsAsync(customerId);
-
-            // 2. Map initial product data to rows
-            _rows = products
-                .Select(p => new CustomerProductStatusRow
-                {
-                    ProductId = p.Id,         
-                    Name      = p.Name,       
-                    // Set the initial status, it might be overwritten by inspection data
-                    ApprovalStatus = p.ApprovalStatus.ToString(), 
-                    LatestComments = "Loading inspection..." // Initial state
-                })
-                .ToList();
-
-            // 3. Create a list of all concurrent inspection tasks
-            var inspectionTasks = _rows.Select(row => 
-                InspectionClient.GetLatestInspectionAsync(row.ProductId)
-            ).ToList();
-
-            // 4. Await all tasks concurrently.
-            // If the API call fails with 400, it throws an exception here. 
-            // We use a Try/Catch inside the loop below to handle individual failures gracefully.
-            ProductInspectionResultDto?[] inspections;
-            try
-            {
-                inspections = await Task.WhenAll(inspectionTasks);
-            }
-            catch (Exception ex)
-            {
-                // This catches a catastrophic error like the API being down or a severe 400.
-                // If you get a 400, it's likely from the API call. Check your API logs/server.
-                _error = $"Failed to fetch all inspections: {ex.Message}";
-                return; 
-            }
-
-            // 5. Update the rows with the results
-            for (int i = 0; i < _rows.Count; i++)
-            {
-                var row = _rows[i];
-                var inspection = inspections[i];
-
-                if (inspection is not null)
-                {
-                    row.LatestComments = inspection.Comments;
-                    row.ApprovalStatus = inspection.ApprovalStatus.ToString();
-                }
-                else
-                {
-                    row.LatestComments = "No inspection available.";
-                    // Preserve the product's default status if no inspection exists
-                }
-            }
+            _rows = (await ProductService.GetAllLatestAsync(_customerId)).OrderBy(p => p.ProductWithFirstImage!.RegisterDate);
         }
         catch (Exception ex)
         {

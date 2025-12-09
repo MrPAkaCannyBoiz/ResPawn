@@ -18,22 +18,6 @@ public class ProductInspectionGrpcService : IProductInspectionService
         _grpcClient = grpcClient;
     }
 
-    public async Task<ProductInspectionResponse> GetLatestInspectionAsync(GetLatestInspectionRequest request, CancellationToken cancellationToken = default)
-    {
-          try
-    {
-        return await _grpcClient.GetLatestInspectionAsync(request, cancellationToken: cancellationToken);
-    }
-    catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
-    {
-        throw new KeyNotFoundException($"No inspection found for product {request.ProductId}.", ex);
-    }
-    catch (RpcException ex)
-    {
-        throw new Exception($"gRPC Error: {ex.Status.Detail}", ex);
-    }
-    }
-
     public async Task<ProductInspectionResponse> ReviewProductAsync(ProductInspectionRequest request,
         CancellationToken cancellationToken = default)
     {
