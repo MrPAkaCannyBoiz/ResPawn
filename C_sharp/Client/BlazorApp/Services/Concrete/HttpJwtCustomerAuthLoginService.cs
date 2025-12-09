@@ -49,13 +49,6 @@ public class HttpJwtCustomerAuthLoginService : IAuthService
         OnAuthStateChanged.Invoke(new());
     }
 
-    // TODO: replace existing LogoutAsync to LogoutCookieAsync (for now keep both)
-    public async Task LogoutCookieAsync()
-    {
-        await _httpClient.PostAsync("api/customers/logout", null);
-        OnAuthStateChanged.Invoke(new());
-    }
-
     public async Task<ClaimsPrincipal> GetAuthAsync()
     {
         HttpResponseMessage http = await _httpClient.GetAsync("api/customers/claims");
