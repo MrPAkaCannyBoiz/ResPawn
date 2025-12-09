@@ -35,7 +35,16 @@ public class CustomAuthProvider : AuthenticationStateProvider
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        // Try to get reseller principal first
+        var customerPrincipal = await _authService.GetAuthAsync();
+        var customerRole = customerPrincipal.FindFirst(ClaimTypes.Role)?.Value ??
+                           customerPrincipal.FindFirst("role")?.Value;
+
+        if (string.Equals(customerRole, "Customer", StringComparison.OrdinalIgnoreCase))
+        {
+            return new AuthenticationState(customerPrincipal);
+        }
+
+        // Try to get reseller principal later
         var resellerPrincipal = await _resellerAuthService.GetAuthAsync();
         var resellerRole = resellerPrincipal.FindFirst(ClaimTypes.Role)?.Value ??
                            resellerPrincipal.FindFirst("role")?.Value;
@@ -46,14 +55,7 @@ public class CustomAuthProvider : AuthenticationStateProvider
         }
 
         // Otherwise, try customer principal
-        var customerPrincipal = await _authService.GetAuthAsync();
-        var customerRole = customerPrincipal.FindFirst(ClaimTypes.Role)?.Value ??
-                           customerPrincipal.FindFirst("role")?.Value;
-
-        if (string.Equals(customerRole, "Customer", StringComparison.OrdinalIgnoreCase))
-        {
-            return new AuthenticationState(customerPrincipal);
-        }
+        
 
         // If neither, return an unauthenticated principal
         return new AuthenticationState(new ClaimsPrincipal());
