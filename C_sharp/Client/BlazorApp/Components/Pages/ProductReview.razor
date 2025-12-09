@@ -4,6 +4,7 @@
 @rendermode InteractiveServer
 @inject BlazorApp.Services.Interface.IProductInspectionService inspectionService
 @inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
 <h3>Review Product</h3>
 
 @if (loading)
@@ -103,8 +104,9 @@ else
             Back to list
         </button>
         </EditForm>
-@code {
+    @code {
     [Parameter] public int ProductId { get; set; }
+    private int ResellerId { get; set; }
 
     private DetailedProductDto? product;
     private ProductInspectionDto form = new(); 
@@ -126,18 +128,28 @@ else
             successMessage = null;
 
             product = await inspectionService.GetProductDetailsAsync(ProductId);
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
 
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                var idClaim = user.FindFirst("ResellerId");
+                if (idClaim != null && int.TryParse(idClaim.Value, out var id))
+                {
+                    ResellerId = id;
+                }
+            }
             
             form = new ProductInspectionDto
             {
-                ResellerId = 1,     // TODO: derive from logged-in reseller
+                ResellerId = ResellerId,     
                 PawnshopId = product.PawnshopId,
                 Comments = "",
                 IsAccepted = true
             };
             verificationForm = new ProductVerificationDto
             {
-                ResellerId = 1,     // TODO: derive from logged-in verifier
+                ResellerId = ResellerId,    
                 Comments = "",
                 IsAccepted = true
 			};

@@ -1,10 +1,11 @@
 ﻿@page "/reseller-login"
 @rendermode InteractiveServer
-
+@using BlazorApp.Services.Interface
+@using ApiContracts.Dtos
 @using Microsoft.AspNetCore.Components.Authorization
 @using global::BlazorApp.Auth
 
-@inject AuthenticationStateProvider SimpleAuthStateProvider
+@inject IResellerAuthService AuthService
 
 <h3>Reseller Login</h3>
 
@@ -35,6 +36,11 @@
     </NotAuthorized>
 
     <Authorized>
+        ur claim:
+        @foreach (var claim in context.User.Claims)
+        {
+            <div>@claim.Type: @claim.Value</div>
+        }
         <h3>Hello reseller, @context.User.Identity!.Name</h3>
         <button @onclick="LogoutAsync">Logout</button>
     </Authorized>
@@ -60,7 +66,12 @@
 
         try
         {
-            await ((CustomAuthProvider)SimpleAuthStateProvider).ResellerLoginAsync(_username, _password);
+            ResellerLoginDto loginDto = new()
+                {
+                    Password = _password,
+                    Username = _username
+                };
+            await AuthService.LoginResellerAsync(loginDto);
         }
         catch (Exception ex)
         {
@@ -71,6 +82,6 @@
 
     private async Task LogoutAsync()
     {
-        await ((CustomAuthProvider)SimpleAuthStateProvider).ResellerLogoutAsync();
+        await AuthService.LogoutResellerAsync();
     }
 }
