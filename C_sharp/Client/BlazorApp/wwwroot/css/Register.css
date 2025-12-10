@@ -1,0 +1,112 @@
+Register.css
+
+.register-container {
+    max-width: 700px;
+    margin: 40px auto;
+    padding: 40px;
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #d9d9d9;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    text-align: center;
+}
+
+.form-card {
+    background: #f4f6ff;
+    border-radius: 18px;
+    padding: 40px 50px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.08);
+    border: 1px solid rgba(220,220,255,0.6);
+    backdrop-filter: blur(6px);
+}
+
+.form-title {
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.form-subtitle {
+    text-align: center;
+    color: #555;
+    margin-bottom: 25px;
+}
+
+.register-title {
+    font-size: 42px;
+    font-weight: 800;
+    color: #1a2340;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    margin-bottom: 10px;
+}
+
+.register-subtitle {
+   font-size: 20px;
+    font-weight: 500;
+    color: #3a4468;
+    opacity: 0.9;
+    margin-top: 0;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+.form-grid-full {
+    grid-column: span 2;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    font-size: 15px;
+}
+
+button {
+    padding: 12px 30px;
+    border-radius: 10px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-secondary {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.create-btn {
+    padding: 10px 28px;
+    font-size: 18px;
+    border-radius: 8px;
+    margin-right: 15px;
+}
+
+.reset-btn {
+    padding: 10px 28px;
+    font-size: 18px;
+    border-radius: 8px;
+}
+
+.button-row {
+    text-align: center;
+    margin-top: 30px;
+}
+
+input {
+    border-radius: 10px !important;
+    padding: 10px !important;
+    border: 1px solid #ccc !important;
+}
+

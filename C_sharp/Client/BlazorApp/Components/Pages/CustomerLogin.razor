@@ -1,73 +1,89 @@
-﻿@page "/customer-login"
-@rendermode InteractiveServer
-@using BlazorApp.Auth
-@using Microsoft.AspNetCore.Components.Authorization
-@inject AuthenticationStateProvider AuthStateProvider
+﻿    @page "/customer-login"
+    @rendermode InteractiveServer
+    @using BlazorApp.Auth
+    @using Microsoft.AspNetCore.Components.Authorization
+    @inject AuthenticationStateProvider AuthStateProvider
 
-@code 
-{
-    private string _email;
-    private string _password;
-    private string _loginMessage;
+    <link href="css/Login.css" rel="stylesheet" />
 
-    private bool IsValidEmail(string email)
+    @code 
     {
-        if (string.IsNullOrWhiteSpace(email))
-            return false;
-        return System.Text.RegularExpressions.Regex.IsMatch(
-            email,
-            @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
-            System.Text.RegularExpressions.RegexOptions.IgnoreCase
-        );
+        private string _email;
+        private string _password;
+        private string _loginMessage;
+
+        private bool IsValidEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+            return System.Text.RegularExpressions.Regex.IsMatch(
+                email,
+                @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase
+            );
+        }
+
+        private async Task LoginAsync()
+        {
+            _loginMessage = string.Empty;
+            if (!IsValidEmail(_email))
+            {
+                _loginMessage = "Please enter a valid email address.";
+                return;
+            }
+            try
+            {
+                await ((SimpleAuthProvider)AuthStateProvider).CustomerLoginAsync(_email, _password);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Login failed: {ex.Message}");
+                _loginMessage = ex.Message;
+            }
+        }
     }
 
-    private async Task LoginAsync()
-    {
-        _loginMessage = string.Empty;
-        if (!IsValidEmail(_email))
-        {
-            _loginMessage = "Please enter a valid email address.";
-            return;
-        }
-        try
-        {
-            await ((SimpleAuthProvider)AuthStateProvider).CustomerLoginAsync(_email, _password);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Login failed: {ex.Message}");
-            _loginMessage = ex.Message;
-        }
-    }
+        <div class="form-card">
+        <h3>Login</h3>
 
+        <AuthorizeView>
+        <NotAuthorized>
 
+        <div class="form-grid-single">
 
-}
+            <h3>Please login</h3>
+            <div>
+            <label class="form-label">Email</label>
+            <input type="text" @bind="_email" />
+            @if (!IsValidEmail(_email))
+            {
+                <label style="color: red">
+                    Invaild email format.
+                </label>
+            }
+                </div>
 
-<h3>Login</h3>
-
-<AuthorizeView>
-    <NotAuthorized>
-        <h3>Please login</h3>
-		<label>Email:</label>
-		<input type="text" @bind="_email" />
-        @if (!IsValidEmail(_email))
-        {
-            <label style="color: red">
-				Invaild email format.
-            </label>
-        }
-        <label>Password:</label>
-		<input type="password" @bind="_password" />
-		@if (!string.IsNullOrEmpty(_loginMessage))
-		{
-			<label style="color: red">
-				@_loginMessage
-			</label>
-		}
-        <button @onclick="() => LoginAsync()">Login</button>
-    </NotAuthorized>
-    <Authorized>
-        <h3>Hello, @context.User.Identity!.Name</h3>
-    </Authorized>
-</AuthorizeView>
+            <div>
+            <label class="form-label">Password</label>
+            <input type="password" @bind="_password" />
+            @if (!string.IsNullOrEmpty(_loginMessage))
+            {
+                <label style="color: red">
+                    @_loginMessage
+                </label>
+            }
+            <div class="button-row">
+            <button @onclick="() => LoginAsync()">Login</button>
+            </div>
+            </div>
+        </div>
+        </NotAuthorized>
+        <Authorized>
+            <div class="success-box">
+            <h3>Hello, @context.User.Identity!.Name</h3>
+            <p>You are successfully logged in.</p>
+            </div>
+        </Authorized>
+    </AuthorizeView>
+    </div>
+      
