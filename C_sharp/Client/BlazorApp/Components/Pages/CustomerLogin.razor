@@ -43,40 +43,47 @@
         }
     }
 
-        <div class="form-card">
-        <h3>Login</h3>
+    <div class="auth-page">
+
+        <div class="auth-card">
+
+        <!-- Icon -->
+        <div class="auth-icon">🔐</div>
+
+        <!-- Title -->
+        <h2 class="auth-title">Sign in to your account</h2>
+        <p class="auth-subtitle">Access your dashboard and manage your activity</p>
+
 
         <AuthorizeView>
         <NotAuthorized>
 
-        <div class="form-grid-single">
+            <div class="form-section">
 
-            <h3>Please login</h3>
-            <div>
             <label class="form-label">Email</label>
             <input type="text" @bind="_email" />
             @if (!IsValidEmail(_email))
             {
-                <label style="color: red">
+                 <div class="error-box">
                     Invaild email format.
-                </label>
-            }
                 </div>
-
-            <div>
+            }
+    
             <label class="form-label">Password</label>
             <input type="password" @bind="_password" />
             @if (!string.IsNullOrEmpty(_loginMessage))
             {
-                <label style="color: red">
-                    @_loginMessage
-                </label>
+              <div class="error-box">@_loginMessage</div>
             }
-            <div class="button-row">
-            <button @onclick="() => LoginAsync()">Login</button>
+
+            <button class="btn-primary" @onclick="() => LoginAsync()">Login</button>
             </div>
-            </div>
-        </div>
+            
+             <!-- Feature -->
+                <div class="feature-box">
+                    🔒 Secure login protected by ReSpawnMarket authentication
+                </div>
+        
         </NotAuthorized>
         <Authorized>
             <div class="success-box">
@@ -85,5 +92,6 @@
             </div>
         </Authorized>
     </AuthorizeView>
+    </div>
     </div>
       
