@@ -3,17 +3,15 @@ package org.example.respawnmarket.Service;
 import java.time.Instant;
 import java.util.List;
 
+import com.google.protobuf.Timestamp;
 import com.respawnmarket.*;
 import com.respawnmarket.*;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import jakarta.transaction.Transactional;
-import org.example.respawnmarket.entities.InspectionEntity;
-import org.example.respawnmarket.entities.PawnshopEntity;
-import org.example.respawnmarket.entities.ProductEntity;
-import org.example.respawnmarket.entities.ResellerEntity;
+import org.example.respawnmarket.dtos.ProductInspectionDTO;
+import org.example.respawnmarket.entities.*;
 import org.example.respawnmarket.entities.enums.ApprovalStatusEnum;
-import org.example.respawnmarket.entities.enums.CategoryEnum;
 import org.example.respawnmarket.repositories.InspectionRepository;
 import org.example.respawnmarket.repositories.PawnshopRepository;
 import org.example.respawnmarket.repositories.ProductRepository;
@@ -21,11 +19,11 @@ import org.example.respawnmarket.repositories.ResellerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.google.protobuf.Timestamp;
 
 import io.grpc.stub.StreamObserver;
 
 import static org.example.respawnmarket.Service.ServiceExtensions.ApprovalStatusExtension.toProtoApprovalStatus;
+import static org.example.respawnmarket.Service.ServiceExtensions.CategoryExtension.toProtoCategory;
 
 @Service
 public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.ProductInspectionServiceImplBase
@@ -94,10 +92,16 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
           product.setApprovalStatus(ApprovalStatusEnum.REVIEWING);
           product.setPawnshop(pawnshop);
         }
-        else
+        else if (!request.getIsAccepted() && !request.getComments().isEmpty())
         {
           product.setApprovalStatus(ApprovalStatusEnum.REJECTED);
           product.setPawnshop(null); // rejected => no pawnshop
+        }
+        else
+        {
+            throw Status.INVALID_ARGUMENT
+                .withDescription("Comments must be provided when rejecting a product")
+                .asRuntimeException();
         }
 
         productRepository.save(product);
@@ -109,6 +113,7 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
             .setPawnshopId(product.getPawnshop() != null
                 ? product.getPawnshop().getId()
                 : 0)
+            .setComments(inspection.getComment())
             .build();
 
         responseObserver.onNext(response);
@@ -153,9 +158,16 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
         {
             product.setApprovalStatus(ApprovalStatusEnum.APPROVED);
         }
-        else // false -> rejected
+        else if (!request.getIsAccepted() && !request.getComments().isEmpty())
         {
             product.setApprovalStatus(ApprovalStatusEnum.REJECTED);
+            product.setPawnshop(null); // rejected => no pawnshop
+        }
+        else
+        {
+            throw Status.INVALID_ARGUMENT
+                    .withDescription("Comments must be provided when rejecting a product")
+                    .asRuntimeException();
         }
         productRepository.save(product); // update product status
         productRepository.flush();
@@ -163,6 +175,7 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
         ProductVerificationResponse response = ProductVerificationResponse.newBuilder()
                 .setProductId(product.getId())
                 .setApprovalStatus(toProtoApprovalStatus(product.getApprovalStatus()))
+                .setComments(inspection.getComment())
                 .build();
 
         responseObserver.onNext(response);
@@ -172,4 +185,6 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
 
 
 }
+
+
 

@@ -21,90 +21,7 @@ public class SimpleAuthProvider : AuthenticationStateProvider
         _jSRuntime = jSRuntime;
     }
 
-    public async Task CustomerLoginAsync(string email, string password)
-    {
-        HttpResponseMessage response = await _httpClient.PostAsJsonAsync("api/customers/login",
-            new CustomerLoginDto() 
-            { 
-                Email = email, 
-                Password = password 
-            });
-        string content = await response.Content.ReadAsStringAsync();
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new Exception($"Login failed: {response.StatusCode}, {content}");
-        }
-
-        CustomerLoginResponseDto responseDto = JsonSerializer.Deserialize<CustomerLoginResponseDto>(
-            content, JsonCaseInsensitiveExtension.MakeJsonCaseInsensitive())!;
-
-        string serializedData = JsonSerializer.Serialize(responseDto);
-        await _jSRuntime.InvokeVoidAsync("sessionStorage.setItem", "currentCustomer", serializedData);
-        _primaryCacheUserJson = serializedData;
-
-        List<Claim> claims = new List<Claim>()
-        {
-            // claim should be unique (depend what we have in database)
-            new Claim(ClaimTypes.NameIdentifier, responseDto.CustomerId.ToString()),
-            new Claim(ClaimTypes.Email, responseDto.Email),
-            new Claim(ClaimTypes.Name, responseDto.FirstName + " " + responseDto.LastName),
-            new Claim(ClaimTypes.Role, "Customer"),
-            new Claim("CanSell", responseDto.CanSell.ToString()) // custom claim for selling permission
-        };
-
-        ClaimsIdentity identity = new(claims, "customerapiauth");
-        _currentClaimsPrincipal = new ClaimsPrincipal(identity);
-
-        // Notify the authentication state has changed, then Blazor will update the UI accordingly.
-        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_currentClaimsPrincipal)));
-    }
-
-    public override async Task<AuthenticationState> GetAuthenticationStateAsync()
-    {
-        string? customerAsJson = _primaryCacheUserJson;
-        try
-        {
-            customerAsJson = await _jSRuntime.InvokeAsync<string>("sessionStorage.getItem", "currentCustomer");
-            _primaryCacheUserJson = customerAsJson;
-        }
-        catch (InvalidOperationException)
-        {
-            var emptyState = new AuthenticationState(new ClaimsPrincipal());
-            return emptyState;
-        }
-        if (string.IsNullOrEmpty(customerAsJson))
-        {
-            var emptyState = new AuthenticationState(new ClaimsPrincipal());
-            return emptyState;
-        }
-
-        CustomerLoginResponseDto? customerDto = JsonSerializer.Deserialize<CustomerLoginResponseDto>(
-            customerAsJson, JsonCaseInsensitiveExtension.MakeJsonCaseInsensitive())!;
-        List<Claim> claims = new List<Claim>()
-        {
-            new Claim(ClaimTypes.NameIdentifier, customerDto.CustomerId.ToString()),
-            new Claim(ClaimTypes.Email, customerDto.Email),
-            new Claim(ClaimTypes.Name, customerDto.FirstName + " " + customerDto.LastName),
-             new Claim(ClaimTypes.Role, "Customer"),
-
-            new Claim(ClaimTypes.Name, customerDto.FirstName + " " + customerDto.LastName),
-            new Claim("CanSell", customerDto.CanSell.ToString())
-        };
-        ClaimsIdentity identity = new(claims, "customerapiauth");
-        ClaimsPrincipal principal = new(identity);
-        AuthenticationState authState = new(principal);
-        return authState;
-    }
-
-    public async Task CustomerLogoutAsync()
-    {
-        await _jSRuntime.InvokeVoidAsync("sessionStorage.setItem", "currentCustomer", "");
-        _primaryCacheUserJson = null;
-        _currentClaimsPrincipal = new ClaimsPrincipal();
-        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_currentClaimsPrincipal)));
-    }
-
-public async Task ResellerLoginAsync(string username, string password)
+    public async Task ResellerLoginAsync(string username, string password)
     {
            HttpResponseMessage response = await _httpClient.PostAsJsonAsync("reseller/login",
             new ResellerLoginDto()
@@ -122,7 +39,7 @@ public async Task ResellerLoginAsync(string username, string password)
             content, JsonCaseInsensitiveExtension.MakeJsonCaseInsensitive())!;
 
         string serializedData = JsonSerializer.Serialize(responseDto);
-        await _jSRuntime.InvokeVoidAsync("sessionStorage.setItem", "currentCustomer", serializedData);
+        await _jSRuntime.InvokeVoidAsync("sessionStorage.setItem", "currentReseller", serializedData);
         _primaryCacheUserJson = serializedData;
 
         List<Claim> claims = new()
@@ -147,39 +64,9 @@ public async Task ResellerLoginAsync(string username, string password)
         _currentClaimsPrincipal = new ClaimsPrincipal();
         NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_currentClaimsPrincipal)));
     }
-    public async Task UpdateCurrentCustomerCanSellAsync(bool canSell)
+
+    public override Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        // Read current customer session
-        var customerJson = _primaryCacheUserJson
-            ?? await _jSRuntime.InvokeAsync<string>("sessionStorage.getItem", "currentCustomer");
-        if (string.IsNullOrWhiteSpace(customerJson))
-        {
-            // No session, nothing to update
-            return;
-        }
-
-        var dto = JsonSerializer.Deserialize<CustomerLoginResponseDto>(
-            customerJson, JsonCaseInsensitiveExtension.MakeJsonCaseInsensitive());
-        if (dto is null) return;
-
-        // Update local DTO and persist to sessionStorage via JSRuntime
-        dto.CanSell = canSell;
-        var updatedJson = JsonSerializer.Serialize(dto);
-        await _jSRuntime.InvokeVoidAsync("sessionStorage.setItem", "currentCustomer", updatedJson);
-        _primaryCacheUserJson = updatedJson;
-
-        // Rebuild principal with updated claim
-        var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, dto.CustomerId.ToString()),
-        new Claim(ClaimTypes.Email, dto.Email),
-        new Claim(ClaimTypes.Name, dto.FirstName + " " + dto.LastName),
-        new Claim("CanSell", dto.CanSell.ToString())
-    };
-        var identity = new ClaimsIdentity(claims, "customerapiauth");
-        _currentClaimsPrincipal = new ClaimsPrincipal(identity);
-
-        // Notify Blazor to refresh UI immediately
-        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_currentClaimsPrincipal)));
+        throw new NotImplementedException();
     }
 }

@@ -1,8 +1,13 @@
 ﻿@page "/products/{ProductId:int}"
 @using ApiContracts.Dtos
 @using BlazorApp.Services.Interface
+@using System.Linq
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Linq
 @rendermode InteractiveServer
+
 @inject IGetProductService GetProductService
+@inject ICartService CartService
 
 <link href="css/ProductDetails.css" rel="stylesheet" />
 
@@ -29,6 +34,7 @@ else
             <p><strong>Category:</strong> @_product.Category</p>
             <p><strong>Description:</strong> @_product.Description</p>
             <p><strong>Registered:</strong> @_product.RegisterDate.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</p>
+
             @if (_product.Images != null && _product.Images.Any())
             {
                 <div class="product-details-images">
@@ -42,30 +48,55 @@ else
             {
                 <p>No images available.</p>
             }
+
             <p><strong>Seller:</strong> @_product.SellerFirstName @_product.SellerLastName</p>
             <p><strong>Seller Email:</strong> @_product.SellerEmail</p>
             <p><strong>Seller Phone:</strong> @_product.SellerPhoneNumber</p>
             <p><strong>Pawnshop:</strong> @_product.PawnshopName, @_product.PawnshopStreetName @_product.PawnshopSecondaryUnit, @_product.PawnshopPostalCode @_product.PawnshopCity</p>
             <p><strong>Status:</strong> @_product.ApprovalStatus</p>
-            <NavLink class="btn btn-primary" href="@($"/customer/{_product.SellerId}/inspection")">
-                Inspect Customer
-                </NavLink>
 
+
+            <AuthorizeView Roles="Reseller">
+                <Authorized>
+                    <NavLink class="btn btn-primary" href="@($"/customer/{_product.SellerId}/inspection")">
+                        Inspect Customer
+                    </NavLink>
+                </Authorized>
+            </AuthorizeView>
+
+
+            <AuthorizeView Roles="Customer">
+                <Authorized>
+                    <button class="btn btn-success" @onclick="AddToCart">
+                        Add to cart
+                    </button>
+                </Authorized>
+            </AuthorizeView>
+
+            @if (!string.IsNullOrEmpty(_infoMessage))
+            {
+                <div class="alert alert-info mt-2">
+                    @_infoMessage
+                </div>
+            }
         </div>
     </div>
 }
 
 @code {
     [Parameter] public int ProductId { get; set; }
+
     private DetailedProductDto? _product;
     private bool _loading = true;
     private string? _error;
+    private string? _infoMessage;
 
     protected override async Task OnParametersSetAsync()
     {
         _loading = true;
         _error = null;
         _product = null;
+        _infoMessage = null;
 
         try
         {
@@ -79,5 +110,24 @@ else
         {
             _loading = false;
         }
+    }
+
+    private void AddToCart()
+    {
+        if (_product is null)
+            return;
+
+        var imageUrl = _product.Images?.FirstOrDefault()?.Url;
+
+
+        CartService.AddItem(
+            ProductId,
+            _product.Name,
+            _product.Price,
+            imageUrl
+        );
+
+        _infoMessage = $"'{_product.Name}' added to your cart.";
+        Console.WriteLine($"[ProductDetails] Added product {ProductId} to cart.");
     }
 }

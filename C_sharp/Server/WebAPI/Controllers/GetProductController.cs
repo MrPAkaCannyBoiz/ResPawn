@@ -1,6 +1,7 @@
 ﻿using ApiContracts.Dtos;
 using Com.Respawnmarket;
 using Microsoft.AspNetCore.Mvc;
+using ReSpawnMarket.SDK.ServiceExceptions;
 using ReSpawnMarket.SDK.ServiceInterfaces;
 
 namespace WebAPI.Controllers;
@@ -33,12 +34,20 @@ public class GetProductController: ControllerBase
         }
         catch (KeyNotFoundException ex)
         {
-            return NotFound(new ProblemDetails
+            return StatusCode(StatusCodes.Status409Conflict, new ProblemDetails
             {
-                Title = "Not Found",
+                Title = "Product key information missing",
                 Detail = ex.Message,
-                Status = StatusCodes.Status404NotFound
+                Status = StatusCodes.Status409Conflict
             });
+        }
+        catch (ProductNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (ApplicationException ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
         }
     }
 
@@ -51,30 +60,50 @@ public class GetProductController: ControllerBase
         var grpcRequest = new GetAllProductsRequest
         {
         };
-        var grpcResponse = await _getProductService.GetAllProductsAsync(grpcRequest, ct);
-        var responseDtoList = grpcResponse.Products
-            .Select(p => new ProductWithFirstImageDto
-            {
-                Id = p.Product.Id,
-                Price = p.Product.Price,
-                Sold = p.Product.Sold,
-                Condition = p.Product.Condition,
-                ApprovalStatus = p.Product.ApprovalStatus.ToString(),
-                Name = p.Product.Name,
-                Category = p.Product.Category.ToString(),
-                Description = p.Product.Description,
-                SoldByCustomerId = p.Product.SoldByCustomerId,
-                RegisterDate = p.Product.RegisterDate.ToDateTime(),
-                OtherCategory = p.Product.OtherCategory,
-                Image = new ImageDto
+        try
+        {
+            var grpcResponse = await _getProductService.GetAllProductsAsync(grpcRequest, ct);
+            var responseDtoList = grpcResponse.Products
+                .Select(p => new ProductWithFirstImageDto
                 {
-                    Id = p.FirstImage.Id,
-                    Url = p.FirstImage.Url,
-                    ProductId = p.FirstImage.ProductId
-                }
-            })
-            .ToList() ?? []; // Return empty list of ProductDto if null
-        return Ok(responseDtoList);
+                    Id = p.Product.Id,
+                    Price = p.Product.Price,
+                    Sold = p.Product.Sold,
+                    Condition = p.Product.Condition,
+                    ApprovalStatus = p.Product.ApprovalStatus.ToString(),
+                    Name = p.Product.Name,
+                    Category = p.Product.Category.ToString(),
+                    Description = p.Product.Description,
+                    SoldByCustomerId = p.Product.SoldByCustomerId,
+                    RegisterDate = p.Product.RegisterDate.ToDateTime(),
+                    OtherCategory = p.Product.OtherCategory,
+                    Image = new ImageDto
+                    {
+                        Id = p.FirstImage.Id,
+                        Url = p.FirstImage.Url,
+                        ProductId = p.FirstImage.ProductId
+                    }
+                })
+                .ToList() ?? []; // Return empty list of ProductDto if null
+            return Ok(responseDtoList);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return StatusCode(StatusCodes.Status409Conflict, new ProblemDetails
+            {
+                Title = "Product key information missing",
+                Detail = ex.Message,
+                Status = StatusCodes.Status409Conflict
+            });
+        }
+        catch (ProductNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (ApplicationException ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
     }
 
     [HttpGet("pending")]
@@ -86,30 +115,50 @@ public class GetProductController: ControllerBase
         var grpcRequest = new GetPendingProductsRequest
         {
         };
-        var grpcResponse = await _getProductService.GetPendingProductsAsync(grpcRequest, ct);
-        var responseDtoList = grpcResponse.Products
-           .Select(p => new ProductWithFirstImageDto
-           {
-               Id = p.Product.Id,
-               Price = p.Product.Price,
-               Sold = p.Product.Sold,
-               Condition = p.Product.Condition,
-               ApprovalStatus = p.Product.ApprovalStatus.ToString(),
-               Name = p.Product.Name,
-               Category = p.Product.Category.ToString(),
-               Description = p.Product.Description,
-               SoldByCustomerId = p.Product.SoldByCustomerId,
-               RegisterDate = p.Product.RegisterDate.ToDateTime(),
-               OtherCategory = p.Product.OtherCategory,
-               Image = new ImageDto
+        try
+        {
+            var grpcResponse = await _getProductService.GetPendingProductsAsync(grpcRequest, ct);
+            var responseDtoList = grpcResponse.Products
+               .Select(p => new ProductWithFirstImageDto
                {
-                   Id = p.FirstImage.Id,
-                   Url = p.FirstImage.Url,
-                   ProductId = p.FirstImage.ProductId
-               }
-           })
-           .ToList() ?? []; // Return empty list of ProductDto if null
-        return Ok(responseDtoList);
+                   Id = p.Product.Id,
+                   Price = p.Product.Price,
+                   Sold = p.Product.Sold,
+                   Condition = p.Product.Condition,
+                   ApprovalStatus = p.Product.ApprovalStatus.ToString(),
+                   Name = p.Product.Name,
+                   Category = p.Product.Category.ToString(),
+                   Description = p.Product.Description,
+                   SoldByCustomerId = p.Product.SoldByCustomerId,
+                   RegisterDate = p.Product.RegisterDate.ToDateTime(),
+                   OtherCategory = p.Product.OtherCategory,
+                   Image = new ImageDto
+                   {
+                       Id = p.FirstImage.Id,
+                       Url = p.FirstImage.Url,
+                       ProductId = p.FirstImage.ProductId
+                   }
+               })
+               .ToList() ?? []; // Return empty list of ProductDto if null
+            return Ok(responseDtoList);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return StatusCode(StatusCodes.Status409Conflict, new ProblemDetails
+            {
+                Title = "Product key information missing",
+                Detail = ex.Message,
+                Status = StatusCodes.Status409Conflict
+            });
+        }
+        catch (ProductNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (ApplicationException ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
     }
 
     [HttpGet("available")]
@@ -121,30 +170,50 @@ public class GetProductController: ControllerBase
         var grpcRequest = new GetAllAvailableProductsRequest
         {
         };
-        var grpcResponse = await _getProductService.GetAllAvailableProductsAsync(grpcRequest, ct);
-        var responseDtoList = grpcResponse.Products
-            .Select(p => new ProductWithFirstImageDto
-            {
-                Id = p.Product.Id,
-                Price = p.Product.Price,
-                Sold = p.Product.Sold,
-                Condition = p.Product.Condition,
-                ApprovalStatus = p.Product.ApprovalStatus.ToString(),
-                Name = p.Product.Name,
-                Category = p.Product.Category.ToString(),
-                Description = p.Product.Description,
-                SoldByCustomerId = p.Product.SoldByCustomerId,
-                RegisterDate = p.Product.RegisterDate.ToDateTime(),
-                OtherCategory = p.Product.OtherCategory,
-                Image = new ImageDto
+        try
+        {
+            var grpcResponse = await _getProductService.GetAllAvailableProductsAsync(grpcRequest, ct);
+            var responseDtoList = grpcResponse.Products
+                .Select(p => new ProductWithFirstImageDto
                 {
-                    Id = p.FirstImage.Id,
-                    Url = p.FirstImage.Url,
-                    ProductId = p.FirstImage.ProductId
-                }
-            })
-            .ToList() ?? []; // Return empty list of ProductDto if null
-        return Ok(responseDtoList);
+                    Id = p.Product.Id,
+                    Price = p.Product.Price,
+                    Sold = p.Product.Sold,
+                    Condition = p.Product.Condition,
+                    ApprovalStatus = p.Product.ApprovalStatus.ToString(),
+                    Name = p.Product.Name,
+                    Category = p.Product.Category.ToString(),
+                    Description = p.Product.Description,
+                    SoldByCustomerId = p.Product.SoldByCustomerId,
+                    RegisterDate = p.Product.RegisterDate.ToDateTime(),
+                    OtherCategory = p.Product.OtherCategory,
+                    Image = new ImageDto
+                    {
+                        Id = p.FirstImage.Id,
+                        Url = p.FirstImage.Url,
+                        ProductId = p.FirstImage.ProductId
+                    }
+                })
+                .ToList() ?? []; // Return empty list of ProductDto if null
+            return Ok(responseDtoList);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return StatusCode(StatusCodes.Status409Conflict, new ProblemDetails
+            {
+                Title = "Product key information missing",
+                Detail = ex.Message,
+                Status = StatusCodes.Status409Conflict
+            });
+        }
+        catch (ProductNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (ApplicationException ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
     }
 
     [HttpGet("reviewing")]
@@ -156,30 +225,98 @@ public class GetProductController: ControllerBase
         var grpcRequest = new GetAllReviewingProductsRequest
         {
         };
-        var grpcResponse = await _getProductService.GetAllReviewingProductsAsync(grpcRequest, ct);
-        var responseDtoList = grpcResponse.Products
-            .Select(p => new ProductWithFirstImageDto
-            {
-                Id = p.Product.Id,
-                Price = p.Product.Price,
-                Sold = p.Product.Sold,
-                Condition = p.Product.Condition,
-                ApprovalStatus = p.Product.ApprovalStatus.ToString(),
-                Name = p.Product.Name,
-                Category = p.Product.Category.ToString(),
-                Description = p.Product.Description,
-                SoldByCustomerId = p.Product.SoldByCustomerId,
-                RegisterDate = p.Product.RegisterDate.ToDateTime(),
-                OtherCategory = p.Product.OtherCategory,
-                Image = new ImageDto
+        try
+        {
+            var grpcResponse = await _getProductService.GetAllReviewingProductsAsync(grpcRequest, ct);
+            var responseDtoList = grpcResponse.Products
+                .Select(p => new ProductWithFirstImageDto
                 {
-                    Id = p.FirstImage.Id,
-                    Url = p.FirstImage.Url,
-                    ProductId = p.FirstImage.ProductId
-                }
-            })
-            .ToList() ?? []; // Return empty list of ProductDto if null
-        return Ok(responseDtoList);
+                    Id = p.Product.Id,
+                    Price = p.Product.Price,
+                    Sold = p.Product.Sold,
+                    Condition = p.Product.Condition,
+                    ApprovalStatus = p.Product.ApprovalStatus.ToString(),
+                    Name = p.Product.Name,
+                    Category = p.Product.Category.ToString(),
+                    Description = p.Product.Description,
+                    SoldByCustomerId = p.Product.SoldByCustomerId,
+                    RegisterDate = p.Product.RegisterDate.ToDateTime(),
+                    OtherCategory = p.Product.OtherCategory,
+                    Image = new ImageDto
+                    {
+                        Id = p.FirstImage.Id,
+                        Url = p.FirstImage.Url,
+                        ProductId = p.FirstImage.ProductId
+                    }
+                })
+                .ToList() ?? []; // Return empty list of ProductDto if null
+            return Ok(responseDtoList);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return StatusCode(StatusCodes.Status409Conflict, new ProblemDetails
+            {
+                Title = "Product key information missing",
+                Detail = ex.Message,
+                Status = StatusCodes.Status409Conflict
+            });
+        }
+        catch (ProductNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (ApplicationException ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
+    }
+
+    [HttpGet("inspection/customer/{id}")]
+    public async Task<IActionResult> GetLatestProductInspection(int id, CancellationToken ct)
+    {
+        var grpcRequest = new GetLatestProductInspectionRequest()
+        {
+            CustomerId = id
+        };
+        try
+        {
+            var grpcResponse = await _getProductService.GetLatestProductInspection(grpcRequest, ct);
+            var responseDtoList = grpcResponse.Products
+                                .Select(p => new LatestProductFromInspectionDto()
+                                {
+                                    ProductWithFirstImage = new ProductWithFirstImageDto()
+                                    {
+                                        Id = p.Product.Product.Id,
+                                        Price = p.Product.Product.Price,
+                                        Sold = p.Product.Product.Sold,
+                                        Condition = p.Product.Product.Condition,
+                                        ApprovalStatus = p.Product.Product.ApprovalStatus.ToString(),
+                                        Name = p.Product.Product.Name,
+                                        Category = p.Product.Product.Category.ToString(),
+                                        Description = p.Product.Product.Description,
+                                        SoldByCustomerId = p.Product.Product.SoldByCustomerId,
+                                        RegisterDate = p.Product.Product.RegisterDate.ToDateTime(),
+                                        OtherCategory = p.Product.Product.OtherCategory,
+                                        Image = new ImageDto
+                                        {
+                                            Id = p.Product.FirstImage.Id,
+                                            Url = p.Product.FirstImage.Url,
+                                            ProductId = p.Product.FirstImage.ProductId
+                                        }
+                                    },
+                                    InspectionComment = p.InspectionComments
+                                }).ToList() ?? [];
+                                return Ok(responseDtoList); 
+        }
+        catch (ProductNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (ApplicationException ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
+
     }
 
 

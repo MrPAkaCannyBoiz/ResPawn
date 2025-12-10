@@ -11,14 +11,29 @@
 	//attributes for product list
 	private IQueryable<ProductWithFirstImageDto>? _products;
 	private string _addToCartMessage = "";
+	private string _loadingMessage = "";
 
 	protected override async Task OnInitializedAsync()
 	{
-		_products = await GetProductService.GetAllAvailableAsync();
+		try
+		{
+			_products = await GetProductService.GetAllAvailableAsync();
+			_loadingMessage = "Loading...";
+		}
+		catch (Exception ex)
+		{
+			_loadingMessage = $"Error loading products: {ex.Message}";
+		}
 	}
 
 	private void AddProductToCart(ProductWithFirstImageDto product)
 	{
+		if (CartService.Items.Any(i => i.ProductId == product.Id))
+		{
+			_addToCartMessage = $"'{product.Name}' is already in the cart.";
+			return;
+		}
+
 		CartService.AddItem(product.Id, product.Name, product.Price, product.Image?.Url);
 		_addToCartMessage = $"'{product.Name}' added to cart.";
 	}
@@ -32,7 +47,7 @@
 
 @if (_products == null)
 {
-	<p>Loading...</p>
+	<p>@_loadingMessage</p>
 }
 else
 {

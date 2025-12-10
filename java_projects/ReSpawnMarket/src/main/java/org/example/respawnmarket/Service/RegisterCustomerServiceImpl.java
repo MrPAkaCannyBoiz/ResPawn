@@ -1,5 +1,7 @@
 package org.example.respawnmarket.Service;
 import com.respawnmarket.CustomerRegisterServiceGrpc;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import jakarta.transaction.Transactional;
 import org.example.respawnmarket.entities.AddressEntity;
@@ -10,7 +12,9 @@ import org.example.respawnmarket.repositories.AddressRepository;
 import org.example.respawnmarket.repositories.CustomerAddressRepository;
 import org.example.respawnmarket.repositories.CustomerRepository;
 import org.example.respawnmarket.repositories.PostalRepository;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +25,8 @@ import com.respawnmarket.Postal;
 import com.respawnmarket.CustomerAddress;
 import com.respawnmarket.RegisterCustomerRequest;
 import com.respawnmarket.RegisterCustomerResponse;
+
+import static org.example.respawnmarket.Service.ServiceExtensions.CustomerExceptionExtension.mapDataIntegrityViolation;
 
 // TODO: add validation for each database constraint, so web api can catch errors properly
 // TODO: handle two addresses per customer
@@ -64,52 +70,73 @@ public class RegisterCustomerServiceImpl extends CustomerRegisterServiceGrpc.Cus
             givenPostal.setPostalCode(existingPostal.getPostalCode());
             givenPostal.setCity(existingPostal.getCity());
         }
-        // encrypt password before saving to DB (omitted for brevity)
-        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        String encodedPassword = passwordEncoder.encode(request.getPassword());
-        // create and save customer, address, and customerAddress entities
-        CustomerEntity customer = new CustomerEntity(request.getFirstName(), request.getLastName()
-                , request.getEmail(), encodedPassword, request.getPhoneNumber());
-        CustomerEntity savedCustomer = customerRepository.save(customer);
-        AddressEntity address = new AddressEntity(request.getStreetName()
-                , request.getSecondaryUnit(), givenPostal);
-        AddressEntity savedAddress = addressRepository.save(address);
-        CustomerAddressEntity savedCustomerAddress = new CustomerAddressEntity(savedCustomer, savedAddress);
-        customerAddressRepository.save(savedCustomerAddress);
-        customerRepository.flush();
-        addressRepository.flush();
-        customerAddressRepository.flush();
-        // make dto for response
-        System.out.println("Registering customer: " + request);
+        try
+        {
+            // encrypt password before saving to DB (omitted for brevity)
+            BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+            String encodedPassword = passwordEncoder.encode(request.getPassword());
+            // create and save customer, address, and customerAddress entities
+            CustomerEntity customer = new CustomerEntity(request.getFirstName(), request.getLastName()
+                    , request.getEmail(), encodedPassword, request.getPhoneNumber());
+            CustomerEntity savedCustomer = customerRepository.save(customer);
+            AddressEntity address = new AddressEntity(request.getStreetName()
+                    , request.getSecondaryUnit(), givenPostal);
+            AddressEntity savedAddress = addressRepository.save(address);
+            CustomerAddressEntity savedCustomerAddress = new CustomerAddressEntity(savedCustomer, savedAddress);
+            customerAddressRepository.save(savedCustomerAddress);
+            customerRepository.flush();
+            addressRepository.flush();
+            customerAddressRepository.flush();
+            // make dto for response
+            System.out.println("Registering customer: " + request);
 
-        Customer customerDto = Customer.newBuilder()
-                .setId(savedCustomer.getId())
-                .setFirstName(savedCustomer.getFirstName())
-                .setLastName(savedCustomer.getLastName())
-                .setEmail(savedCustomer.getEmail())
-                .setPhoneNumber(savedCustomer.getPhoneNumber())
-                .build();
+            Customer customerDto = Customer.newBuilder()
+                    .setId(savedCustomer.getId())
+                    .setFirstName(savedCustomer.getFirstName())
+                    .setLastName(savedCustomer.getLastName())
+                    .setEmail(savedCustomer.getEmail())
+                    .setPhoneNumber(savedCustomer.getPhoneNumber())
+                    .build();
 
-        Address addressDto = Address.newBuilder()
-                .setId(savedAddress.getId())
-                .setStreetName(savedAddress.getStreetName())
-                .setSecondaryUnit(savedAddress.getSecondaryUnit())
-                .setPostalCode(savedAddress.getPostal().getPostalCode())
-                .build();
+            Address addressDto = Address.newBuilder()
+                    .setId(savedAddress.getId())
+                    .setStreetName(savedAddress.getStreetName())
+                    .setSecondaryUnit(savedAddress.getSecondaryUnit())
+                    .setPostalCode(savedAddress.getPostal().getPostalCode())
+                    .build();
 
-        Postal postalDto = Postal.newBuilder()
-                .setPostalCode(givenPostal.getPostalCode())
-                .setCity(givenPostal.getCity())
-                .build();
+            Postal postalDto = Postal.newBuilder()
+                    .setPostalCode(givenPostal.getPostalCode())
+                    .setCity(givenPostal.getCity())
+                    .build();
 
-        RegisterCustomerResponse response = RegisterCustomerResponse.newBuilder()
-                .setCustomer(customerDto)
-                .setAddress(addressDto)
-                .setPostal(postalDto)
-                .build();
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
+            RegisterCustomerResponse response = RegisterCustomerResponse.newBuilder()
+                    .setCustomer(customerDto)
+                    .setAddress(addressDto)
+                    .setPostal(postalDto)
+                    .build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        }
+        catch (DataIntegrityViolationException ex)
+        {
+            StatusRuntimeException statusEx = mapDataIntegrityViolation(ex);
+            responseObserver.onError(statusEx);
+        }
+        catch (Exception ex)
+        {
+            responseObserver.onError(
+                    Status.INTERNAL
+                            .withDescription("Unexpected error while registering customer")
+                            .withCause(ex)
+                            .asRuntimeException()
+            );
+        }
     }
+
+
+
+
 
 
 }

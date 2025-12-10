@@ -7,7 +7,7 @@
 @rendermode InteractiveServer
 @inject AuthenticationStateProvider AuthStateProvider
 
- @inject IPurchaseService PurchaseService
+@inject IPurchaseService PurchaseService
 @inject ICartService CartService
 
 <h3>Shopping Cart</h3>
@@ -15,10 +15,11 @@
 @if (!CartService.Items.Any())
 {
     <p>Your cart is empty.</p>
+    <p>debugging: your customer id from claim is: @CustomerId </p>
 }
 else
 {
-
+    <p>debugging: your customer id from claim is: @CustomerId </p>
 
     <table class="table">
         <thead>
@@ -57,14 +58,40 @@ else
 
     <p><strong>Total: @CartService.TotalPrice DKK</strong></p>
 
-    <div class="mt-3 d-flex gap-2">
-        <button class="btn btn-primary" @onclick="Buy" disabled="@busy">
-            @(busy ? "Buying..." : "Buy")
-        </button>
-        <button class="btn btn-outline-secondary" @onclick="ClearCart" disabled="@busy">
-            Clear cart
-        </button>
-    </div>
+
+
+
+    <EditForm Model="@creditCard" OnValidSubmit="Buy">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <h5>Credit Card Information</h5>
+        <div class="mb-2">
+            <label>Card Number</label>
+            <InputText class="form-control" @bind-Value="creditCard.CardNumber" maxlength="19" />
+        </div>
+        <div class="mb-2">
+            <label>Cardholder Name</label>
+            <InputText class="form-control" @bind-Value="creditCard.CardholderName" />
+        </div>
+        <div class="mb-2">
+            <label>Expiration (MM/YY)</label>
+            <InputText class="form-control" @bind-Value="creditCard.Expiration" maxlength="5" />
+        </div>
+        <div class="mb-2">
+            <label>CVV</label>
+            <InputText class="form-control" @bind-Value="creditCard.CVV" maxlength="4" />
+        </div>
+
+        <div class="mt-3 d-flex gap-2">
+            <button class="btn btn-primary" type="submit" disabled="@busy">
+                @(busy ? "Buying..." : "Buy")
+            </button>
+            <button class="btn btn-outline-secondary" type="button" @onclick="ClearCart" disabled="@busy">
+                Clear cart
+            </button>
+        </div>
+    </EditForm>
 }
 
 @if (!string.IsNullOrEmpty(message))
@@ -90,6 +117,7 @@ else
     private string? message;
     private bool success;
     private bool busy;
+    private CreditCardDto? creditCard= new();
 
     private void ChangeQuantity(int productId, ChangeEventArgs e)
     {
@@ -107,7 +135,7 @@ else
 
         if (user.Identity?.IsAuthenticated == true)
         {
-            var idClaim = user.FindFirst(ClaimTypes.NameIdentifier);
+            var idClaim = user.FindFirst("CustomerId");
             if (idClaim != null && int.TryParse(idClaim.Value, out var id))
             {
                 CustomerId = id;
@@ -137,17 +165,16 @@ else
         message = null;
         success = false;
         Result = null;
-
+		creditCard ??= new CreditCardDto();
         if (!CartService.Items.Any())
         {
             message = "Your cart is empty.";
             busy = false;
             return;
         }
-
-        if (CustomerId <= 0)
+        if (!ValidateCreditCard(creditCard, out var validationError))
         {
-            message = "Please enter a valid Customer Id.";
+            message = validationError;
             busy = false;
             return;
         }
@@ -174,7 +201,9 @@ else
             message = $"Purchase completed. TransactionId = {Result.Transaction.Id}, " +
                       $"Total = {Result.ShoppingCart.TotalPrice}.";
 
+       
             CartService.Clear();
+            creditCard = new CreditCardDto();
         }
         catch (Exception ex)
         {
@@ -186,5 +215,42 @@ else
         {
             busy = false;
         }
+    }
+
+
+    private bool ValidateCreditCard(CreditCardDto card, out string error)
+    {
+        error = null!;
+
+       
+        var digits = card.CardNumber?.Replace(" ", "");
+        if (string.IsNullOrWhiteSpace(digits) || digits.Length != 16 || !digits.All(char.IsDigit))
+        {
+            error = "Card number must be 16 digits.";
+            return false;
+        }
+
+       
+        if (string.IsNullOrWhiteSpace(card.CardholderName))
+        {
+            error = "Cardholder name is required.";
+            return false;
+        }
+
+        
+        if (string.IsNullOrWhiteSpace(card.Expiration) || !System.Text.RegularExpressions.Regex.IsMatch(card.Expiration, @"^(0[1-9]|1[0-2])\/\d{2}$"))
+        {
+            error = "Expiration must be in MM/YY format.";
+            return false;
+        }
+
+        
+        if (string.IsNullOrWhiteSpace(card.CVV) || !(card.CVV.Length == 3 || card.CVV.Length == 4) || !card.CVV.All(char.IsDigit))
+        {
+            error = "CVV must be 3 or 4 digits.";
+            return false;
+        }
+
+        return true;
     }
 }

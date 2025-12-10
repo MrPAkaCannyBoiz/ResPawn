@@ -25,6 +25,19 @@ public class CustomerRegisterGrpcService : IRegisterCustomerService
                 cancellationToken: cancellationToken);
             return response;
         }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.AlreadyExists)
+        {
+            throw new InvalidOperationException($"Email or Number already exist: {ex.Status.Detail}");
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.InvalidArgument)
+        {
+            throw new ArgumentException($"Invalid input: {ex.Status.Detail}");
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.Internal)
+        {
+            throw new ApplicationException(
+                $"An internal server error occurred while register the customer. {ex.Message}");
+        }
         catch (RpcException ex)
         {
             throw new ApplicationException($"gRPC {ex.StatusCode}: {ex.Status.Detail}", ex);

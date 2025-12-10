@@ -27,7 +27,11 @@ public class ProductInspectionGrpcService : IProductInspectionService
         }
         catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
         {
-            throw new KeyNotFoundException($"Product with ID {request.ProductId} not found.", ex);
+            throw new KeyNotFoundException($"Product with ID {request.ProductId} not found.");
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.InvalidArgument)
+        {
+            throw new ArgumentException($"Invalid argument: {ex.Status.Detail}");
         }
         catch (RpcException ex)
         {
@@ -45,6 +49,10 @@ public class ProductInspectionGrpcService : IProductInspectionService
         catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
         {
             throw new KeyNotFoundException($"Product with ID {request.ProductId} not found.", ex);
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.InvalidArgument)
+        {
+            throw new ArgumentException($"Invalid argument: {ex.Status.Detail}");
         }
         catch (RpcException ex)
         {

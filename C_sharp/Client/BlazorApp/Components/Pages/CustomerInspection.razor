@@ -1,4 +1,5 @@
 ﻿@page "/customer/{id:int}/inspection"
+@attribute [Authorize(Roles = "Reseller")]
 @using ApiContracts.Dtos
 @using BlazorApp.Services.Interface
 @inject IGetCustomerService GetCustomerService
@@ -72,8 +73,6 @@ else
                     }
                 </div>
             </div>
-
-            <!-- Desired state selector paired with action button -->
             <div class="customer-row">
                 <div class="customer-cell customer-cell-key">Desired Selling State</div>
                 <div class="customer-cell customer-cell-val">
@@ -144,10 +143,6 @@ else
             ? $"Customer {_customer.Id} marked as allowed to sell."
             : $"Customer {_customer.Id} marked as not allowed to sell.";
 		StateHasChanged();
-        
-        // Later: call backend to persist
-        // await CustomerUpdateService.SetCanSellAsync(_customer.Id, _desiredCanSell);
-        // then set message based on success/failure and possibly revert on failure.
     }
 }
 

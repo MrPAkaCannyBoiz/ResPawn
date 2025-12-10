@@ -1,6 +1,7 @@
 ﻿using ApiContracts.Dtos;
 using Com.Respawnmarket;
 using Microsoft.AspNetCore.Mvc;
+using ReSpawnMarket.SDK.ServiceExceptions;
 using ReSpawnMarket.SDK.ServiceInterfaces;
 
 namespace WebAPI.Controllers;
@@ -36,39 +37,54 @@ public class UploadProductController : ControllerBase
             ImageUrl = {dto.ImageUrls ?? new List<string>() } // equivalent as ImageUrl.AddRange(dto.ImageUrls)
         };
 
-        var grpcResponse = await _uploadProductService.UploadProductAsync(grpcRequest, ct);
-        if (grpcRequest.Category == Category.Unspecified)
+        try
         {
-            return StatusCode(502, new ProblemDetails
+            var grpcResponse = await _uploadProductService.UploadProductAsync(grpcRequest, ct);
+            if (grpcRequest.Category == Category.Unspecified)
             {
-                Title = "Bad Gateway",
-                Detail = "The upstream service returned an invalid category.",
-                Status = StatusCodes.Status502BadGateway
-            });
+                return StatusCode(502, new ProblemDetails
+                {
+                    Title = "Bad Gateway",
+                    Detail = "The upstream service returned an invalid category.",
+                    Status = StatusCodes.Status502BadGateway
+                });
+            }
+
+            //convert gRPC Image into ImageDto
+            var images = grpcResponse.Images.Select(img => new ImageDto()
+            {
+                Id = img.Id,
+                Url = img.Url,
+                ProductId = img.ProductId
+            }).ToList();
+
+            ProductDto responseDto = new()
+            {
+                Id = grpcResponse.Product.Id,
+                Price = grpcResponse.Product.Price,
+                Sold = grpcResponse.Product.Sold,
+                Condition = grpcResponse.Product.Condition,
+                ApprovalStatus = grpcResponse.Product.ApprovalStatus.ToString(),
+                Name = grpcResponse.Product.Name,
+                Category = grpcResponse.Product.Category.ToString(),
+                Description = grpcResponse.Product.Description,
+                SoldByCustomerId = grpcResponse.Product.SoldByCustomerId,
+                RegisterDate = grpcResponse.Product.RegisterDate.ToDateTime(),
+                Images = images
+            };
+            return Ok(responseDto);
         }
-
-        //convert gRPC Image into ImageDto
-        var images = grpcResponse.Images.Select(img => new ImageDto()
-        { 
-            Id = img.Id,
-            Url = img.Url,
-            ProductId = img.ProductId
-        }).ToList(); 
-
-        ProductDto responseDto = new()
+        catch (UploadProductException ex)
         {
-           Id = grpcResponse.Product.Id,
-           Price = grpcResponse.Product.Price,
-           Sold = grpcResponse.Product.Sold,
-           Condition = grpcResponse.Product.Condition,
-           ApprovalStatus = grpcResponse.Product.ApprovalStatus.ToString(),
-           Name = grpcResponse.Product.Name,
-           Category = grpcResponse.Product.Category.ToString(),
-           Description = grpcResponse.Product.Description,
-           SoldByCustomerId = grpcResponse.Product.SoldByCustomerId,
-           RegisterDate = grpcResponse.Product.RegisterDate.ToDateTime(),
-           Images = images
-        };
-        return Ok(responseDto);
+            return BadRequest(ex.Message);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (ApplicationException ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
     }
 }
