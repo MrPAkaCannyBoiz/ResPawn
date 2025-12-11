@@ -1,23 +1,138 @@
 ﻿@inherits LayoutComponentBase
+@using System.Security.Claims
+@using BlazorApp.Auth
+@inject CustomAuthProvider AuthProvider
+@inject NavigationManager Navigation
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+@implements IDisposable
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+<div class="layout-root">
+
+    <nav class="top-navbar">
+
+        <div class="nav-left">
+            <span class="brand-title">ReSpawnMarket</span>
         </div>
 
-        <article class="content px-4">
-            @Body
-        </article>
+        <div class="nav-center desktop-menu">
+
+            <NavLink href="/" class="nav-link" activeClass="active">Home</NavLink>
+            <NavLink href="/available-product" class="nav-link" activeClass="active">Products</NavLink>
+            <NavLink href="/register" class="nav-link" activeClass="active">Sign up</NavLink>
+
+            <!-- CUSTOMER MENU -->
+            <AuthorizeView Roles="Customer">
+                <Authorized Context="ctx">
+
+                    @if (ctx.User.HasClaim("CanSell","true"))
+                    {
+                        <NavLink href="/customer/new-product" class="nav-link" activeClass="active">Upload Item</NavLink>
+                    }
+
+                    <NavLink href="/purchase" class="nav-link" activeClass="active">Cart</NavLink>
+                    <NavLink href="/customer/info" class="nav-link" activeClass="active">Profile</NavLink>
+                    <NavLink href="/my-products" class="nav-link" activeClass="active">My Products</NavLink>
+
+                </Authorized>
+            </AuthorizeView>
+
+            <!-- RESELLER MENU -->
+            <AuthorizeView Roles="Reseller">
+                <Authorized>
+                    <NavLink href="/resellercheck" class="nav-link" activeClass="active">Check Quality</NavLink>
+                </Authorized>
+            </AuthorizeView>
+
+        </div>
+
+        <div class="nav-right">
+
+            <AuthorizeView>
+                <NotAuthorized>
+                    <NavLink href="/customer-login" class="nav-link">Customer Login</NavLink>
+                    <NavLink href="/reseller-login" class="nav-link">Reseller Login</NavLink>
+                </NotAuthorized>
+
+                <Authorized>
+                    <button class="logout-btn" @onclick="LogoutAsync">Logout</button>
+                </Authorized>
+            </AuthorizeView>
+
+            <button class="hamburger" @onclick="ToggleMenu">☰</button>
+
+        </div>
+    </nav>
+
+    @if (isMenuOpen)
+    {
+        <div class="mobile-menu">
+
+            <NavLink href="/" class="mobile-link">Home</NavLink>
+            <NavLink href="/available-product" class="mobile-link">Products</NavLink>
+            <NavLink href="/register" class="mobile-link">Sign up</NavLink>
+
+            <AuthorizeView Roles="Customer">
+                <Authorized Context="ctx">
+
+                    @if (ctx.User.HasClaim("CanSell","true"))
+                    {
+                        <NavLink href="/customer/new-product" class="mobile-link">Upload Item</NavLink>
+                    }
+
+                    <NavLink href="/purchase" class="mobile-link">Cart</NavLink>
+                    <NavLink href="/customer/info" class="mobile-link">Profile</NavLink>
+                    <NavLink href="/my-products" class="mobile-link">My Products</NavLink>
+
+                </Authorized>
+            </AuthorizeView>
+
+            <AuthorizeView Roles="Reseller">
+                <Authorized>
+                    <NavLink href="/resellercheck" class="mobile-link">Check Quality</NavLink>
+                </Authorized>
+            </AuthorizeView>
+
+            <AuthorizeView>
+                <NotAuthorized>
+                    <NavLink href="/customer-login" class="mobile-link">Customer Login</NavLink>
+                    <NavLink href="/reseller-login" class="mobile-link">Reseller Login</NavLink>
+                </NotAuthorized>
+
+                <Authorized>
+                    <button class="mobile-logout" @onclick="LogoutAsync">Logout</button>
+                </Authorized>
+            </AuthorizeView>
+        </div>
+    }
+
+    <main class="content-area">
+        @Body
     </main>
 </div>
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
-</div>
+@code {
+    private bool isMenuOpen = false;
+
+    private void ToggleMenu() => isMenuOpen = !isMenuOpen;
+
+   private async Task LogoutAsync()
+{
+    await AuthProvider.LogoutAsync();
+    Navigation.NavigateTo("/", forceLoad: true);
+}
+
+    protected override void OnInitialized()
+    {
+        AuthProvider.AuthenticationStateChanged += OnAuthStateChanged;
+    }
+
+    private void OnAuthStateChanged(Task<AuthenticationState> task)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AuthProvider.AuthenticationStateChanged -= OnAuthStateChanged;
+    }
+}

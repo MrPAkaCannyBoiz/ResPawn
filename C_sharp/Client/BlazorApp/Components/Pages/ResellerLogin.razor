@@ -7,13 +7,24 @@
 
 @inject IResellerAuthService AuthService
 
-<h3>Reseller Login</h3>
+<link href="css/Login.css" rel="stylesheet" />
+
+<div class="login-shell">
+    <div class="login-right single-login-card">
+
+        <div class="auth-icon">🛒</div>
+
+        <!-- Title -->
+        <h2 class="auth-title">Reseller Login</h2>
+        <p class="auth-subtitle">Access your reseller dashboard and manage your products</p>
+
 
 <AuthorizeView Roles="Reseller">
     <NotAuthorized>
         <h3>Please login as reseller</h3>
 
-        <label>Username:</label>
+    <div class="form-section">
+        <label class="form-label">Username:</label>
         <input type="text" @bind="_username" />
         @if (!IsValidUsername(_username))
         {
@@ -22,7 +33,7 @@
             </label>
         }
 
-        <label>Password:</label>
+        <label class="form-label">Password:</label>
         <input type="password" @bind="_password" />
 
         @if (!string.IsNullOrEmpty(_loginMessage))
@@ -33,18 +44,30 @@
         }
 
         <button @onclick="LoginAsync">Login</button>
+
+            <div class="feature-box">
+                    🔐 Secure login protected by ReSpawnMarket reseller authentication
+            </div>
+    </div>
     </NotAuthorized>
 
     <Authorized>
-        ur claim:
+       <!-- ur claim:
         @foreach (var claim in context.User.Claims)
         {
             <div>@claim.Type: @claim.Value</div>
         }
         <h3>Hello reseller, @context.User.Identity!.Name</h3>
-        <button @onclick="LogoutAsync">Logout</button>
+        <button @onclick="LogoutAsync">Logout</button> -->
+
+        <div class="success-box">
+                    <h3>Welcome back, @context.User.Identity!.Name!</h3>
+                    <button class="logout-btn" @onclick="LogoutAsync">Logout</button>
+        </div>
     </Authorized>
 </AuthorizeView>
+    </div>
+</div>
 
 @code {
     private string _username;

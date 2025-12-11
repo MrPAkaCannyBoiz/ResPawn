@@ -1,4 +1,3 @@
-using ApiContracts.AuthPolicies;
 using Grpc.Net.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
@@ -82,7 +81,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 builder.Services.AddAuthorization(); // this is needed for jwt auth, remove if jwt is not used/doesn't work
-AuthorizationPolicies.AddPolicies(builder.Services); // add custom authorization policies
+/*AuthorizationPolicies.AddPolicies(builder.Services); // add custom authorization policies*/
 
 // Configure Kestrel to use HTTPS with the specified .pfx certificate
 // install the certificate to trusted root authorities

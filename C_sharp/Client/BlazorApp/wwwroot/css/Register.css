@@ -1,54 +1,104 @@
-Register.css
-
-.register-container {
-    max-width: 700px;
-    margin: 40px auto;
-    padding: 40px;
-    background: #ffffff;
-    border-radius: 16px;
-    border: 1px solid #d9d9d9;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    text-align: center;
+/* Page background */
+.register-shell {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle at top left, #e1e9ff, #e7edff, #f2f6ff);
 }
 
-.form-card {
-    background: #f4f6ff;
-    border-radius: 18px;
-    padding: 40px 50px;
-    box-shadow: 0 8px 28px rgba(0,0,0,0.08);
-    border: 1px solid rgba(220,220,255,0.6);
-    backdrop-filter: blur(6px);
+/* MAIN 2-COL CARD */
+.register-card-2col {
+    width: 90%;
+    max-width: 1500px;
+    min-height: 78vh;
+
+    background: white;
+    border-radius: 26px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    box-shadow: 0 18px 40px rgba(15,23,42,0.18);
 }
 
-.form-title {
-    text-align: center;
-    margin-bottom: 25px;
-    font-size: 28px;
-    font-weight: 600;
+
+.register-left {
+    padding: 60px 55px;
+    position: relative;
+
+    background: linear-gradient(145deg, #3b1c88, #162a78, #14305e);
+    color: white;
 }
 
-.form-subtitle {
-    text-align: center;
-    color: #555;
-    margin-bottom: 25px;
+/* Decorative blurred bubbles */
+.bubble {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(40px);
+    opacity: 0.30;
 }
 
-.register-title {
-    font-size: 42px;
-    font-weight: 800;
-    color: #1a2340;
-    letter-spacing: 1px;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    margin-bottom: 10px;
+.small-b1 {
+    width: 140px;
+    height: 140px;
+    background: #ff9f43;
+    top: 40px;
+    right: 60px;
 }
 
-.register-subtitle {
-   font-size: 20px;
-    font-weight: 500;
-    color: #3a4468;
+.small-b2 {
+    width: 120px;
+    height: 120px;
+    background: #53ffa1;
+    bottom: 60px;
+    left: 50px;
+}
+
+
+.brand-badge {
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.15);
+    margin-bottom: 20px;
+}
+
+.left-title {
+    font-size: 34px;
+    font-weight: 700;
+}
+
+.left-subtitle {
+    margin-top: 12px;
+    max-width: 330px;
     opacity: 0.9;
-    margin-top: 0;
+    margin-bottom: 24px;
 }
+
+.left-feature-list {
+    margin-top: 20px;
+    list-style: none;
+    padding: 0;
+}
+.left-feature-list li {
+    margin-bottom: 12px;
+    font-size: 15px;
+}
+
+
+.register-right {
+    padding: 60px 55px;
+}
+
+.auth-title {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.auth-subtitle {
+    color: #64748b;
+    margin-bottom: 30px;
+}
+
 
 .form-grid {
     display: grid;
@@ -56,57 +106,24 @@ Register.css
     gap: 18px;
 }
 
-.form-grid-full {
-    grid-column: span 2;
-}
-
-input {
+.input-field {
     width: 100%;
     padding: 12px;
     border-radius: 10px;
     border: 1px solid #cbd5e1;
-    font-size: 15px;
-}
-
-button {
-    padding: 12px 30px;
-    border-radius: 10px;
-    font-size: 16px;
-    border: none;
-    cursor: pointer;
 }
 
 .btn-primary {
+    width: 100%;
+    padding: 14px;
+    margin-top: 22px;
+    border-radius: 12px;
     background: #3b82f6;
     color: white;
+    font-size: 17px;
+    border: none;
+    cursor: pointer;
 }
-
-.btn-secondary {
-    background: #e2e8f0;
-    color: #475569;
+.btn-primary:hover {
+    background: #2563eb;
 }
-
-.create-btn {
-    padding: 10px 28px;
-    font-size: 18px;
-    border-radius: 8px;
-    margin-right: 15px;
-}
-
-.reset-btn {
-    padding: 10px 28px;
-    font-size: 18px;
-    border-radius: 8px;
-}
-
-.button-row {
-    text-align: center;
-    margin-top: 30px;
-}
-
-input {
-    border-radius: 10px !important;
-    padding: 10px !important;
-    border: 1px solid #ccc !important;
-}
-

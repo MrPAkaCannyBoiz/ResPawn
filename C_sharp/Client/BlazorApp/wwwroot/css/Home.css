@@ -3,9 +3,19 @@ body {
     color: white;
 }
 
+.home-background {
+    min-height: 100vh;
+    width: 100%;
+    padding-top: 50px;
+
+    background: radial-gradient(circle at top center, #1e1b4b 10%, #0f172a 60%, #0a0f24 100%);
+    background-attachment: fixed;
+}
+
 .hero-container {
     display: flex;
-    justify-content: space-between;
+    min-height: 75vh;
+    justify-content: center;
     align-items: center;
     margin: 80px auto;
     padding: 60px;
@@ -71,11 +81,43 @@ body {
 }
 
 
+.home-buttons {
+    margin-top: 25px;
+    text-align: center;
+}
+
+/* Explore Products */
+.main-explore {
+    margin-bottom: 20px;
+}
+
+/*  “primary call-to-action” */
+.hero-main-btn {
+    display: inline-block;
+    padding: 14px 30px;
+    font-size: 18px;
+    border-radius: 10px;
+    min-width: 220px;
+}
+
+.sub-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
 
 
+.hero-sub-btn {
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 16px;
+}
 
-
-
+@media (max-width: 600px) {
+    .sub-buttons {
+        flex-direction: column;
+    }
+}
 
 
 

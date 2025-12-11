@@ -2,6 +2,7 @@
 
 <link href="css/home.css" rel="stylesheet">
 
+<div class="home-background">
 <div class="hero-container">
     <div class="hero-content">
         <h1>Welcome to <span>ReSpawnMarket</span></h1>
@@ -11,13 +12,30 @@
             Want to take a look first? Explore our available products!
         </p>
 
-        <div class="hero-buttons">
-            <NavLink href="/register" class="btn-primary">Create Account</NavLink>
-            <NavLink href="/customer-login" class="btn-secondary">Login</NavLink>
-            <NavLink href="/available-product" class="btn-tertiary">Explore Products</NavLink>
+        <div class="home-buttons">
+
+        <div class="main-explore">
+        <NavLink href="/available-product" class="btn-tertiary hero-main-btn">
+            Explore Products
+        </NavLink>
+        </div>
+        
+        <div class="sub-buttons">
+        <NavLink href="/register" class="btn-primary hero-sub-btn">
+            Create Account
+        </NavLink>
+
+        <NavLink href="/customer-login" class="btn-secondary hero-sub-btn">
+            Login
+        </NavLink>
+        </div>
         </div>
     </div>
 
     <img class="hero-image"
          src="https://cdn-icons-png.flaticon.com/512/5046/5046845.png">
 </div>
+</div>
+
+
+

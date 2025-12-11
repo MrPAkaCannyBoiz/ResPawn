@@ -8,18 +8,42 @@
 
 <link href="css/Register.css" rel="stylesheet" />
 
-<div class="register-container">
-   
-    <h2 class="register-title">Create Account</h2>
-    <p class="register-subtitle">Join ReSpawnMarket and start buying & selling safely!</p>  
+<div class="register-shell">
+    <div class="register-card-2col">
 
+        <!-- LEFT BRANDING SIDE -->
+        <div class="register-left">
+            <div class="brand-badge">ReSpawnMarket</div>
+
+            <h2 class="left-title">Buy safer. Sell smarter.</h2>
+
+            <p class="left-subtitle">
+                Join a trusted second-hand marketplace where safety, transparency 
+                and convenience come first.
+            </p>
+
+            <ul class="left-feature-list">
+                <li>✔ Verified customer accounts</li>
+                <li>✔ Secure transactions</li>
+                <li>✔ Easy access from any device</li>
+            </ul>
+            
+             <!-- Subtle bubbles -->
+            <div class="bubble small-b1"></div>
+            <div class="bubble small-b2"></div>
+
+        </div>
+
+        <!-- RIGHT REGISTER FORM SIDE -->
 <EditForm EditContext="editContext" OnValidSubmit="CreateCustomer">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
-<div class="form-card">
+ <div class="register-right">
    <div class="form-grid">
-            <div>
+            <h2 class="auth-title">Create your ReSpawnMarket account</h2>
+            <p class="auth-subtitle">Start buying & selling safely today.</p>
+        <div>
             <label class="form-label">First name</label>
             <InputText class="form-control styled-input" @bind-Value="form.FirstName" />
             <ValidationMessage For="@(() => form.FirstName)" />
@@ -31,7 +55,7 @@
             <ValidationMessage For="@(() => form.LastName)" />
         </div>
 
-        <div class="form-grid-full">
+        <div class="form-label">
             <label class="form-label">Email</label>
             <InputText class="form-control styled-input" type="email" @bind-Value="form.Email" />
             <ValidationMessage For="@(() => form.Email)" />
@@ -73,15 +97,15 @@
         </div>
 
         <div>
-            <label class="form-label styled-input">City</label>
-            <InputText class="form-control styled-input" @bind-Value="form.City" />
+            <label class="form-label">City</label>
+            <InputText class="input-field" @bind-Value="form.City" />
             <ValidationMessage For="@(() => form.City)" />
         </div>
     </div>
 
 <div class="button-row">
    <div style="margin-top:25px; text-align:center;">
-    <button class="btn btn-primary create-btn"
+    <button class="btn-primary"
             type="submit"
             disabled="@busy">
         @(busy ? "Creating..." : "Create")
@@ -93,12 +117,13 @@
             disabled="@busy">
         Reset
     </button>
+    </div>
 </div>
-</div>
-</div>
-
+</div>    
 </EditForm>
-</div>
+        </div>
+    </div>
+
 
 @if (!string.IsNullOrEmpty(message))
 {
