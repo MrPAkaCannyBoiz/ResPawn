@@ -151,6 +151,13 @@ public class UploadProductServiceImpl extends com.respawnmarket.UploadProductSer
     private ProductEntity getProductEntity(UploadProductRequest request,
              StreamObserver<UploadProductResponse> responseObserver, CustomerEntity givenCustomer)
     {
+        if (request.getPrice() < 0)
+        {
+            responseObserver.onError(Status.INVALID_ARGUMENT
+                    .withDescription("Price must be non-negative")
+                    .asRuntimeException());
+            return null;
+        }
         var product = new ProductEntity(
                 request.getName(),
                 request.getPrice(),
