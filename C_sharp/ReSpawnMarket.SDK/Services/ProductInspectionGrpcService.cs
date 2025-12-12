@@ -35,7 +35,7 @@ public class ProductInspectionGrpcService : IProductInspectionService
         }
         catch (RpcException ex)
         {
-            throw new Exception($"gRPC Error: {ex.Status.Detail}", ex);
+            throw new ApplicationException($"gRPC Error: {ex.Status.Detail}", ex);
         }
     }
 
@@ -48,7 +48,7 @@ public class ProductInspectionGrpcService : IProductInspectionService
         }
         catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
         {
-            throw new KeyNotFoundException($"Product with ID {request.ProductId} not found.", ex);
+            throw new KeyNotFoundException($"Product/Reseller/Pawnshop not found {ex.Status.Detail}");
         }
         catch (RpcException ex) when (ex.StatusCode == StatusCode.InvalidArgument)
         {
@@ -56,7 +56,7 @@ public class ProductInspectionGrpcService : IProductInspectionService
         }
         catch (RpcException ex)
         {
-            throw new Exception($"gRPC Error: {ex.Status.Detail}", ex);
+            throw new ApplicationException($"gRPC Error: {ex.Status.Detail}", ex);
         }
     }
 }
