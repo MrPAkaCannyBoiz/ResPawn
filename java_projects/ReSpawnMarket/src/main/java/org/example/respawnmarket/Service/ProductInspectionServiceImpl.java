@@ -4,8 +4,6 @@ import java.time.Instant;
 import java.util.List;
 
 import com.google.protobuf.Timestamp;
-import com.respawnmarket.*;
-import com.respawnmarket.*;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import jakarta.transaction.Transactional;
@@ -26,7 +24,7 @@ import static org.example.respawnmarket.Service.ServiceExtensions.ApprovalStatus
 import static org.example.respawnmarket.Service.ServiceExtensions.CategoryExtension.toProtoCategory;
 
 @Service
-public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.ProductInspectionServiceImplBase
+public class ProductInspectionServiceImpl extends com.respawnmarket.ProductInspectionServiceGrpc.ProductInspectionServiceImplBase
 {
     private ProductRepository productRepository;
     private InspectionRepository inspectionRepository;
@@ -46,8 +44,8 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
 
     @Override
     @Transactional
-    public void reviewProduct(ProductInspectionRequest request,
-                              StreamObserver<ProductInspectionResponse> responseObserver)
+    public void reviewProduct(com.respawnmarket.ProductInspectionRequest request,
+                              StreamObserver<com.respawnmarket.ProductInspectionResponse> responseObserver)
     {
       try
       {
@@ -107,7 +105,7 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
         productRepository.save(product);
 
         //  response
-        ProductInspectionResponse response = ProductInspectionResponse.newBuilder()
+        com.respawnmarket.ProductInspectionResponse response = com.respawnmarket.ProductInspectionResponse.newBuilder()
             .setProductId(product.getId())
             .setApprovalStatus(toProtoApprovalStatus(product.getApprovalStatus()))
             .setPawnshopId(product.getPawnshop() != null
@@ -136,8 +134,8 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
 
     @Override
     @Transactional
-    public void verifyProduct(ProductVerificationRequest request,
-                              StreamObserver<ProductVerificationResponse> responseObserver)
+    public void verifyProduct(com.respawnmarket.ProductVerificationRequest request,
+                              StreamObserver<com.respawnmarket.ProductVerificationResponse> responseObserver)
     {
         ProductEntity product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> Status
@@ -172,7 +170,7 @@ public class ProductInspectionServiceImpl extends ProductInspectionServiceGrpc.P
         productRepository.save(product); // update product status
         productRepository.flush();
 
-        ProductVerificationResponse response = ProductVerificationResponse.newBuilder()
+        com.respawnmarket.ProductVerificationResponse response = com.respawnmarket.ProductVerificationResponse.newBuilder()
                 .setProductId(product.getId())
                 .setApprovalStatus(toProtoApprovalStatus(product.getApprovalStatus()))
                 .setComments(inspection.getComment())
