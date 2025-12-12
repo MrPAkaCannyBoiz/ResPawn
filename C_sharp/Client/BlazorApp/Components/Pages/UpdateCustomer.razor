@@ -9,6 +9,7 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Nav
 
+
 @rendermode InteractiveServer
 
 @code 
@@ -106,43 +107,51 @@
 
 }
 
-<h3>Update Customer</h3>
-<button class="btn btn-primary" @onclick="() => NavigateToCustomerDetails()">Back to Customer Details</button>
+<link href="css/Customer.css" rel="stylesheet" />
+
+<div class="update-container">
+
+    <div class="update-card">
+        <h2>Update Customer</h2>
+
+ <button class="back-btn" @onclick="() => NavigateToCustomerDetails()">Back to Customer Details</button>
+
+<div class="form-grid">
 @if(_customerToUpdate != null)
 {
 	<div>
 		<label>First Name:</label>
-		<input @bind="_firstName" />
+		     <input type="text" @bind="_firstName" class="input"/>
 	</div>
 	<div>
 		<label>Last Name:</label>
-		<input @bind="_lastName" />
+		     <input type="text" @bind="_lastName" class="input"/>
 	</div>
 	<div>
 		<label>Email:</label>
-		<input @bind="_email" />
+		     <input type="text" @bind="_email" class="input"/>
 	</div>
 	<div>
 		<label>Phone Number:</label>
-		<input @bind="_phoneNumber" />
+	     <input type="text"@bind="_phoneNumber" class="input"/>
 	</div>
 	<div>
 		<label>Street Name:</label>
-		<input @bind="_streetName" />
+		     <input type="text" @bind="_streetName" class="input"/>
 	</div>
 	<div>
 		<label>Secondary Unit:</label>
-		<input @bind="_secondaryUnit" />
+		     <input type="text" @bind="_secondaryUnit" class="input"/>
 	</div>
 	<div>
 		<label>City:</label>
-		<input @bind="_city" />
+		     <input type="text" @bind="_city" class="input"/>
 	</div>
 	<div>
 		<label>Postal Code:</label>
-		<input type="number" @bind="_postalCode" />
+		     <input type="text" @bind="_postalCode" class="input"/>
 	</div>
-	<button class="btn btn-primary" @onclick="() => _showConfirmation = true">
+	  <button class="update-btn" @onclick="() => _showConfirmation = true">
 		Update Customer
 		</button>
 	@if (_showConfirmation)
@@ -159,3 +168,6 @@ else
 {
 	<p>@_loadMessage</p>
 }
+	</div>	
+</div>
+</div>

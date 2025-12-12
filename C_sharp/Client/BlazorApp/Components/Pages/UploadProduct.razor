@@ -137,7 +137,12 @@
 	}
 }
 
-<h3>Upload your new Item here</h3>
+<link href="css/Product.css" rel="stylesheet">
+
+<div class="upload-page">
+    <div class="upload-card">
+
+  <h3 class="upload-title">Upload your new Item</h3>
 
 @*Product upload inputs*@
 <div class="mb-3">
@@ -272,12 +277,15 @@
 
 </div>
 
-		<button class="btn btn-primary" disabled="@_isBusy" 
-		@onclick="UploadNewProduct">
-		@(_isBusy ? "uploading..." : "upload")
-		</button>
+		 <button class="upload-btn" disabled="@_isBusy"
+                @onclick="UploadNewProduct">
+            @(_isBusy ? "uploading..." : "upload")
+        </button>
 
-@if (!string.IsNullOrWhiteSpace(_uploadProductMessage))
-{
-	<div class="mt-3">@_uploadProductMessage</div>
-}
+        @if (!string.IsNullOrWhiteSpace(_uploadProductMessage))
+        {
+            <div class="mt-3">@_uploadProductMessage</div>
+        }
+
+    </div>
+</div>

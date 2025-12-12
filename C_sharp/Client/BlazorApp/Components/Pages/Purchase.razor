@@ -10,7 +10,12 @@
 @inject IPurchaseService PurchaseService
 @inject ICartService CartService
 
-<h3>Shopping Cart</h3>
+<link href="css/Product.css" rel="stylesheet">
+
+<div class="cart-wrapper">
+    <div class="cart-card">
+
+        <h2>Shopping Cart</h2>
 
 @if (!CartService.Items.Any())
 {
@@ -55,11 +60,10 @@ else
             }
         </tbody>
     </table>
-
-    <p><strong>Total: @CartService.TotalPrice DKK</strong></p>
-
-
-
+          
+        }
+    </div>
+  </div>
 
     <EditForm Model="@creditCard" OnValidSubmit="Buy">
         <DataAnnotationsValidator />

@@ -10,7 +10,12 @@
 @inject IAuthService AuthService
 @inject NavigationManager Nav
 
-<h3>My Uploaded Products (TEST)</h3>
+<link href="css/Product.css" rel="stylesheet">
+<div class="products-page">
+
+    <div class="products-card">
+        <h2 class="products-title">My Uploaded Products</h2>
+
 
 @if (_loading)
 {
@@ -48,7 +53,8 @@ else
         </tbody>
     </table>
 }
-
+    </div>
+</div>
 @code {
     private bool _loading = true;
     private string? _error;
