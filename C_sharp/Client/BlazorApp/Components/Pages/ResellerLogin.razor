@@ -52,13 +52,14 @@
     </NotAuthorized>
 
     <Authorized>
-       <!-- ur claim:
+       ur claim:
         @foreach (var claim in context.User.Claims)
         {
             <div>@claim.Type: @claim.Value</div>
         }
+        
         <h3>Hello reseller, @context.User.Identity!.Name</h3>
-        <button @onclick="LogoutAsync">Logout</button> -->
+        <button @onclick="LogoutAsync">Logout</button> 
 
         <div class="success-box">
                     <h3>Welcome back, @context.User.Identity!.Name!</h3>
