@@ -17,14 +17,14 @@ public interface AddressRepository extends JpaRepository<AddressEntity, Integer>
             """)
     List<AddressEntity> findAddressByCustomerId(@Param("customerId") Integer customerId);
 
-//    @Query("""
-//            select new org.example.respawnmarket.dtos.PawnshopAddressPostalDto(
-//                a.id, a.streetName,a.secondaryUnit, p.postalCode, p.city, ps.id)
-//            from PawnshopEntity ps
-//            join AddressEntity a on ps.address.id = a.id
-//            join PostalEntity p on a.postal.postalCode = p.postalCode
-//           """)
-//    List<PawnshopAddressPostalDto> getAllPawnshopAddresses();
+    @Query("""
+            select new org.example.respawnmarket.dtos.PawnshopAddressPostalDto(
+                a.id, a.streetName,a.secondaryUnit, p.postalCode, p.city, ps.id)
+            from PawnshopEntity ps
+            join AddressEntity a on ps.address.id = a.id
+            join PostalEntity p on a.postal.postalCode = p.postalCode
+           """)
+    List<PawnshopAddressPostalDto> getAllPawnshopAddresses();
 
 
 }
