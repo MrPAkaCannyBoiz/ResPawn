@@ -36,6 +36,10 @@ public static class HttpsServiceExtensions
         {
             c.BaseAddress = address;
         });
+        services.AddHttpClient<HttpGetAddressService>(c =>
+        {
+            c.BaseAddress = address;
+        });
 
     }
 }

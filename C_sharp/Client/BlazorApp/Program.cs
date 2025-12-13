@@ -32,6 +32,7 @@ builder.Services.AddScoped<IAuthService, HttpJwtCustomerAuthLoginService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IProductInspectionClient, HttpProductInspectionClient>();
 builder.Services.AddScoped<IResellerAuthService, HttpJwtResellerAuthService>();
+builder.Services.AddScoped<IGetAddressService, HttpGetAddressService>();
 
 AuthorizationPolicies.AddPolicies(builder.Services); // add custom authorization policies
 
