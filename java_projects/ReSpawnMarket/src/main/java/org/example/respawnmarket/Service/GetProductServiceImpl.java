@@ -361,30 +361,6 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
         return products;
     }
 
-  private List<ProductWithFirstImage> toProtoProductWithImageListGivenProductInspection(
-      List<ProductInspectionDTO> dtos,
-      StreamObserver<?> responseObserver)
-  {
-    if (dtos == null)
-    {
-      responseObserver.onError(io.grpc.Status.NOT_FOUND
-          .withDescription("Products not found")
-          .asRuntimeException());
-    }
-    assert dtos != null;
-    List<ProductEntity> entities = new ArrayList<>();
-    for (ProductInspectionDTO dto : dtos)
-    {
-      checkNullAndRelations(dto.getProduct(), responseObserver);
-      entities.add(dto.getProduct());
-    }
-
-    List<ProductWithFirstImage> products = entities.stream()
-        .map(this::toProtoProductWithImage)
-        .toList();
-    return products;
-  }
-
   private LatestProductFromInspection toProtoProductViaDto(ProductInspectionDTO dto)
   {
     ApprovalStatus approvalStatus = toProtoApprovalStatus(dto.getProduct().getApprovalStatus());
