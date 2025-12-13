@@ -68,7 +68,7 @@
 				&& IsFirstUrlFilled()
 				&& (_category != Category.OTHER || _isStringValid(_otherCategory))))		
 			{
-				_uploadProductMessage = "Please correct the input before uploading.";
+				_uploadProductMessage = "Please correct the input before uploading. Some fields are missing or invalid.";
 				return;
 			}
 			_uploadProductDto = new()
@@ -91,6 +91,19 @@
 			var result = await UploadProductService
 							.UploadProductAsync(_userIdToUpload, _uploadProductDto);
 			_uploadProductMessage = "Item uploaded successfully! (Admin will soon check it)";
+
+			// Clear form
+			            _price = 0;
+            _condition = "";
+            _description = "";
+            _name = "";
+            _photoUrl0 = "";
+            _photoUrl1 = "";
+            _photoUrl2 = "";
+            _photoUrl3 = "";
+            _photoUrl4 = "";
+            _category = Category.CATEGORY_UNSPECIFIED;
+            _otherCategory = "";
 		}
 		catch (Exception ex)
 		{
@@ -99,17 +112,6 @@
 		finally
 		{
 			_isBusy = false;
-			_price = 0;
-			_condition = "";
-			_description = "";
-			_name = "";
-			_photoUrl0 = "";
-			_photoUrl1 = "";
-			_photoUrl2 = "";
-			_photoUrl3 = "";
-			_photoUrl4 = "";
-			_category = Category.CATEGORY_UNSPECIFIED;
-			_otherCategory = "";
 		}
 	}
 
