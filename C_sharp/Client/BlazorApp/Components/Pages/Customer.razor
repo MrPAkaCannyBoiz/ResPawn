@@ -1,7 +1,9 @@
-@page "/customer/{id:int}"
+@page "/customer/info"
 @using ApiContracts
 @using ApiContracts.Dtos
 @using BlazorApp.Services.Interface
+@attribute [Authorize(Roles = "Customer")]
+@inject AuthenticationStateProvider AuthStateProvider
 @inject IGetCustomerService GetCustomerService
 @inject NavigationManager Nav
 
@@ -33,8 +35,7 @@ else
 }
 
 @code {
-    [Parameter] public int id { get; set; }
-
+    private int id { get; set; }
     private CustomerDto? _customer;
     private string? _error;
     private bool _loading = true;
@@ -45,6 +46,23 @@ else
         _loading = true;
         _error = null;
         _customer = null;
+
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (!user.Identity?.IsAuthenticated ?? false)
+        {
+            Nav.NavigateTo("/customer-login", forceLoad: true);
+            return;
+        }
+        // Read the ID claim from the token
+        var idClaim = user.FindFirst("CustomerId")?.Value;
+        if (string.IsNullOrWhiteSpace(idClaim) || !int.TryParse(idClaim, out var customerIdFromToken))
+        {
+            Nav.NavigateTo("/customer-login", forceLoad: true);
+            return;
+        }
+        id = customerIdFromToken;
 
         try
         {
@@ -62,6 +80,6 @@ else
 
     private void NavigateToUpdateCustomer()
     {
-        Nav.NavigateTo($"/customer/update/{id}");
+        Nav.NavigateTo($"/customer/info/update");
 	}
 }

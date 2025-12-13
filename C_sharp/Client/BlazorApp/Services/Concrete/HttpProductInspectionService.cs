@@ -30,7 +30,8 @@ public class HttpProductInspectionService : IProductInspectionService
                 : text);
         }
 
-        var result = JsonSerializer.Deserialize<List<ProductDto>>(text, JsonOpts);
+        var result = JsonSerializer.Deserialize<List<ProductDto>>(text, 
+            JsonCaseInsensitiveExtension.MakeJsonCaseInsensitive());
         return result ?? new List<ProductDto>();
     }
 
@@ -65,7 +66,8 @@ public class HttpProductInspectionService : IProductInspectionService
                 : text);
         }
 
-        return JsonSerializer.Deserialize<ProductInspectionResultDto>(text, JsonOpts)
+        return JsonSerializer.Deserialize<ProductInspectionResultDto>(text,
+            JsonCaseInsensitiveExtension.MakeJsonCaseInsensitive())
                ?? throw new Exception("Failed to deserialize ProductInspectionResultDto.");
     }
 

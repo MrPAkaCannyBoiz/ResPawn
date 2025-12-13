@@ -1,22 +1,23 @@
 ﻿@page "/reseller/product/{ProductId:int}"
 @attribute [Authorize(Roles = "Reseller")]
 @using ApiContracts.Dtos
+@using BlazorApp.Services.Interface
 @rendermode InteractiveServer
-@inject BlazorApp.Services.Interface.IProductInspectionService inspectionService
+@inject IProductInspectionService inspectionService
 @inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IGetAddressService AddressService
 <h3>Review Product</h3>
 
 @if (loading)
 {
     <p><em>Loading product...</em></p>
 }
-else if (!string.IsNullOrEmpty(error))
-{
-    <div class="alert alert-danger">@error</div>
-}
+
 else if (product is null)
 {
     <p>Product not found.</p>
+    <p>@error</p>
 }
 else
 {
@@ -66,29 +67,62 @@ else
         <div class="alert alert-success">@successMessage</div>
     }
 
-    <EditForm Model="form" OnValidSubmit="SubmitReview">
+    <EditForm Model="@(IsReviewing ? verificationForm : form)">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
-      <div class="mb-3 form-check">
-    <InputCheckbox class="form-check-input" @bind-Value="form.IsAccepted" />
-        <label class="form-check-label">
-            @(
-               product?.ApprovalStatus?.Equals("reviewing", StringComparison.OrdinalIgnoreCase) == true
-               ? "Accept this product for selling"
-               : "Confirm this product for reviewing in the pawnshop"
-             )
-        </label>
-</div>
-
-        <div class="mb-3">
-            <label class="form-label">Pawnshop Id</label>
-            <InputNumber class="form-control" @bind-Value="form.PawnshopId" />
+        <div class="mb-3 form-check">
+            @if (IsReviewing)
+            {
+                <InputCheckbox class="form-check-input" @bind-Value="verificationForm.IsAccepted" />
+            }
+            else
+            {
+                <InputCheckbox class="form-check-input" @bind-Value="form.IsAccepted" />
+            }
+            <label class="form-check-label">
+                @(IsReviewing
+                    ? "Accept this product for selling"
+                    : "Confirm this product for reviewing in the pawnshop")
+            </label>
         </div>
+
+        @if (!IsReviewing)
+        {
+            <div class="mb-3">
+                <label class="form-label">Pawnshop address to send the product</label>
+                <InputSelect class="form-select" @bind-Value="form.PawnshopId">
+                    <option value="0">Select pawnshop address</option>
+                    @foreach (var address in pawnshopAddresses)
+                    {
+                        <option value="@address.PawnshopId">
+                            @($"{address.StreetName} {address.SecondaryUnit}, {address.PostalCode} {address.City}")
+                        </option>
+                    }
+                </InputSelect>
+            </div>
+        }
+        else
+        {
+            <div class="mb-3">
+                <p>
+                    @(@$"Pawnshop address:
+{givenPawnshopAddress.StreetName} {givenPawnshopAddress.SecondaryUnit}
+{givenPawnshopAddress.PostalCode} {givenPawnshopAddress.City}")
+                </p>
+            </div>
+        }
 
         <div class="mb-3">
             <label class="form-label">Comments</label>
-            <InputTextArea class="form-control" @bind-Value="form.Comments" />
+            @if (IsReviewing)
+            {
+                <InputTextArea class="form-control" @bind-Value="verificationForm.Comments" />
+            }
+            else
+            {
+                <InputTextArea class="form-control" @bind-Value="form.Comments" />
+            }
         </div>
 
     <button class="btn btn-primary" type="button"
@@ -99,16 +133,25 @@ else
             : (IsReviewing ? "Verify Product" : "Submit Review"))
     </button>
         <button class="btn btn-secondary ms-2" type="button"
-                @onclick="@(() => Nav.NavigateTo("/reseller/pending-products"))">
+            @onclick="@(() => Nav.NavigateTo("/resellercheck"))">
             Back to list
         </button>
         </EditForm>
+
+        if (!string.IsNullOrEmpty(error))
+        {
+            <div class="alert alert-danger">@error</div>
+        }
+}
 @code {
     [Parameter] public int ProductId { get; set; }
+    private int ResellerId { get; set; }
 
     private DetailedProductDto? product;
     private ProductInspectionDto form = new(); 
 	private ProductVerificationDto verificationForm = new();
+	private List<PawnshopAddressDto> pawnshopAddresses = new();
+	private PawnshopAddressDto givenPawnshopAddress = new();
     private bool loading = true;
     private bool busy;
     private bool cooldownActive = false;
@@ -126,21 +169,38 @@ else
             successMessage = null;
 
             product = await inspectionService.GetProductDetailsAsync(ProductId);
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
 
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                var idClaim = user.FindFirst("ResellerId");
+                if (idClaim != null && int.TryParse(idClaim.Value, out var id))
+                {
+                    ResellerId = id;
+                }
+            }
             
+			pawnshopAddresses = await AddressService.GetPawnshopAddressesAsync();
+            var pawnshopIdFromAddresses = pawnshopAddresses
+                .FirstOrDefault(a => a.PawnshopId == product.PawnshopId)?.PawnshopId
+                ?? 0;
             form = new ProductInspectionDto
             {
-                ResellerId = 1,     // TODO: derive from logged-in reseller
-                PawnshopId = product.PawnshopId,
+                ResellerId = ResellerId,     
+                PawnshopId = pawnshopIdFromAddresses,
                 Comments = "",
-                IsAccepted = true
+                IsAccepted = false
             };
             verificationForm = new ProductVerificationDto
             {
-                ResellerId = 1,     // TODO: derive from logged-in verifier
+                ResellerId = ResellerId,    
                 Comments = "",
-                IsAccepted = true
+                IsAccepted = false
 			};
+            givenPawnshopAddress = pawnshopAddresses
+                .FirstOrDefault(a => a.PawnshopId == product.PawnshopId)
+				?? new PawnshopAddressDto(); // uses for display if product is under review
         }
         catch (Exception ex)
         {
@@ -170,7 +230,7 @@ else
 
         cooldownActive = true;
         StateHasChanged();
-        await Task.Delay(5000); // 5 sec
+        await Task.Delay(5000); 
         cooldownActive = false;
         StateHasChanged();
     }
@@ -183,8 +243,12 @@ else
 
         try
         {
-            var result = await inspectionService.ReviewProductAsync(ProductId, form);
+            if (form.PawnshopId == 0 && form.IsAccepted)
+            {
+                throw new Exception("Please select the address");
+			}
 
+            var result = await inspectionService.ReviewProductAsync(ProductId, form);
             successMessage =
                 $"Review saved. ProductId={result.ProductId}, New status={result.ApprovalStatus}, PawnshopId={result.PawnshopId}";
         }
@@ -207,7 +271,6 @@ else
         try
         {
             var result = await inspectionService.VerifyProductAsync(ProductId, verificationForm);
-
             successMessage =
                 $"Product Verified. ProductId={result.ProductId}, New status={result.ApprovalStatus}";
         }
@@ -221,27 +284,4 @@ else
         }
     }
 
-    // Try common property names at runtime so the Razor compiles even if the DTO uses a different name (PhotoUrl, images, Images, etc.)
-    @* private string? GetProductImage(DetailedProductDto? p)
-    {
-        if (p == null) return null;
-
-        var type = p.GetType();
-        string[] names = new[] { "PhotoUrl", "Photo", "Images", "images", "ImageUrl", "Image", "PhotoUrls" };
-
-        foreach (var name in names)
-        {
-            var prop = type.GetProperty(name);
-            if (prop != null)
-            {
-                var val = prop.GetValue(p) as string;
-                if (!string.IsNullOrWhiteSpace(val)) return val;
-            }
-        }
-
-        return null;
-    }
-}           busy = false;
-        } *@
-    }
 }

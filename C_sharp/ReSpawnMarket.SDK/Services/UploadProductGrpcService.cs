@@ -30,6 +30,10 @@ public class UploadProductGrpcService : IUploadProductService
         {
             throw new UploadProductException($"Upload Product failed: {ex.Status.Detail}");
         }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound) // known errors from gRPC server
+        {
+            throw new KeyNotFoundException($"Customer to upload not found: {ex.Status.Detail}");
+        }
         catch (RpcException ex) // unexpected gRPC error
         {
             throw new ApplicationException($"unknown gRPC Error: {ex.StatusCode}: {ex.Status.Detail}", ex);

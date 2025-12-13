@@ -1,5 +1,6 @@
 ﻿using Com.Respawnmarket;
 using Grpc.Core;
+using ReSpawnMarket.SDK.ServiceExceptions;
 using ReSpawnMarket.SDK.ServiceInterfaces;
 using System;
 using System.Collections.Generic;
@@ -15,12 +16,27 @@ public class UpdateCustomerGrpcService : IUpdateCustomerService
     {
         _grpcClient = grpcClient;
     }
-    public Task<UpdateCustomerResponse> UpdateCustomerAsync(UpdateCustomerRequest request
+    public async Task<UpdateCustomerResponse> UpdateCustomerAsync(UpdateCustomerRequest request
         , CancellationToken cancellationToken = default)
     {
         try
         {
-            return _grpcClient.UpdateCustomerAsync(request, cancellationToken: cancellationToken).ResponseAsync;
+            return await _grpcClient.UpdateCustomerAsync(request, cancellationToken: cancellationToken);
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.InvalidArgument
+                                       || ex.StatusCode == StatusCode.AlreadyExists)
+        {
+            throw new UpdateCustomerException($"Error while updating the customer {ex.Message}");
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
+        {
+            throw new KeyNotFoundException(
+                $"The customer to update was not found. {ex.Message}");
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.Internal)
+        {
+            throw new ApplicationException(
+                $"An internal server error occurred while updating the customer. {ex.Message}");
         }
         catch (RpcException ex)
         {

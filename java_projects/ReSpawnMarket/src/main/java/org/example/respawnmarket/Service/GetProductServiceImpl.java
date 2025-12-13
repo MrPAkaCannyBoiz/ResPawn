@@ -2,8 +2,10 @@ package org.example.respawnmarket.Service;
 
 import com.google.protobuf.Timestamp;
 import com.respawnmarket.*;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.example.respawnmarket.Service.ServiceExtensions.ImageExtension;
+import org.example.respawnmarket.dtos.ProductInspectionDTO;
 import org.example.respawnmarket.entities.CustomerEntity;
 import org.example.respawnmarket.entities.ImageEntity;
 import org.example.respawnmarket.entities.PawnshopEntity;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.example.respawnmarket.Service.ServiceExtensions.ApprovalStatusExtension.toProtoApprovalStatus;
@@ -198,6 +201,51 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
         responseObserver.onCompleted();
     }
 
+      @Override
+      public void getLatestInspection(GetLatestProductInspectionRequest request,
+                                      StreamObserver<GetLatestProductInspectionResponse> responseObserver)
+      {
+        List<ProductInspectionDTO> inspectionDTOs = productRepository.findProductsWithLatestInspection(
+            request.getCustomerId());
+        if (inspectionDTOs.isEmpty())
+        {
+          responseObserver.onError(Status.NOT_FOUND.withDescription(
+                  "No inspections found for product")
+              .asRuntimeException());
+          return;
+        }
+        for (ProductInspectionDTO inspectionDTO : inspectionDTOs)
+        {
+          if (inspectionDTO.getLatestComment() == null)
+          {
+            // set it to empty string if no inspection found
+            inspectionDTO.setLatestComment("");
+          }
+          if (inspectionDTO.getProduct() == null)
+          {
+            responseObserver.onError(Status.NOT_FOUND.withDescription(
+                    "Product not found with ID: " + inspectionDTO.getProduct().getId())
+                .asRuntimeException());
+            return;
+          }
+        }
+        List<LatestProductFromInspection> latestProducts = inspectionDTOs.stream()
+            .map(this::toProtoProductViaDto)
+            .toList();
+        GetLatestProductInspectionResponse response = GetLatestProductInspectionResponse.newBuilder()
+            .addAllProducts(latestProducts)
+            .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+
+
+      }
+
+
+
+
+
+
     private ProductWithFirstImage toProtoProductWithImage(ProductEntity entity)
     {
         Product productDto = toProtoProduct(entity);
@@ -272,12 +320,14 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
 
       boolean isPending =
               productEntity.getApprovalStatus() == ApprovalStatusEnum.PENDING;
+      boolean isRejected =
+              productEntity.getApprovalStatus() == ApprovalStatusEnum.REJECTED;
 
       StringBuilder issues = new StringBuilder();
       if (seller == null)
           issues.append("seller missing");
       // Only require pawnshop when NOT pending
-      if (!isPending && pawnshop == null)
+      if ((!isPending && !isRejected) && pawnshop == null)
           issues.append("pawnshop missing on non-pending product");
       if (productEntity.getRegisterDate() == null)
           issues.append("registerDate missing");
@@ -310,6 +360,44 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
                 .toList();
         return products;
     }
+
+  private LatestProductFromInspection toProtoProductViaDto(ProductInspectionDTO dto)
+  {
+    ApprovalStatus approvalStatus = toProtoApprovalStatus(dto.getProduct().getApprovalStatus());
+    Category category = toProtoCategory(dto.getProduct().getCategory());
+    Instant instant = dto.getProduct().getRegisterDate().toInstant(java.time.ZoneOffset.UTC);
+    Timestamp registerDateTimestamp = Timestamp.newBuilder()
+        .setSeconds(instant.getEpochSecond())
+        .setNanos(0)
+        .build();
+
+    Product productDto = Product.newBuilder()
+        .setId(dto.getProduct().getId())
+        .setName(dto.getProduct().getName())
+        .setPrice(dto.getProduct().getPrice())
+        .setCondition(dto.getProduct().getCondition())
+        .setDescription(dto.getProduct().getDescription())
+        .setSoldByCustomerId(dto.getProduct().getSeller().getId())
+        .setCategory(category)
+        .setSold(dto.getProduct().isSold())
+        .setApprovalStatus(approvalStatus)
+        .setRegisterDate(registerDateTimestamp)
+        .setOtherCategory(dto.getProduct().getOtherCategory() == null ? "" : dto.getProduct().getOtherCategory())
+        .setPawnshopId(dto.getProduct().getPawnshop() != null ? dto.getProduct().getPawnshop().getId() : 0)
+        .build();
+    Image firstImageDto = null;
+    List<ImageEntity> images = imageRepository.findAllByProductId(dto.getProduct().getId());
+    firstImageDto = ImageExtension.toProtoImageList(images).getFirst();
+    ProductWithFirstImage productWithImageDto = ProductWithFirstImage.newBuilder()
+        .setProduct(productDto)
+        .setFirstImage(firstImageDto)
+        .build();
+    LatestProductFromInspection latestProductDto = LatestProductFromInspection.newBuilder()
+        .setProduct(productWithImageDto)
+        .setInspectionComments(dto.getLatestComment())
+        .build();
+    return latestProductDto;
+  }
 
 
 

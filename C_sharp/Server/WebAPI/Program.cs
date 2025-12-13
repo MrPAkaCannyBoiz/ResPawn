@@ -1,5 +1,7 @@
+using ApiContracts.AuthPolicies;
 using Grpc.Net.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.JSInterop.Infrastructure;
@@ -37,14 +39,23 @@ builder.Services.AddScoped<IGetProductService, GetProductGrpcService>();
 builder.Services.AddScoped<ICustomerLoginService, CustomerLoginGrpcService>();
 builder.Services.AddScoped<IResellerLoginService, ResellerLoginGrpcService>();
 builder.Services.AddScoped<ICustomerInspectionService, CustomerInspectionGrpcService>();
+builder.Services.AddScoped<IGetAddressService, GetAddressGrpcService>();
 
 
 // adding custom extension(static) grpc sdk services
 builder.Services.AddGrpcSdk();
 
 // Bind jwt settings from appsettings.json
-var jwtSettingsSection = builder.Configuration.GetSection("Jwt");
-builder.Services.AddAuthentication()
+DotNetEnv.Env.Load(); // load .env file (on webapi project root)
+builder.Configuration.AddEnvironmentVariables(); // add environment variables to configuration
+// this will override appsettings.json values with environment variables if they exist
+var section = builder.Configuration; 
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
     .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
 {
     options.TokenValidationParameters = new()
@@ -53,18 +64,30 @@ builder.Services.AddAuthentication()
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettingsSection["Issuer"],
-        ValidAudience = jwtSettingsSection["Audience"],
+        ValidIssuer = section["Jwt:Issuer"],
+        ValidAudience = section["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(
-            System.Text.Encoding.UTF8.GetBytes(jwtSettingsSection["Key"] ?? ""))
+            System.Text.Encoding.UTF8.GetBytes(section["Jwt:Key"] ?? ""))
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            // Read JWT from cookie if present
+            if (context.Request.Cookies.ContainsKey("JwtCookie"))
+            {
+                context.Token = context.Request.Cookies["JwtCookie"];
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 builder.Services.AddAuthorization(); // this is needed for jwt auth, remove if jwt is not used/doesn't work
+AuthorizationPolicies.AddPolicies(builder.Services); // add custom authorization policies
 
 // Configure Kestrel to use HTTPS with the specified .pfx certificate
 // install the certificate to trusted root authorities
 // use .env
-DotNetEnv.Env.Load();
 var pfxFilePath = Environment.GetEnvironmentVariable("PFX_FILE_PATH") 
     ?? throw new InvalidOperationException("PFX_FILE_PATH environment variable is not set.");
 var pfxPassword = Environment.GetEnvironmentVariable("PFX_PASSWORD") 

@@ -1,0 +1,94 @@
+﻿@page "/my-products"
+@using System.Security.Claims
+@using ApiContracts.Dtos
+@using BlazorApp.Services.Interface
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject IGetProductService ProductService
+@inject IGetCustomerService CustomerSerivce
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IAuthService AuthService
+@inject NavigationManager Nav
+
+<h3>My Uploaded Products (TEST)</h3>
+
+@if (_loading)
+{
+    <p>Loading...</p>
+}
+else if (!string.IsNullOrEmpty(_error))
+{
+    <div class="alert alert-danger">@_error</div>
+}
+else if (_rows is null || !_rows.Any())
+{
+    <p>You have not uploaded any products yet.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product Id</th>
+                <th>Product name</th>
+                <th>Approval status</th>
+                <th>Latest comment</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var row in _rows)
+        {
+            <tr>
+               <td>@row.ProductWithFirstImage!.Id</td>
+               <td>@row.ProductWithFirstImage.Name</td>
+               <td>@row.ProductWithFirstImage.ApprovalStatus</td>
+               <td>@row.InspectionComment></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private bool _loading = true;
+    private string? _error;
+    private IQueryable<LatestProductFromInspectionDto>? _rows;
+    private int _customerId; // will be set by claim later
+   
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (!user.Identity?.IsAuthenticated ?? true)
+            {
+                Nav.NavigateTo("/customer-login", forceLoad: true);
+                return;
+            }
+
+            var idClaim = user.FindFirst("CustomerId");
+            if (idClaim is null || !int.TryParse(idClaim.Value, out var claimId))
+            {
+                Nav.NavigateTo("/customer-login", forceLoad: true);
+                return;
+            }
+            _customerId = claimId; // set claim id 
+
+            _rows = (await ProductService.GetAllLatestAsync(_customerId)).OrderBy(p => p.ProductWithFirstImage!.RegisterDate);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+            // Catch-all for login issues, product service failure, or the Task.WhenAll failure.
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

@@ -1,3 +1,4 @@
+using ApiContracts.AuthPolicies;
 using BlazorApp.Auth;
 using BlazorApp.Components;
 using BlazorApp.Services;
@@ -25,13 +26,21 @@ builder.Services.AddScoped<IPurchaseService, HttpPurchaseService>();
 builder.Services.AddScoped<IProductInspectionService, HttpProductInspectionService>();
 builder.Services.AddScoped<IGetCustomerService, HttpGetCustomerService>();
 builder.Services.AddScoped<ICustomerInspectionService, HttpCustomerInspectionService>();
-builder.Services.AddScoped<AuthenticationStateProvider, SimpleAuthProvider>();
+//builder.Services.AddScoped<SimpleAuthProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthProvider>();
+builder.Services.AddScoped<IAuthService, HttpJwtCustomerAuthLoginService>();
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IProductInspectionClient, HttpProductInspectionClient>();
+builder.Services.AddScoped<IResellerAuthService, HttpJwtResellerAuthService>();
+builder.Services.AddScoped<IGetAddressService, HttpGetAddressService>();
 
+AuthorizationPolicies.AddPolicies(builder.Services); // add custom authorization policies
 
 builder.Services.AddServerSideBlazor()
     .AddCircuitOptions(o => o.DetailedErrors = true);
-builder.Services.AddAuthorizationCore();
+
+builder.Services.AddAuthorizationCore(); // add authorization core for blazor wasm
+builder.Services.AddAuthentication();
 
 builder.Services.AddHttpService();
 
