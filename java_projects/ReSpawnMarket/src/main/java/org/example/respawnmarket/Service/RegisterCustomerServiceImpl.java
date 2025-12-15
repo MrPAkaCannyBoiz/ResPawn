@@ -78,6 +78,16 @@ public class RegisterCustomerServiceImpl extends CustomerRegisterServiceGrpc.Cus
             // create and save customer, address, and customerAddress entities
             CustomerEntity customer = new CustomerEntity(request.getFirstName(), request.getLastName()
                     , request.getEmail(), encodedPassword, request.getPhoneNumber());
+            if (request.getFirstName().isEmpty() || request.getLastName().isEmpty()
+                    || request.getEmail().isEmpty() || request.getPassword().isEmpty()
+                    || request.getPhoneNumber().isEmpty()
+                    || request.getStreetName().isEmpty()
+                    || request.getCity().isEmpty())
+            {
+               responseObserver.onError(Status.INVALID_ARGUMENT
+                       .withDescription("All fields must be filled")
+                       .asRuntimeException());
+            }
             CustomerEntity savedCustomer = customerRepository.save(customer);
             AddressEntity address = new AddressEntity(request.getStreetName()
                     , request.getSecondaryUnit(), givenPostal);
@@ -118,10 +128,12 @@ public class RegisterCustomerServiceImpl extends CustomerRegisterServiceGrpc.Cus
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         }
-        catch (DataIntegrityViolationException ex)
+        catch (DataIntegrityViolationException ex) // handle unique constraint violations
         {
             StatusRuntimeException statusEx = mapDataIntegrityViolation(ex);
-            responseObserver.onError(statusEx);
+            responseObserver.onError(Status
+                    .INVALID_ARGUMENT
+                    .withDescription(statusEx.getMessage()).asRuntimeException());
         }
         catch (Exception ex)
         {
