@@ -72,12 +72,30 @@ public class RegisterCustomerServiceImpl extends CustomerRegisterServiceGrpc.Cus
         }
         try
         {
+            if (request.getPassword().length() < 8)
+            {
+               responseObserver.onError(Status.INVALID_ARGUMENT
+                       .withDescription("Password must be at least 8 characters long")
+                       .asRuntimeException());
+               return;
+            }
             // encrypt password before saving to DB (omitted for brevity)
             BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
             String encodedPassword = passwordEncoder.encode(request.getPassword());
             // create and save customer, address, and customerAddress entities
             CustomerEntity customer = new CustomerEntity(request.getFirstName(), request.getLastName()
                     , request.getEmail(), encodedPassword, request.getPhoneNumber());
+            if (request.getFirstName().isEmpty() || request.getLastName().isEmpty()
+                    || request.getEmail().isEmpty()
+                    || request.getPhoneNumber().isEmpty()
+                    || request.getStreetName().isEmpty()
+                    || request.getCity().isEmpty())
+            {
+               responseObserver.onError(Status.INVALID_ARGUMENT
+                       .withDescription("All fields must be filled")
+                       .asRuntimeException());
+               return;
+            }
             CustomerEntity savedCustomer = customerRepository.save(customer);
             AddressEntity address = new AddressEntity(request.getStreetName()
                     , request.getSecondaryUnit(), givenPostal);
@@ -118,10 +136,12 @@ public class RegisterCustomerServiceImpl extends CustomerRegisterServiceGrpc.Cus
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         }
-        catch (DataIntegrityViolationException ex)
+        catch (DataIntegrityViolationException ex) // handle unique constraint violations
         {
             StatusRuntimeException statusEx = mapDataIntegrityViolation(ex);
-            responseObserver.onError(statusEx);
+            responseObserver.onError(Status
+                    .INVALID_ARGUMENT
+                    .withDescription(statusEx.getMessage()).asRuntimeException());
         }
         catch (Exception ex)
         {

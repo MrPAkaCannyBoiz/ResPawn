@@ -107,6 +107,14 @@ public class UploadProductServiceImpl extends com.respawnmarket.UploadProductSer
         ImageEntity imageEntity = new ImageEntity(imageUrl, newProduct);
         imageEntities.add(imageEntity);
       }
+      if (imageEntities.isEmpty())
+      {
+        responseObserver.onError(
+            Status.INVALID_ARGUMENT.withDescription(
+                    "At least one image must be provided")
+                .asRuntimeException());
+        return;
+      }
       imageRepository.saveAll(imageEntities);
 
       // 6) Map to gRPC Product + response
