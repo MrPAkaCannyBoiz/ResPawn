@@ -109,5 +109,4 @@ public class ProductInspectionController : ControllerBase
             _ => throw new NotImplementedException(),
         };
     }
-
 }

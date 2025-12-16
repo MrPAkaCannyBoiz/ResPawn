@@ -35,3 +35,4 @@ build/
 ### .env files ###
 /.env
 /src/main/java/org/example/respawnmarket/PasswordHasher.java
+/src/main/java/org/example/respawnmarket/Bootstrap/
