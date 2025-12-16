@@ -152,7 +152,6 @@ message RegisterCustomerRequest
   int32 postal_code = 8;
   string city = 9;
 }
-
 message RegisterCustomerResponse
 {
   Customer customer = 1;
@@ -164,19 +163,15 @@ message GetCustomerRequest
 {
   int32 customer_id = 1;
 }
-
 message GetCustomerResponse
 {
   NonSensitiveCustomerInfo customer = 1;
 }
-
 message Empty { }
-
 message GetAllCustomersRequest
 {
   Empty empty = 1;
 }
-
 message NonSensitiveCustomerInfo
 {
   int32 id = 1;
@@ -188,12 +183,10 @@ message NonSensitiveCustomerInfo
   repeated Postal postals = 7;
   bool can_sell = 8;
 }
-
 message GetAllCustomersResponse
 {
   repeated NonSensitiveCustomerInfo customers = 1;
 }
-
 message UpdateCustomerRequest
 {
   int32 customer_id = 1;
@@ -206,7 +199,6 @@ message UpdateCustomerRequest
   int32 postal_code = 8;
   string city = 9;
 }
-
 message UpdateCustomerResponse
 {
   int32 id = 1;
@@ -217,20 +209,17 @@ message UpdateCustomerResponse
   repeated Address addresses = 6;
   repeated Postal postals = 7;
 }
-
 // use case for "Register" (only customer)
 service CustomerRegisterService
 {
   rpc RegisterCustomer (RegisterCustomerRequest) returns (RegisterCustomerResponse);
 }
-
 // use case for "Show Customer Details"
 service GetCustomerService
 {
   rpc GetCustomer (GetCustomerRequest) returns (GetCustomerResponse);
   rpc GetAllCustomers (GetAllCustomersRequest) returns (GetAllCustomersResponse);
 }
-
 // use case for "Edit Customer Details"
 service UpdateCustomerService
 {
@@ -359,7 +348,7 @@ message ProductInspectionResponse
   int32 product_id = 1;
   ApprovalStatus approvalStatus = 2;
   int32 pawnshop_id = 3;
-  string comments =4;
+  string comments = 4;
 }
 message ProductVerificationRequest
 {
@@ -436,4 +425,23 @@ message EnableSellingResponse
 service CustomerInspectionService
 {
   rpc SetCanSell(EnableSellingRequest) returns (EnableSellingResponse);
+}
+// use case for getting address (for now only all pawnshops is enough)
+message PawnshopAddressWithPostal
+{
+  Address address = 1;
+  Postal postal = 2;
+  int32 pawnshop_id = 3;
+}
+message GetAllPawnshopAddressesRequest
+{
+  Empty empty = 1;
+}
+message GetAllPawnshopAddressesResponse
+{
+  repeated PawnshopAddressWithPostal addresses = 1;
+}
+service GetAddressService
+{
+  rpc GetAllPawnshopAddresses(GetAllPawnshopAddressesRequest) returns (GetAllPawnshopAddressesResponse);
 }

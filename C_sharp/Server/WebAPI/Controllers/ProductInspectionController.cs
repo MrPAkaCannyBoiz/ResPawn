@@ -23,83 +23,79 @@ public class ProductInspectionController : ControllerBase
 
     [HttpPost("product/{productId}")]
     [ProducesResponseType(typeof(ProductInspectionResultDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(KeyNotFoundException), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ArgumentException), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ReviewProductAsync(int productId, 
         ProductInspectionDto dto ,CancellationToken ct)
     {
         try
- {
-     var request = new ProductInspectionRequest
-     {
-         ProductId = productId,
-         ResellerId = dto.ResellerId,
-         Comments = dto.Comments,
-         IsAccepted = dto.IsAccepted,
-         PawnshopId = dto.PawnshopId
-     };
-     var response = await service.ReviewProductAsync(request, ct);
-     var resultDto = new ProductInspectionResultDto
-     {
-         ProductId = response.ProductId,
-         ApprovalStatus = ToDtoApprovalStatus(response.ApprovalStatus),
-         PawnshopId = response.PawnshopId,
-         Comments = response.Comments
-     };
-     return Ok(resultDto);
- }
- catch (KeyNotFoundException ex)
- {
-     return NotFound(ex.Message);
- }
- catch (ArgumentException ex)
- {
-     return BadRequest(ex.Message);
- }
- catch (ApplicationException ex)
- { 
-     return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
- }
+        {
+            var request = new ProductInspectionRequest
+            {
+                ProductId = productId,
+                ResellerId = dto.ResellerId,
+                Comments = dto.Comments,
+                IsAccepted = dto.IsAccepted,
+                PawnshopId = dto.PawnshopId
+            };
+            var response = await service.ReviewProductAsync(request, ct);
+            var resultDto = new ProductInspectionResultDto
+            {
+                ProductId = response.ProductId,
+                ApprovalStatus = ToDtoApprovalStatus(response.ApprovalStatus),
+                PawnshopId = response.PawnshopId,
+                Comments = response.Comments
+            };
+            return Ok(resultDto);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (ApplicationException ex)
+        { 
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
     }
 
     [HttpPost("product/verify/{productId}")]
     [ProducesResponseType(typeof(ProductVerificationResultDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(KeyNotFoundException), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ArgumentException), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> VerifyProductAsync (int productId,
         ProductVerificationDto dto, CancellationToken ct)
     {
-       try
-{
-    var request = new ProductVerificationRequest
-    {
-        ProductId = productId,
-        ResellerId = dto.ResellerId,
-        Comments = dto.Comments,
-        IsAccepted = dto.IsAccepted
-    };
-    var response = await service.VerifyProductAsync(request, ct);
+        try
+        {
+            var request = new ProductVerificationRequest
+            {
+                ProductId = productId,
+                ResellerId = dto.ResellerId,
+                Comments = dto.Comments,
+                IsAccepted = dto.IsAccepted
+            };
+            var response = await service.VerifyProductAsync(request, ct);
 
-    var resultDto = new ProductVerificationResultDto
-    {
-        ProductId = response.ProductId,
-        ApprovalStatus = ToDtoApprovalStatus(response.ApprovalStatus),
-        Comments = response.Comments
-    };
-        return Ok(resultDto);
-    }
-    catch (KeyNotFoundException ex)
-    {
-        return NotFound(ex.Message);
-    }
-    catch (ArgumentException ex)
-    {
-        return BadRequest(ex.Message);
-    }
-    catch (ApplicationException ex)
-    {
-        return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-    }
+            var resultDto = new ProductVerificationResultDto
+            {
+                ProductId = response.ProductId,
+                ApprovalStatus = ToDtoApprovalStatus(response.ApprovalStatus),
+                Comments = response.Comments
+            };
+            return Ok(resultDto);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (ApplicationException ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
     }
 
     private ApiContracts.Dtos.Enums.ApprovalStatus ToDtoApprovalStatus(ApprovalStatus status)
@@ -113,5 +109,4 @@ public class ProductInspectionController : ControllerBase
             _ => throw new NotImplementedException(),
         };
     }
-
 }

@@ -1,9 +1,7 @@
 // java
 package org.example.respawnmarket.Service;
 
-import com.respawnmarket.GetAllProductsRequest;
-import com.respawnmarket.GetAllProductsResponse;
-import com.respawnmarket.ProductWithFirstImage;
+import com.respawnmarket.*;
 import io.grpc.stub.StreamObserver;
 import org.example.respawnmarket.entities.*;
 import org.example.respawnmarket.entities.enums.ApprovalStatusEnum;
@@ -44,7 +42,8 @@ class GetProductServiceImplTest {
     }
 
     @Test
-    void getAllProducts_returnsProductsWithFirstImage() {
+    void getAllProducts_returnsProductsWithFirstImage()
+    {
         // arrange: build entities that satisfy checkNullAndRelations()
         CustomerEntity seller = new CustomerEntity();
         seller.setId(1);
@@ -78,7 +77,8 @@ class GetProductServiceImplTest {
                 .thenReturn(List.of(image));
 
         // custom StreamObserver to capture response
-        class TestObserver implements StreamObserver<GetAllProductsResponse> {
+        class TestObserver implements StreamObserver<GetAllProductsResponse>
+        {
             GetAllProductsResponse response;
             Throwable error;
             boolean completed = false;
@@ -116,4 +116,98 @@ class GetProductServiceImplTest {
         assertEquals(image.getId(), pfi.getFirstImage().getId());
         assertEquals(image.getImageUrl(), pfi.getFirstImage().getUrl());
     }
+
+    @Test
+    void getProduct_returnsProductDetails_whenProductExists()
+    {
+        // Arrange
+        int productId = 20;
+        int sellerId = 2;
+        int pawnshopId = 5;
+
+        // 1. Setup Seller
+        CustomerEntity seller = new CustomerEntity();
+        seller.setId(sellerId);
+        seller.setFirstName("Jane");
+        seller.setLastName("Smith");
+        seller.setEmail("jane@example.com");
+        seller.setPhoneNumber("555-0199");
+        seller.setPassword("password1234");
+
+        // 2. Setup Pawnshop (Required for APPROVED products based on checkNullAndRelations logic)
+        PostalEntity postal = new PostalEntity();
+        postal.setPostalCode(90210);
+        postal.setCity("Beverly Hills");
+
+        AddressEntity address = new AddressEntity();
+        address.setId(55);
+        address.setStreetName("Rodeo Dr");
+        address.setSecondaryUnit("Suite 100");
+        address.setPostal(postal);
+
+        PawnshopEntity pawnshop = new PawnshopEntity();
+        pawnshop.setId(pawnshopId);
+        pawnshop.setName("Luxury Pawn");
+        pawnshop.setAddress(address);
+
+        // 3. Setup Product
+        ProductEntity product = new ProductEntity();
+        product.setId(productId);
+        product.setName("Diamond Ring");
+        product.setPrice(5000.0);
+        product.setCondition("LIKE_NEW");
+        product.setDescription("Shiny");
+        product.setSeller(seller);
+        product.setCategory(CategoryEnum.ELECTRONICS); // Using existing enum
+        product.setSold(false);
+        product.setApprovalStatus(ApprovalStatusEnum.APPROVED);
+        product.setRegisterDate(LocalDateTime.now());
+        product.setPawnshop(pawnshop);
+
+        // 4. Setup Images
+        ImageEntity image = new ImageEntity();
+        image.setId(200);
+        image.setImageUrl("http://images.com/ring.jpg");
+        image.setProduct(product);
+
+        // 5. Mock Repository Calls
+        // Note: These are called multiple times (in checkNullAndRelations and getProduct),
+        // but Mockito handles multiple calls to the same mock by default.
+        when(productRepository.findById(productId)).thenReturn(java.util.Optional.of(product));
+        when(customerRepository.findById(sellerId)).thenReturn(java.util.Optional.of(seller));
+        when(pawnshopRepository.findById(pawnshopId)).thenReturn(java.util.Optional.of(pawnshop));
+        when(imageRepository.findAllByProductId(productId)).thenReturn(List.of(image));
+
+        // 6. Prepare Observer
+        StreamObserver<GetProductResponse> responseObserver = mock(StreamObserver.class);
+        ArgumentCaptor<GetProductResponse> responseCaptor = ArgumentCaptor.forClass(GetProductResponse.class);
+
+        // Act
+        GetProductRequest request = GetProductRequest.newBuilder().setProductId(productId).build();
+        service.getProduct(request, responseObserver);
+
+        // Assert
+        verify(responseObserver).onNext(responseCaptor.capture());
+        verify(responseObserver).onCompleted();
+        verify(responseObserver, never()).onError(any());
+
+        GetProductResponse response = responseCaptor.getValue();
+        assertNotNull(response);
+        assertEquals(productId, response.getProduct().getId());
+        assertEquals("Diamond Ring", response.getProduct().getName());
+        assertEquals(sellerId, response.getCustomer().getId());
+
+        // Verify Pawnshop details were mapped
+        assertTrue(response.hasPawnshop());
+        assertEquals(pawnshopId, response.getPawnshop().getId());
+        assertEquals("Luxury Pawn", response.getPawnshop().getName());
+
+        // Verify Images
+        assertEquals(1, response.getImagesCount());
+        assertEquals("http://images.com/ring.jpg", response.getImages(0).getUrl());
+    }
+
+
+
+
 }

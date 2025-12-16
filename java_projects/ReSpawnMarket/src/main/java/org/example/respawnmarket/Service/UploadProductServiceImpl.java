@@ -107,6 +107,14 @@ public class UploadProductServiceImpl extends com.respawnmarket.UploadProductSer
         ImageEntity imageEntity = new ImageEntity(imageUrl, newProduct);
         imageEntities.add(imageEntity);
       }
+      if (imageEntities.isEmpty())
+      {
+        responseObserver.onError(
+            Status.INVALID_ARGUMENT.withDescription(
+                    "At least one image must be provided")
+                .asRuntimeException());
+        return;
+      }
       imageRepository.saveAll(imageEntities);
 
       // 6) Map to gRPC Product + response
@@ -151,6 +159,13 @@ public class UploadProductServiceImpl extends com.respawnmarket.UploadProductSer
     private ProductEntity getProductEntity(UploadProductRequest request,
              StreamObserver<UploadProductResponse> responseObserver, CustomerEntity givenCustomer)
     {
+        if (request.getPrice() < 0)
+        {
+            responseObserver.onError(Status.INVALID_ARGUMENT
+                    .withDescription("Price must be non-negative")
+                    .asRuntimeException());
+            return null;
+        }
         var product = new ProductEntity(
                 request.getName(),
                 request.getPrice(),
