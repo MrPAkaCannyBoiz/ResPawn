@@ -210,7 +210,7 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
         if (inspectionDTOs.isEmpty())
         {
           responseObserver.onError(Status.NOT_FOUND.withDescription(
-                  "No inspections found for product ID: " + request.getCustomerId())
+                  "No inspections found for product")
               .asRuntimeException());
           return;
         }
@@ -224,7 +224,7 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
           if (inspectionDTO.getProduct() == null)
           {
             responseObserver.onError(Status.NOT_FOUND.withDescription(
-                    "Product not found with ID: " + request.getCustomerId())
+                    "Product not found with ID: " + inspectionDTO.getProduct().getId())
                 .asRuntimeException());
             return;
           }
@@ -320,12 +320,14 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
 
       boolean isPending =
               productEntity.getApprovalStatus() == ApprovalStatusEnum.PENDING;
+      boolean isRejected =
+              productEntity.getApprovalStatus() == ApprovalStatusEnum.REJECTED;
 
       StringBuilder issues = new StringBuilder();
       if (seller == null)
           issues.append("seller missing");
       // Only require pawnshop when NOT pending
-      if (!isPending && pawnshop == null)
+      if ((!isPending && !isRejected) && pawnshop == null)
           issues.append("pawnshop missing on non-pending product");
       if (productEntity.getRegisterDate() == null)
           issues.append("registerDate missing");
@@ -358,30 +360,6 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
                 .toList();
         return products;
     }
-
-  private List<ProductWithFirstImage> toProtoProductWithImageListGivenProductInspection(
-      List<ProductInspectionDTO> dtos,
-      StreamObserver<?> responseObserver)
-  {
-    if (dtos == null)
-    {
-      responseObserver.onError(io.grpc.Status.NOT_FOUND
-          .withDescription("Products not found")
-          .asRuntimeException());
-    }
-    assert dtos != null;
-    List<ProductEntity> entities = new ArrayList<>();
-    for (ProductInspectionDTO dto : dtos)
-    {
-      checkNullAndRelations(dto.getProduct(), responseObserver);
-      entities.add(dto.getProduct());
-    }
-
-    List<ProductWithFirstImage> products = entities.stream()
-        .map(this::toProtoProductWithImage)
-        .toList();
-    return products;
-  }
 
   private LatestProductFromInspection toProtoProductViaDto(ProductInspectionDTO dto)
   {
