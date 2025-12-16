@@ -1,4 +1,5 @@
 html, body {
+    background: linear-gradient(to bottom, #ffffff, #e5e9ff);
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
@@ -57,4 +58,9 @@ h1:focus {
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
+}
+
+.navbar-dark .navbar-nav .nav-link.active {
+    background-color: #1861ac;
+    border-radius: 0.25rem;
 }

@@ -1,0 +1,126 @@
+body {
+    background: linear-gradient(to bottom right, #111827, #1f2937);
+    color: white;
+}
+
+.home-background {
+    min-height: 100vh;
+    width: 100%;
+    padding-top: 50px;
+
+    background: radial-gradient(circle at top center, #1e1b4b 10%, #0f172a 60%, #0a0f24 100%);
+    background-attachment: fixed;
+}
+
+.hero-container {
+    display: flex;
+    min-height: 75vh;
+    justify-content: center;
+    align-items: center;
+    margin: 80px auto;
+    padding: 60px;
+    width: 80%;
+    background: rgba(255,255,255,0.06);
+    border-radius: 30px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    backdrop-filter: blur(10px);
+}
+
+.hero-content h1 {
+    font-size: 48px;
+    font-weight: 800;
+}
+
+.hero-content span {
+    color: #4f46e5;
+}
+
+.btn-primary {
+    padding: 14px 25px;
+    background: #4f46e5;
+    border-radius: 10px;
+    color: white;
+    margin-right: 15px;
+}
+
+.btn-secondary {
+    padding: 14px 25px;
+    background: #6b7280;
+    border-radius: 10px;
+    color: white;
+}
+
+.explore-text {
+    margin-top: 25px;
+    font-size: 1.15rem;
+    color: #d9ddff;
+    font-weight: 300;
+}
+
+.btn-tertiary {
+    padding: 10px 22px;
+    background: #24293e;
+    border: 1px solid #6772ff;
+    border-radius: 8px;
+    color: #bfc3ff;
+    font-weight: 600;
+    transition: 0.25s;
+    text-decoration: none;
+}
+
+.btn-tertiary:hover {
+    background: #333a57;
+    color: #ffffff;
+    border-color: #8892ff;
+    transform: translateY(-2px);
+}
+
+.hero-image {
+    width: 350px;
+    filter: drop-shadow(0 0 20px rgba(79,70,229,0.6));
+}
+
+
+.home-buttons {
+    margin-top: 25px;
+    text-align: center;
+}
+
+/* Explore Products */
+.main-explore {
+    margin-bottom: 20px;
+}
+
+/*  “primary call-to-action” */
+.hero-main-btn {
+    display: inline-block;
+    padding: 14px 30px;
+    font-size: 18px;
+    border-radius: 10px;
+    min-width: 220px;
+}
+
+.sub-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+
+.hero-sub-btn {
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 16px;
+}
+
+@media (max-width: 600px) {
+    .sub-buttons {
+        flex-direction: column;
+    }
+}
+
+
+
+
+
+

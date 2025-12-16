@@ -1,9 +1,12 @@
 ﻿@page "/customer/info/update"
+
 @using ApiContracts
 @using ApiContracts.Dtos
 @using BlazorApp.Services.Interface
 @using System.Security.Claims
+
 @attribute [Authorize (Roles = "Customer")]
+
 @inject IGetCustomerService GetCustomerServices
 @inject IUpdateCustomerService UpdateCustomerServices
 @inject AuthenticationStateProvider AuthStateProvider
@@ -13,149 +16,182 @@
 
 @code 
 {
-	private CustomerDto? _customerToUpdate;
-	private int id = 0; // customer ID is soon obtained from the token
-	private string _updateMessage = string.Empty;
-	private string _loadMessage = string.Empty;
-	private string _firstName = string.Empty;
-	private string _lastName = string.Empty;
-	private string _email = string.Empty;
-	private string _phoneNumber = string.Empty;
-	private string _streetName = string.Empty;
-	private string _secondaryUnit = string.Empty;
-	private string _city = string.Empty;
-	private int _postalCode;
-	private bool _showConfirmation = false;
+    private CustomerDto? _customerToUpdate;
+    private int id = 0; // customer ID is soon obtained from the token
+    private UpdateCustomerDto model = new();
+    private string _updateMessage = string.Empty;
+    private string _loadMessage = string.Empty;
+    private string _firstName = string.Empty;
+    private string _lastName = string.Empty;
+    private string _email = string.Empty;
+    private string _phoneNumber = string.Empty;
+    private string _streetName = string.Empty;
+    private string _secondaryUnit = string.Empty;
+    private string _city = string.Empty;
+    private int _postalCode;
+    private bool _showConfirmation = false;
 
-	protected override async Task OnInitializedAsync()
-	{
-		var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-		var user = authState.User;
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
 
-		// If not authenticated, redirect to login
-		if (!user.Identity?.IsAuthenticated ?? false)
-		{
-			Nav.NavigateTo("/customer-login", forceLoad: true);
-			return;
-		}
-		// Read the ID claim from the token
-		var idClaim = user.FindFirst("CustomerId")?.Value;
-		if (string.IsNullOrWhiteSpace(idClaim) || !int.TryParse(idClaim, out var customerIdFromToken))
-		{
-			// No usable id in token -> deny
-			_loadMessage = "Unauthorized: missing customer identifier.";
-			Nav.NavigateTo("/customer-login", forceLoad: true);
-			return;
-		}
-		id = customerIdFromToken;
+        // If not authenticated, redirect to login
+        if (!user.Identity?.IsAuthenticated ?? false)
+        {
+            Nav.NavigateTo("/customer-login", forceLoad: true);
+            return;
+        }
+        // Read the ID claim from the token
+        var idClaim = user.FindFirst("CustomerId")?.Value;
+        if (string.IsNullOrWhiteSpace(idClaim) || !int.TryParse(idClaim, out var customerIdFromToken))
+        {
+            // No usable id in token -> deny
+            _loadMessage = "Unauthorized: missing customer identifier.";
+            Nav.NavigateTo("/customer-login", forceLoad: true);
+            return;
+        }
+        id = customerIdFromToken;
 
-		try
-		{
-			_customerToUpdate = await GetCustomerServices.GetCustomerByIdAsync(id);
-			if (_customerToUpdate != null) // Pre-fill form fields with existing customer data
-			{
-				_firstName = _customerToUpdate.FirstName;
-				_lastName = _customerToUpdate.LastName;
-				_email = _customerToUpdate.Email;
-				_phoneNumber = _customerToUpdate.PhoneNumber;
-				_streetName = _customerToUpdate.StreetName;
-				_secondaryUnit = _customerToUpdate.SecondaryUnit;
-				_city = _customerToUpdate.City;
-				_postalCode = _customerToUpdate.PostalCode;
-			}
-		}
-		catch (Exception ex)
-		{
-			_loadMessage = $"Error loading customer: {ex.Message}";
-		}
-	}
+        try
+        {
+            _customerToUpdate = await GetCustomerServices.GetCustomerByIdAsync(id);
+            if (_customerToUpdate != null) // Pre-fill form fields with existing customer data
+            {
+                _firstName = _customerToUpdate.FirstName;
+                _lastName = _customerToUpdate.LastName;
+                _email = _customerToUpdate.Email;
+                _phoneNumber = _customerToUpdate.PhoneNumber;
+                _streetName = _customerToUpdate.StreetName;
+                _secondaryUnit = _customerToUpdate.SecondaryUnit;
+                _city = _customerToUpdate.City;
+                _postalCode = _customerToUpdate.PostalCode;
+            }
+        }
+        catch (Exception ex)
+        {
+            _loadMessage = $"Error loading customer: {ex.Message}";
+        }
+    }
 
-	private async Task UpdateCustomerGivenId()
-	{
-		if (_customerToUpdate == null)
-		{
-			_updateMessage = "Customer data is not loaded.";
-			return;
-		}
-		var updateDto = new UpdateCustomerDto
-		{
-			FirstName = _firstName,
-			LastName = _lastName,
-			Email = _email,
-			PhoneNumber = _phoneNumber,
-			StreetName = _streetName,
-			SecondaryUnit = _secondaryUnit,
-			City = _city,
-			PostalCode = _postalCode
-		};
-		try
-		{
-			await UpdateCustomerServices.UpdateCustomerAsync(id, updateDto);
-			_updateMessage = "Customer updated successfully.";
-		}
-		catch (Exception ex)
-		{
-			_updateMessage = $"Error updating customer: {ex.Message}";
-		}
-	}
+    private async Task UpdateCustomerGivenId()
+    {
+        if (_customerToUpdate == null)
+        {
+            _updateMessage = "Customer data is not loaded.";
+            return;
+        }
+        var updateDto = new UpdateCustomerDto
+        {
+            FirstName = _firstName,
+            LastName = _lastName,
+            Email = _email,
+            PhoneNumber = _phoneNumber,
+            StreetName = _streetName,
+            SecondaryUnit = _secondaryUnit,
+            City = _city,
+            PostalCode = _postalCode
+        };
+        try
+        {
+            await UpdateCustomerServices.UpdateCustomerAsync(id, updateDto);
+            _updateMessage = "Customer updated successfully.";
+        }
+        catch (Exception ex)
+        {
+            _updateMessage = $"Error updating customer: {ex.Message}";
+        }
+    }
 
-	private void NavigateToCustomerDetails()
-	{
-		Nav.NavigateTo($"/customer/info");
-	}
+    private void NavigateToCustomerDetails()
+    {
+        Nav.NavigateTo($"/customer/info");
+    }
 
 }
 
-<h3>Update Customer</h3>
-<button class="btn btn-primary" @onclick="() => NavigateToCustomerDetails()">Back to Customer Details</button>
-@if(_customerToUpdate != null)
-{
-	<div>
-		<label>First Name:</label>
-		<input @bind="_firstName" />
-	</div>
-	<div>
-		<label>Last Name:</label>
-		<input @bind="_lastName" />
-	</div>
-	<div>
-		<label>Email:</label>
-		<input @bind="_email" />
-	</div>
-	<div>
-		<label>Phone Number:</label>
-		<input @bind="_phoneNumber" />
-	</div>
-	<div>
-		<label>Street Name:</label>
-		<input @bind="_streetName" />
-	</div>
-	<div>
-		<label>Secondary Unit:</label>
-		<input @bind="_secondaryUnit" />
-	</div>
-	<div>
-		<label>City:</label>
-		<input @bind="_city" />
-	</div>
-	<div>
-		<label>Postal Code:</label>
-		<input type="number" @bind="_postalCode" />
-	</div>
-	<button class="btn btn-primary" @onclick="() => _showConfirmation = true">
-		Update Customer
-		</button>
-	@if (_showConfirmation)
+<link href="css/Customer.css" rel="stylesheet" />
+
+<div class="update-container">
+
+<div class="update-card">
+    <h2>Update Customer</h2>
+ 
+	
+
+	<div class="form-grid">
+
+	@if(_customerToUpdate != null)
 	{
-		<div class="confirmation-dialog">
-			<p>Are you sure you want to update?</p>
-			<button @onclick="async () => { await UpdateCustomerGivenId(); _showConfirmation = false; }">Yes</button>
-			<button @onclick="() => _showConfirmation = false">No</button>
+		<div>
+			<label>First Name:</label>
+				<input type="text" @bind="_firstName" class="input"/>
 		</div>
-	}
-	<p>@_updateMessage</p>
+		<div>
+			<label>Last Name:</label>
+				<input type="text" @bind="_lastName" class="input"/>
+		</div>
+		<div>
+			<label>Email:</label>
+				<input type="text" @bind="_email" class="input"/>
+		</div>
+		<div>
+			<label>Phone Number:</label>
+			<input type="text"@bind="_phoneNumber" class="input"/>
+		</div>
+		<div>
+			<label>Street Name:</label>
+				<input type="text" @bind="_streetName" class="input"/>
+		</div>
+		<div>
+			<label>Secondary Unit:</label>
+				<input type="text" @bind="_secondaryUnit" class="input"/>
+		</div>
+		<div>
+			<label>City:</label>
+				<input type="text" @bind="_city" class="input"/>
+		</div>
+		<div>
+			<label>Postal Code:</label>
+				<input type="text" @bind="_postalCode" class="input"/>
+		</div>
+	
+
+   @if (_showConfirmation)
+{
+    <div class="confirm-box">
+        <p>Are you sure you want to update?</p>
+
+        <div class="confirm-actions">
+            <button class="confirm-yes"
+                @onclick="async () => { await UpdateCustomerGivenId(); _showConfirmation = false; }">
+                Yes
+            </button>
+            <button class="confirm-no"
+                @onclick="() => _showConfirmation = false">
+                No
+            </button>
+        </div>
+    </div>
+}
+
+    <p>@_updateMessage</p>
 }
 else
 {
-	<p>@_loadMessage</p>
+    <p>@_loadMessage</p>
 }
+    </div>  
+<div class="form-actions">
+		<button class="update-btn primary"
+            type="button"
+		@onclick="() => _showConfirmation = true">
+			Update Details</button>
+    	<button class="back-btn secondary"
+            type="button" @onclick="() => NavigateToCustomerDetails()">
+			Back to Customer Details</button>
+</div>
+	
+</div>
+</div>
+

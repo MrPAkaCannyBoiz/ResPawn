@@ -10,51 +10,124 @@
 @inject IAuthService AuthService
 @inject NavigationManager Nav
 
-<h3>My Uploaded Products (TEST)</h3>
+<link href="css/Product.css" rel="stylesheet">
 
-@if (_loading)
-{
-    <p>Loading...</p>
-}
-else if (!string.IsNullOrEmpty(_error))
-{
-    <div class="alert alert-danger">@_error</div>
-}
-else if (_rows is null || !_rows.Any())
-{
-    <p>You have not uploaded any products yet.</p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Product Id</th>
-                <th>Product name</th>
-                <th>Approval status</th>
-                <th>Latest comment</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach (var row in _rows)
-        {
-            <tr>
-               <td>@row.ProductWithFirstImage!.Id</td>
-               <td>@row.ProductWithFirstImage.Name</td>
-               <td>@row.ProductWithFirstImage.ApprovalStatus</td>
-               <td>@row.InspectionComment></td>
-            </tr>
-        }
-        </tbody>
-    </table>
-}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0 fw-bold text-primary">My Uploaded Products</h3>
+                        <span class="badge bg-light text-dark border">
+                            @(_rows?.Count() ?? 0) Items
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    @if (_loading)
+                    {
+                        <div class="text-center p-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Fetching your products...</p>
+                        </div>
+                    }
+                    else if (!string.IsNullOrEmpty(_error))
+                    {
+                        <div class="alert alert-danger m-3">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> @_error
+                        </div>
+                    }
+                    else if (_rows is null || !_rows.Any())
+                    {
+                        <div class="text-center p-5">
+                            <div class="mb-3">
+                                <i class="bi bi-box-seam text-muted" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5>No products yet</h5>
+                            <p class="text-muted">You haven't uploaded any items for sale yet.</p>
+                            <button class="btn btn-primary btn-sm mt-2" @onclick='() => Nav.NavigateTo("/upload-item")'>
+                                Upload your first item
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light text-uppercase small text-muted">
+                                    <tr>
+                                        <th class="ps-4" style="width: 10%;">ID</th>
+                                        <th style="width: 30%;">Product Name</th>
+                                        <th style="width: 15%;">Status</th>
+                                        <th style="width: 45%;">Latest Comment</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var row in _rows)
+                                    {
+                                        <tr>
+                                            <td class="ps-4 text-muted">#@row.ProductWithFirstImage!.Id</td>
+                                            <td>
+                                                <span class="fw-bold text-dark">@row.ProductWithFirstImage.Name</span>
+                                                <br />
+                                                <small class="text-muted" style="font-size: 0.75rem;">
+                                                    @row.ProductWithFirstImage.RegisterDate.ToString("MMM dd, yyyy")
+                                                </small>
+                                            </td>
+                                            <td>
+                                                <span class="badge rounded-pill @GetStatusColor(row.ProductWithFirstImage.ApprovalStatus)">
+                                                    @row.ProductWithFirstImage.ApprovalStatus
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @if (string.IsNullOrWhiteSpace(row.InspectionComment))
+                                                {
+                                                    <span class="text-muted font-italic small">- No comments -</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="d-inline-block text-truncate text-secondary" style="max-width: 300px;" title="@row.InspectionComment">
+                                                        @row.InspectionComment
+                                                    </span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
 
 @code {
     private bool _loading = true;
     private string? _error;
     private IQueryable<LatestProductFromInspectionDto>? _rows;
-    private int _customerId; // will be set by claim later
-   
+    private int _customerId;
+    private string GetStatusColor(string? status)
+    {
+        if (string.IsNullOrEmpty(status)) return "bg-secondary";
+
+        return status.ToLower() switch
+        {
+            "approved" => "bg-success",    // Green
+            "pending" => "bg-secondary",   // Grey
+            "reviewing" => "bg-warning text-dark", // Yellow
+            "rejected" => "bg-danger",     // Red
+            _ => "bg-primary"              // Default Blue
+        };
+    }
+
     protected override async Task OnInitializedAsync()
     {
         _loading = true;
@@ -77,14 +150,15 @@ else
                 Nav.NavigateTo("/customer-login", forceLoad: true);
                 return;
             }
-            _customerId = claimId; // set claim id 
+            _customerId = claimId;
 
-            _rows = (await ProductService.GetAllLatestAsync(_customerId)).OrderBy(p => p.ProductWithFirstImage!.RegisterDate);
+            // Added OrderByDescending to show newest first (usually better for UX)
+            var result = await ProductService.GetAllLatestAsync(_customerId);
+            _rows = result.OrderByDescending(p => p.ProductWithFirstImage!.RegisterDate).AsQueryable();
         }
         catch (Exception ex)
         {
             _error = ex.Message;
-            // Catch-all for login issues, product service failure, or the Task.WhenAll failure.
         }
         finally
         {

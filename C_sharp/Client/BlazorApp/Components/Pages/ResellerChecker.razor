@@ -9,6 +9,8 @@
 @using System.Linq
 @using global::BlazorApp.Services.Interface
 
+<link href="css/Reseller.css" rel="stylesheet" />
+
 <h3>Pending Products</h3>
 
 @if (_loading)
@@ -33,31 +35,27 @@ else
         @foreach (var p in _products)
         {
             <div class="col">
-                <div class="card h-100">
-                    @{
-                        var firstImageUrl = p.Image;      
-                    }
+                <div class="product-card">
+    <div class="product-image-container">
+        <img src="@p.Image.Url" class="product-image" alt="@p.Name" />
+    </div>
 
-                    @if (!string.IsNullOrWhiteSpace(firstImageUrl.Url))
-                    {
-                        <img src="@firstImageUrl.Url" class="card-img-top" alt="@p.Name" />
-                    }
+    <div class="product-card-body">
+        <h5 class="product-title">@p.Name</h5>
+        <p class="product-price">@p.Price.ToString("0.00") DKK</p>
 
-                    <div class="card-body">
-                        <h5 class="card-title">@p.Name (@p.Price.ToString("0.00") DKK)</h5>
-                        <p class="card-text">
-                            <strong>Condition:</strong> @p.Condition<br />
-                            <strong>Category:</strong> @p.Category<br />
-                            <strong>Status:</strong> @p.ApprovalStatus<br />
-                            <strong>Uploaded:</strong> @p.RegisterDate.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
-                        </p>
+        <div class="product-meta">
+            <span><strong>Condition:</strong> @p.Condition</span><br />
+            <span><strong>Status:</strong> @p.ApprovalStatus</span><br />
+        </div>
 
-                        <button class="btn btn-primary"
-                                @onclick="() => GoToDetails(p.Id)">
-                            More details / Inspect
-                        </button>
-                    </div>
-                </div>
+        <button class="btn btn-primary w-100 mt-2"
+                @onclick="() => GoToDetails(p.Id)">
+            Inspect Product
+        </button>
+    </div>
+</div>
+
             </div>
         }
     </div>

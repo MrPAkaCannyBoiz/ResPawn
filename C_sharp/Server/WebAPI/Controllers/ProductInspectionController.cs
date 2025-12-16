@@ -55,7 +55,7 @@ public class ProductInspectionController : ControllerBase
             return BadRequest(ex.Message);
         }
         catch (ApplicationException ex)
-        { 
+        {
             return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
         }
     }

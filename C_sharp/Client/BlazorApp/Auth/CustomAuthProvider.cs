@@ -71,6 +71,20 @@ public class CustomAuthProvider : AuthenticationStateProvider
         );
     }
 
+public Task LogoutAsync()
+{
+    // Cream un user anonim (fără identitate / fără roluri)
+    var anonymous = new ClaimsPrincipal(new ClaimsIdentity());
+
+    // Anunțăm Blazor că s-a schimbat AuthenticationState-ul
+    NotifyAuthenticationStateChanged(
+        Task.FromResult(new AuthenticationState(anonymous))
+    );
+
+    // nu avem nimic de așteptat, deci returnăm Task completat
+    return Task.CompletedTask;
+}
+}
     //// Reseller login method (non JWT based)
     //public async Task ResellerLoginAsync(string username, string password)
     //{
@@ -107,4 +121,4 @@ public class CustomAuthProvider : AuthenticationStateProvider
     //    // Notify the authentication state has changed, then Blazor will update the UI accordingly.
     //    NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_currentClaimsPrincipal)));
 
-    }
+

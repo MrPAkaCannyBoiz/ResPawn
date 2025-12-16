@@ -1,0 +1,252 @@
+/* Background full page */
+.login-shell {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding:0;
+    background: radial-gradient(circle at top left, #e0f2fe, #e5e7ff, #eef2ff);
+}
+
+
+.login-card-2col {
+    width: 85%;
+    max-width: 1400px;
+    min-height: 70vh;
+    background: #ffffff;
+    border-radius: 26px;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    overflow: hidden;
+}
+
+/* LEFT SIDE – info */
+.login-left {
+    position: relative;
+    padding: 40px 45px;
+    background: radial-gradient(circle at top, #4f46e5, #312e81, #1e1b4b);
+    color: #e5e7eb;
+}
+
+/* Glowing circles */
+.login-left::before,
+.login-left::after {
+    content: "";
+    position: absolute;
+    border-radius: 999px;
+    filter: blur(40px);
+    opacity: 0.45;
+}
+
+.login-left::before {
+    width: 220px;
+    height: 220px;
+    background: #f97316;
+    top: -40px;
+    right: -60px;
+}
+
+.login-left::after {
+    width: 260px;
+    height: 260px;
+    background: #22c55e;
+    bottom: -60px;
+    left: -40px;
+}
+
+
+.login-left > * {
+    position: relative;
+    z-index: 1;
+}
+
+
+.brand-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.55);
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+}
+
+
+.left-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #f9fafb;
+}
+
+.left-subtitle {
+    font-size: 15px;
+    color: #e5e7eb;
+    max-width: 310px;
+    margin-bottom: 24px;
+}
+
+
+.left-feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 14px;
+}
+
+.left-feature-list li {
+    margin-bottom: 8px;
+}
+
+
+.login-right {
+    padding: 40px 45px;
+    background: #ffffff;
+}
+
+
+.auth-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 6px;
+}
+
+.auth-subtitle {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 24px;
+}
+
+/* Form text */
+.form-section {
+    text-align: left;
+}
+
+.form-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-top: 12px;
+    display: block;
+}
+
+
+.input-field {
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    font-size: 15px;
+    margin-top: 4px;
+    margin-bottom: 8px;
+}
+
+
+.btn-primary {
+    width: 100%;
+    padding: 11px;
+    margin-top: 16px;
+    border-radius: 999px;
+    border: none;
+    background: #3b82f6;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+}
+
+
+.error-box {
+    background: #fee2e2;
+    color: #b91c1c;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-top: 4px;
+    margin-bottom: 6px;
+}
+
+.success-box {
+    background: #e7f5e9;
+    padding: 14px;
+    border-radius: 10px;
+    color: #166534;
+    font-weight: 600;
+    text-align: center;
+}
+
+.feature-box {
+    margin-top: 18px;
+    font-size: 13px;
+    text-align: center;
+    background: #f3f4f6;
+    padding: 10px 12px;
+    border-radius: 10px;
+    color: #374151;
+}
+
+
+.form-links {
+    margin-top: 12px;
+    display: flex;
+    gap: 6px;
+    font-size: 13px;
+    color: #6b7280;
+    align-items: center;
+}
+
+.muted-link {
+    color: #3b82f6;
+    text-decoration: none;
+}
+
+.muted-link:hover {
+    text-decoration: underline;
+}
+
+.small-b1 {
+    width: 140px;
+    height: 140px;
+    background: #ff9f43;
+    top: 40px;
+    right: 60px;
+}
+
+.small-b2 {
+    width: 120px;
+    height: 120px;
+    background: #53ffa1;
+    bottom: 60px;
+    left: 50px;
+}
+
+.single-login-card {
+    width: 420px;
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 22px;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+}
+
+/* Responsive: stack columns on small screens */
+@media (max-width: 900px) {
+    .login-card-2col {
+        grid-template-columns: 1fr;
+    }
+
+    .login-left {
+        display: none; /* hide left side on small screens */
+    }
+
+    .login-right {
+        padding: 30px 24px;
+    }
+}

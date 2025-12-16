@@ -1,6 +1,5 @@
 package org.example.respawnmarket.Service;
 
-import com.respawnmarket.*;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.example.respawnmarket.entities.ResellerEntity;
@@ -10,7 +9,7 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
 @Service
-public class ResellerLoginServiceImpl extends ResellerLoginServiceGrpc.ResellerLoginServiceImplBase
+public class ResellerLoginServiceImpl extends com.respawnmarket.ResellerLoginServiceGrpc.ResellerLoginServiceImplBase
 {
     private ResellerRepository resellerRepository;
 
@@ -22,7 +21,7 @@ public class ResellerLoginServiceImpl extends ResellerLoginServiceGrpc.ResellerL
 
     @Override
     public void login(
-            ResellerLoginRequest request, StreamObserver<ResellerLoginResponse> responseObserver)
+            com.respawnmarket.ResellerLoginRequest request, StreamObserver<com.respawnmarket.ResellerLoginResponse> responseObserver)
     {
         String username = request.getUsername();
         String password = request.getPassword();
@@ -40,7 +39,7 @@ public class ResellerLoginServiceImpl extends ResellerLoginServiceGrpc.ResellerL
             throwNotFoundIfInvalidCredentials(responseObserver);
             return;
         }
-        ResellerLoginResponse response = ResellerLoginResponse.newBuilder()
+        com.respawnmarket.ResellerLoginResponse response = com.respawnmarket.ResellerLoginResponse.newBuilder()
                 .setId(loginReseller.getId())
                 .setUsername(loginReseller.getUsername())
                 .build();
@@ -49,7 +48,7 @@ public class ResellerLoginServiceImpl extends ResellerLoginServiceGrpc.ResellerL
     }
 
     private void throwNotFoundIfInvalidCredentials
-            (StreamObserver<ResellerLoginResponse> responseObserver)
+            (StreamObserver<com.respawnmarket.ResellerLoginResponse> responseObserver)
     {
         responseObserver.onError(Status.NOT_FOUND
                 .withDescription("Invalid username or password") // show vague error message for security

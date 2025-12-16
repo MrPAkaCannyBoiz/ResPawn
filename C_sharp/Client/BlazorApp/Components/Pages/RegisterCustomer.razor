@@ -6,81 +6,124 @@
 @using global::BlazorApp.Services.Interface
 @inject IRegisterCustomerService registerCustomerService
 
-<PageTitle>Create Account</PageTitle>
+<link href="css/Register.css" rel="stylesheet" />
 
-<h3>Create Account</h3>
+<div class="register-shell">
+    <div class="register-card-2col">
 
+        <!-- LEFT BRANDING SIDE -->
+        <div class="register-left">
+            <div class="brand-badge">ReSpawnMarket</div>
+
+            <h2 class="left-title">Buy safer. Sell smarter.</h2>
+
+            <p class="left-subtitle">
+                Join a trusted second-hand marketplace where safety, transparency 
+                and convenience come first.
+            </p>
+
+            <ul class="left-feature-list">
+                <li>✔ Verified customer accounts</li>
+                <li>✔ Secure transactions</li>
+                <li>✔ Easy access from any device</li>
+            </ul>
+            
+             <!-- Subtle bubbles -->
+            <div class="bubble small-b1"></div>
+            <div class="bubble small-b2"></div>
+
+        </div>
+
+        <!-- RIGHT REGISTER FORM SIDE -->
 <EditForm EditContext="editContext" OnValidSubmit="CreateCustomer">
     <DataAnnotationsValidator />
     <ValidationSummary />
-    <div class="row g-3">
-        <div class="col-md-6">
+
+ <div class="register-right">
+   <div class="form-grid">
+            <h2 class="auth-title">Create your ReSpawnMarket account</h2>
+            <p class="auth-subtitle">Start buying & selling safely today.</p>
+        <div>
             <label class="form-label">First name</label>
-            <InputText class="form-control" @bind-Value="form.FirstName" />
+            <InputText class="form-control styled-input" @bind-Value="form.FirstName" />
             <ValidationMessage For="@(() => form.FirstName)" />
         </div>
 
-        <div class="col-md-6">
+        <div>
             <label class="form-label">Last name</label>
-            <InputText class="form-control" @bind-Value="form.LastName" />
+            <InputText class="form-control styled-input" @bind-Value="form.LastName" />
             <ValidationMessage For="@(() => form.LastName)" />
         </div>
 
-        <div class="col-md-6">
+        <div class="form-label">
             <label class="form-label">Email</label>
-            <InputText class="form-control" type="email" @bind-Value="form.Email" />
+            <InputText class="form-control styled-input" type="email" @bind-Value="form.Email" />
             <ValidationMessage For="@(() => form.Email)" />
         </div>
 
-        <div class="col-md-6">
+        <div>
             <label class="form-label">Phone number</label>
-            <InputText class="form-control" @bind-Value="form.PhoneNumber" />
+            <InputText class="form-control styled-input" @bind-Value="form.PhoneNumber" />
             <ValidationMessage For="@(() => form.PhoneNumber)" />
         </div>
 
-        <div class="col-md-6">
+        <div>
             <label class="form-label">Password</label>
-            <InputText class="form-control" type="password" @bind-Value="form.Password" />
+            <InputText class="form-control styled-input" type="password" @bind-Value="form.Password" />
             <ValidationMessage For="@(() => form.Password)" />
         </div>
 
-        <div class="col-md-6">
+        <div>
             <label class="form-label">Repeat password</label>
-            <InputText class="form-control" type="password" @bind-Value="confirmPassword" />
+            <InputText class="form-control styled-input" type="password" @bind-Value="confirmPassword" />
         </div>
 
-        <div class="col-md-6">
+        <div>
             <label class="form-label">Street</label>
-            <InputText class="form-control" @bind-Value="form.StreetName" />
+            <InputText class="form-control styled-input" @bind-Value="form.StreetName" />
             <ValidationMessage For="@(() => form.StreetName)" />
         </div>
 
-        <div class="col-md-6">
+        <div>
             <label class="form-label">Secondary unit</label>
-            <InputText class="form-control" @bind-Value="form.SecondaryUnit" />
+            <InputText class="form-control styled-input" @bind-Value="form.SecondaryUnit" />
             <ValidationMessage For="@(() => form.SecondaryUnit)" />
         </div>
 
-        <div class="col-md-3">
+        <div>
             <label class="form-label">Postal code</label>
-            <InputNumber class="form-control" @bind-Value="form.PostalCode" />
+            <InputNumber class="form-control styled-input" @bind-Value="form.PostalCode" />
             <ValidationMessage For="@(() => form.PostalCode)" />
         </div>
 
-        <div class="col-md-9">
+        <div>
             <label class="form-label">City</label>
-            <InputText class="form-control" @bind-Value="form.City" />
+            <InputText class="input-field" @bind-Value="form.City" />
             <ValidationMessage For="@(() => form.City)" />
         </div>
     </div>
 
-    <div class="mt-3 d-flex gap-2">
-        <button class="btn btn-primary" type="submit" disabled="@busy">
-            @(busy ? "Creating..." : "Create")
-        </button>
-        <button type="button" class="btn btn-outline-secondary" @onclick="ResetForm" disabled="@busy">Reset</button>
+<div class="button-row">
+   <div style="margin-top:25px; text-align:center;">
+    <button class="btn-primary"
+            type="submit"
+            disabled="@busy">
+        @(busy ? "Creating..." : "Create")
+    </button>
+
+    <button class="btn btn-outline-secondary reset-btn"
+            type="button"
+            @onclick="ResetForm"
+            disabled="@busy">
+        Reset
+    </button>
     </div>
+</div>
+</div>    
 </EditForm>
+        </div>
+    </div>
+
 
 @if (!string.IsNullOrEmpty(message))
 {

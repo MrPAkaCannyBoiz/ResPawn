@@ -28,11 +28,13 @@ builder.Services.AddScoped<IGetCustomerService, HttpGetCustomerService>();
 builder.Services.AddScoped<ICustomerInspectionService, HttpCustomerInspectionService>();
 //builder.Services.AddScoped<SimpleAuthProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthProvider>();
+builder.Services.AddScoped<CustomAuthProvider>();
 builder.Services.AddScoped<IAuthService, HttpJwtCustomerAuthLoginService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IProductInspectionClient, HttpProductInspectionClient>();
 builder.Services.AddScoped<IResellerAuthService, HttpJwtResellerAuthService>();
 builder.Services.AddScoped<IGetAddressService, HttpGetAddressService>();
+
 
 AuthorizationPolicies.AddPolicies(builder.Services); // add custom authorization policies
 
