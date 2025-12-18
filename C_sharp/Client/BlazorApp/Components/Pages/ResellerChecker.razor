@@ -21,7 +21,7 @@ else if (!string.IsNullOrEmpty(_error))
 {
     <div class="alert alert-danger">@_error</div>
 }
-else if (_products is null || _products.Count() == 0)
+else if (_allProducts is null || _allProducts.Count() == 0)
 {
     <p>No products awaiting inspection </p>
 }
@@ -32,37 +32,45 @@ else
             <option value="pending">Pending</option>
             <option value="reviewing">Reviewing</option>
         </select>
-        @foreach (var p in _products)
+        @if (_products is null || _products.Count() == 0)
         {
-            <div class="col">
-                <div class="product-card">
-    <div class="product-image-container">
-        <img src="@p.Image.Url" class="product-image" alt="@p.Name" />
-    </div>
+            <p>No pending/reviewing products awaiting for inspection</p>
+        }
+        else
+        {
+            @foreach (var p in _products!)
+            {
+                <div class="col">
+                    <div class="product-card">
+                        <div class="product-image-container">
+                            <img src="@p.Image.Url" class="product-image" alt="@p.Name" />
+                        </div>
 
-    <div class="product-card-body">
-        <h5 class="product-title">@p.Name</h5>
-        <p class="product-price">@p.Price.ToString("0.00") DKK</p>
+                        <div class="product-card-body">
+                            <h5 class="product-title">@p.Name</h5>
+                            <p class="product-price">@p.Price.ToString("0.00") DKK</p>
 
-        <div class="product-meta">
-            <span><strong>Condition:</strong> @p.Condition</span><br />
-            <span><strong>Status:</strong> @p.ApprovalStatus</span><br />
-        </div>
+                            <div class="product-meta">
+                                <span><strong>Condition:</strong> @p.Condition</span><br />
+                                <span><strong>Status:</strong> @p.ApprovalStatus</span><br />
+                            </div>
 
-        <button class="btn btn-primary w-100 mt-2"
-                @onclick="() => GoToDetails(p.Id)">
-            Inspect Product
-        </button>
-    </div>
-</div>
+                            <button class="btn btn-primary w-100 mt-2"
+                                    @onclick="() => GoToDetails(p.Id)">
+                                Inspect Product
+                            </button>
+                        </div>
+                    </div>
 
-            </div>
+                </div>
+            }
         }
     </div>
 }
 
 @code {
     private IQueryable<ProductWithFirstImageDto>? _products;
+    private IQueryable<ProductWithFirstImageDto>? _allProducts;
     private bool _loading = true;
     private string? _error;
 
@@ -73,7 +81,7 @@ else
             _loading = true;
             _error = null;
             _products = (await GetProductService.GetAllPendingAsync()).OrderBy(p => p.RegisterDate);
-
+            _allProducts = (await GetProductService.GetAllAsync()).OrderBy(p => p.RegisterDate);
         }
         catch (Exception ex)
         {
