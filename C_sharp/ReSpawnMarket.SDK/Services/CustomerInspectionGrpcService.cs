@@ -9,7 +9,7 @@ namespace ReSpawnMarket.SDK.Services;
 
 public class CustomerInspectionGrpcService : ICustomerInspectionService
 {
-    public readonly CustomerInspectionService.CustomerInspectionServiceClient _grpcClient;
+    private readonly CustomerInspectionService.CustomerInspectionServiceClient _grpcClient;
     public CustomerInspectionGrpcService(CustomerInspectionService.CustomerInspectionServiceClient grpcClient)
     {
         _grpcClient = grpcClient;
