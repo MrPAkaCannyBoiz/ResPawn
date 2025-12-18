@@ -271,7 +271,60 @@ public class UploadProductServiceImplTest
           verify(imageRepository, never()).saveAll(any());
       }
 
+    @Test
+    void uploadProduct_BlackBox_VerifiesResponseOnly()
+    {
+        // 1. Arrange (Inputs & Environment Stubbing)
+        int customerId = 100;
+        CustomerEntity mockCustomer = new CustomerEntity();
+        mockCustomer.setId(customerId);
 
+        // Stubbing dependencies is required for the code to run,
+        // but in a black-box style test, we treat this as "system configuration"
+        // and do not assert on how these mocks were called.
+        when(customerRepository.findById(customerId)).thenReturn(java.util.Optional.of(mockCustomer));
+
+        when(productRepository.save(any(ProductEntity.class))).thenAnswer(inv -> {
+            ProductEntity p = inv.getArgument(0);
+            p.setId(12345); // Simulate DB ID generation
+            if (p.getRegisterDate() == null) p.setRegisterDate(LocalDateTime.now());
+            return p;
+        });
+
+        com.respawnmarket.UploadProductRequest request = com.respawnmarket.UploadProductRequest.newBuilder()
+                .setSoldByCustomerId(customerId)
+                .setName("Black Box Item")
+                .setPrice(25.50)
+                .setCondition("Mint")
+                .setDescription("Boxed")
+                .setCategory(Category.ELECTRONICS)
+                .addImageUrl("http://img.com/1.jpg")
+                .build();
+
+        StreamObserver<com.respawnmarket.UploadProductResponse> responseObserver = mock(StreamObserver.class);
+
+        // 2. Act
+        service.uploadProduct(request, responseObserver);
+
+        // 3. Assert (External Outputs Only)
+        // We verify the output sent to the client (responseObserver)
+        // without inspecting the internal state of the repositories or entities.
+        ArgumentCaptor<com.respawnmarket.UploadProductResponse> responseCaptor =
+                ArgumentCaptor.forClass(com.respawnmarket.UploadProductResponse.class);
+
+        verify(responseObserver).onNext(responseCaptor.capture());
+        com.respawnmarket.UploadProductResponse response = responseCaptor.getValue();
+
+        // Assertions focus on the contract: Input Request -> Output Response
+        assertEquals(12345, response.getProduct().getId());
+        assertEquals("Black Box Item", response.getProduct().getName());
+        assertEquals(com.respawnmarket.ApprovalStatus.PENDING, response.getProduct().getApprovalStatus());
+        assertEquals(1, response.getImagesCount());
+        assertEquals("http://img.com/1.jpg", response.getImages(0).getUrl());
+
+        verify(responseObserver).onCompleted();
+        verify(responseObserver, never()).onError(any());
+    }
 
 
 

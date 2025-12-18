@@ -7,7 +7,5 @@ import java.util.Optional;
 
 public interface InspectionRepository extends JpaRepository<InspectionEntity, Integer>
 {
-  //  testing purposes
-  Optional<InspectionEntity> findTopByProductIdOrderByIdDesc(int productId);
 
 }
