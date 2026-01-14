@@ -10,7 +10,8 @@ ResPawnMarket is an online pawn shop clone modeled based on typical e-commerce p
 # Learning Outcome
 - gRPC (Server in Spring Boot (Java)/ Client in .NET (C#)
 - RESTful API
-- TLS/SSL
+- TLS/SSL via asymmetric keys pairs
+- http to https via asymmetric keys pairs
 - Blazor
 
 
