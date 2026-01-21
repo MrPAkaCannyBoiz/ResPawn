@@ -1,9 +1,11 @@
 ﻿using ApiContracts.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ReSpawnMarket.SDK.ServiceInterfaces;
 
 namespace WebAPI.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("/api/customer/inspection")]
 public class CustomerInspectionController : ControllerBase
@@ -15,10 +17,6 @@ public class CustomerInspectionController : ControllerBase
     }
 
     [HttpPatch("{customerId}")]
-    [ProducesResponseType(typeof(EnableSellDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(KeyNotFoundException), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ApplicationException), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> SetCanSellAsync([FromBody] EnableSellDto dto, 
         int customerId, CancellationToken ct)
     {

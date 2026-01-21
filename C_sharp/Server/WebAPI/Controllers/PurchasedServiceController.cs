@@ -6,114 +6,112 @@ using ApiContracts.Dtos;
 using Com.Respawnmarket;
 using System.Runtime.Serialization;
 using Grpc.Core;
+using Microsoft.AspNetCore.Authorization;
 
-namespace WebAPI.Controllers
+namespace WebAPI.Controllers;
+
+[Authorize]
+[Route("/api/purchases")]
+[ApiController]
+public class PurchasedServiceController : ControllerBase
 {
-    [Route("/api/purchases")]
-    [ApiController]
-    public class PurchasedServiceController : ControllerBase
+    private readonly IPurchaseService purchaseService;
+    public PurchasedServiceController(IPurchaseService purchaseService)
     {
-        private readonly IPurchaseService purchaseService;
-        public PurchasedServiceController(IPurchaseService purchaseService)
+        this.purchaseService = purchaseService;
+    }
+
+
+    [HttpPost]
+    public async Task<IActionResult> BuyProductsAsync([FromBody] BuyProductRequestDto dto, CancellationToken ct)
+    {
+        if(!ModelState.IsValid) return ValidationProblem(ModelState);
+        Console.WriteLine(
+            $"[WebAPI] BuyProducts: CustomerId={dto.CustomerId}, " +
+            $"ItemsCount={dto.Items?.Count ?? 0}, " +
+            $"FirstItemProductId={dto.Items?.FirstOrDefault()?.ProductId}, " +
+            $"FirstItemQuantity={dto.Items?.FirstOrDefault()?.Quantity}");
+            //Map API DTO -> gRPC request
+        var grpcReq = new BuyProductsRequest
         {
-            this.purchaseService = purchaseService;
+           CustomerId = dto.CustomerId
+        };
+        grpcReq.Items.Add(dto.Items.Select(i=> new CartItem
+        {
+            ProductId = i.ProductId,
+            Quantity = i.Quantity
+        }));
+        BuyProductsResponse grpcRes;
+        try
+        {
+            grpcRes = await purchaseService.BuyProductsAsync(grpcReq, ct);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (ApplicationException ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
+        if (grpcRes.Transaction is null || grpcRes.ShoppingCart is null)
+        {
+            return StatusCode(StatusCodes.Status502BadGateway, "Upstream gRPC service returned an incomplete response");
         }
 
 
-        [HttpPost]
-        [ProducesResponseType(typeof(BuyProductsResultDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
-        public async Task<IActionResult> BuyProductsAsync([FromBody] BuyProductRequestDto dto, CancellationToken ct)
+        // Map gRpc to dto
+        var TxDto = new TransactionDto{
+                Id = grpcRes.Transaction.Id,
+             Date = grpcRes.Transaction.Date.ToDateTime(),
+             ShoppingCartId = grpcRes.Transaction.ShoppingCartId, // or ShoppingCartId if you rename it
+             CustomerId = grpcRes.Transaction.CustomerId
+        };
+        //grpc shoppincCartDto
+            var CartDto = new ShoppinCartDto
+            {
+                Id =grpcRes.ShoppingCart.Id,
+                TotalPrice = grpcRes.ShoppingCart.TotalPrice
+            };
+            var CartProductDtos = grpcRes.CartProducts
+            .Select(cp => new CartProductDto
+            {
+                CartId = cp.CartId,
+                ProductId = cp.ProductId,
+                Quantity = cp.Quantity
+            })
+            .ToList();
+        
+            var productDtos = grpcRes.PurchasedProducts
+            .Select(p => new ProductDto
+            {
+                Id = p.Id,
+                Price = p.Price,
+                Sold = p.Sold,
+                Condition = p.Condition,
+                ApprovalStatus = p.ApprovalStatus.ToString(),
+                Name = p.Name,
+           
+                Category = p.Category.ToString(),
+                Description = p.Description,
+                SoldByCustomerId = p.SoldByCustomerId,
+                RegisterDate = p.RegisterDate.ToDateTime()
+            })
+            .ToList();
+
+        // Wrap everything in one result DTO
+        var result = new BuyProductsResultDto
         {
-            if(!ModelState.IsValid) return ValidationProblem(ModelState);
-            Console.WriteLine(
-                $"[WebAPI] BuyProducts: CustomerId={dto.CustomerId}, " +
-                $"ItemsCount={dto.Items?.Count ?? 0}, " +
-                $"FirstItemProductId={dto.Items?.FirstOrDefault()?.ProductId}, " +
-                $"FirstItemQuantity={dto.Items?.FirstOrDefault()?.Quantity}");
-                //Map API DTO -> gRPC request
-            var grpcReq = new BuyProductsRequest
-            {
-               CustomerId = dto.CustomerId
-            };
-            grpcReq.Items.Add(dto.Items.Select(i=> new CartItem
-            {
-                ProductId = i.ProductId,
-                Quantity = i.Quantity
-            }));
-            BuyProductsResponse grpcRes;
-            try
-            {
-                grpcRes = await purchaseService.BuyProductsAsync(grpcReq, ct);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (ApplicationException ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
-            }
-            if (grpcRes.Transaction is null || grpcRes.ShoppingCart is null)
-            {
-                return StatusCode(StatusCodes.Status502BadGateway, "Upstream gRPC service returned an incomplete response");
-            }
+            Transaction = TxDto,
+            ShoppingCart = CartDto,
+            CartProducts = CartProductDtos,
+            PurchasedProduct = productDtos
+        };
+        return Ok(result);
+    }
 
-
-            // Map gRpc to dto
-            var TxDto = new TransactionDto{
-                    Id = grpcRes.Transaction.Id,
-                 Date = grpcRes.Transaction.Date.ToDateTime(),
-                 ShoppingCartId = grpcRes.Transaction.ShoppingCartId, // or ShoppingCartId if you rename it
-                 CustomerId = grpcRes.Transaction.CustomerId
-            };
-            //grpc shoppincCartDto
-                var CartDto = new ShoppinCartDto
-                {
-                    Id =grpcRes.ShoppingCart.Id,
-                    TotalPrice = grpcRes.ShoppingCart.TotalPrice
-                };
-                var CartProductDtos = grpcRes.CartProducts
-                .Select(cp => new CartProductDto
-                {
-                    CartId = cp.CartId,
-                    ProductId = cp.ProductId,
-                    Quantity = cp.Quantity
-                })
-                .ToList();
-            
-                var productDtos = grpcRes.PurchasedProducts
-                .Select(p => new ProductDto
-                {
-                    Id = p.Id,
-                    Price = p.Price,
-                    Sold = p.Sold,
-                    Condition = p.Condition,
-                    ApprovalStatus = p.ApprovalStatus.ToString(),
-                    Name = p.Name,
-               
-                    Category = p.Category.ToString(),
-                    Description = p.Description,
-                    SoldByCustomerId = p.SoldByCustomerId,
-                    RegisterDate = p.RegisterDate.ToDateTime()
-                })
-                .ToList();
-
-            // Wrap everything in one result DTO
-            var result = new BuyProductsResultDto
-            {
-                Transaction = TxDto,
-                ShoppingCart = CartDto,
-                CartProducts = CartProductDtos,
-                PurchasedProduct = productDtos
-            };
-            return Ok(result);
-        }
-
-}
 }

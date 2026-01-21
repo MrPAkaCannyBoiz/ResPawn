@@ -5,11 +5,13 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using ApiContracts.Dtos;
 using Com.Respawnmarket;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ReSpawnMarket.SDK.ServiceInterfaces;
 
 namespace WebAPI.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("/api/inspection")]
 public class ProductInspectionController : ControllerBase
