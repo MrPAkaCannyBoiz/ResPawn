@@ -155,6 +155,7 @@ public class ProductInspectionServiceImpl extends com.respawnmarket.ProductInspe
         if (request.getIsAccepted()) //true -> approved
         {
             product.setApprovalStatus(ApprovalStatusEnum.APPROVED);
+
         }
         else if (!request.getIsAccepted() && !request.getComments().isEmpty())
         {
