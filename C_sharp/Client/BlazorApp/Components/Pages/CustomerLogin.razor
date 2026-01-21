@@ -6,6 +6,8 @@
 @using System.Security.Claims
 @inject IAuthService customerAuthService
 
+
+
 @code 
 {
     private string _email;
@@ -67,31 +69,68 @@
 
 }
 
-<h3>Login</h3>
+<link href="css/Login.css" rel="stylesheet" />
+
+<div class="login-shell">
+    <div class="login-card-2col">
+
+        <!-- LEFT BRANDING SIDE -->
+        <div class="login-left">
+            <div class="brand-badge">ReSpawnMarket</div>
+            <h2 class="left-title">Buy & sell second-hand smarter.</h2>
+            <p class="left-subtitle">
+                Join a trusted community marketplace where every deal is safer and easier to manage.
+            </p>
+
+            <ul class="left-feature-list">
+                <li>✔ Secure customer accounts</li>
+                <li>✔ Activity overview in one place</li>
+                <li>✔ Easy access from any device</li>
+            </ul>
+            
+        </div>
+
+        <!-- RIGHT LOGIN FORM SIDE -->
+        <div class="login-right">
+
+            <h2 class="auth-title">Sign in to your account</h2>
+            <p class="auth-subtitle">
+                Access your dashboard and manage your activity.
+            </p>
 
 <AuthorizeView>
     <NotAuthorized>
-        <h3>Please login</h3>
+
+    <div class="form-section">
+        <h3>Customer Login</h3>
 		<label>Email:</label>
 		<input type="text" @bind="_email" />
         @if (!IsValidEmail(_email))
         {
-            <label style="color: red">
+            <div class="error-box">
                 Invaild email format.
-            </label>
+            </div>
         }
-        <label>Password:</label>
+        <label class="form-label">Password:</label>
 		<input type="password" @bind="_password" />
 		@if (!string.IsNullOrEmpty(_loginMessage))
 		{
-			<label style="color: red">
+			<div class="error-box">
 				@_loginMessage
-			</label>
+			</div>
 		}
-        <button @onclick="() => LoginAsync()">Login</button>
+
+        <button class="btn-primary" @onclick="() => LoginAsync()">Login</button>
+    </div>
+
+    <!-- Feature -->
+                <div class="feature-box">
+                    🔒 Secure login protected by ReSpawnMarket authentication
+                </div>
+
     </NotAuthorized>
     <Authorized>
-        <h3>
+       <!--<h3>
             ur claim:
             @foreach (var claim in context.User.Claims)
             {
@@ -101,6 +140,16 @@
             @context.User.FindFirst(ClaimTypes.GivenName)?.Value
             @context.User.FindFirst(ClaimTypes.Surname)?.Value
 			<button @onclick="() => LogoutAsync()">Logout</button>
-        </h3>
+        </h3>-->
+        
+        <div class="success-box">
+                    <h3>Welcome back, 
+                    @context.User.FindFirst(ClaimTypes.GivenName)?.Value
+                    @context.User.FindFirst(ClaimTypes.Surname)?.Value</h3>
+                <button class="logout-btn" @onclick="() => LogoutAsync()">Logout</button>
+        </div>
     </Authorized>
 </AuthorizeView>
+</div>
+      </div>
+    </div>

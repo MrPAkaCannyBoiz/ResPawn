@@ -48,7 +48,7 @@ public class HttpGetProductService : IGetProductService
        {
            throw new Exception($"Error getting posts: {httpResponse.StatusCode}, {textResponse}");
        }
-        return JsonSerializer.Deserialize<DetailedProductDto>(textResponse,
+       return JsonSerializer.Deserialize<DetailedProductDto>(textResponse,
               JsonCaseInsensitiveExtension.MakeJsonCaseInsensitive())!;
     }
     public async Task<IQueryable<ProductWithFirstImageDto>> GetAllAvailableAsync()
@@ -98,7 +98,7 @@ public class HttpGetProductService : IGetProductService
 
     public async Task<List<ProductWithFirstImageDto>> GetCustomerProductsAsync(int customerId)
     {
-        //testisg
+        //testing
          HttpResponseMessage httpResponse =
         await _httpClient.GetAsync($"api/products/customer/{customerId}");
 

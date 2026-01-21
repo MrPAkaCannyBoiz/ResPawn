@@ -1,0 +1,129 @@
+/* Page background */
+.register-shell {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle at top left, #e1e9ff, #e7edff, #f2f6ff);
+}
+
+/* MAIN 2-COL CARD */
+.register-card-2col {
+    width: 90%;
+    max-width: 1500px;
+    min-height: 78vh;
+
+    background: white;
+    border-radius: 26px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    box-shadow: 0 18px 40px rgba(15,23,42,0.18);
+}
+
+
+.register-left {
+    padding: 60px 55px;
+    position: relative;
+
+    background: linear-gradient(145deg, #3b1c88, #162a78, #14305e);
+    color: white;
+}
+
+/* Decorative blurred bubbles */
+.bubble {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(40px);
+    opacity: 0.30;
+}
+
+.small-b1 {
+    width: 140px;
+    height: 140px;
+    background: #ff9f43;
+    top: 40px;
+    right: 60px;
+}
+
+.small-b2 {
+    width: 120px;
+    height: 120px;
+    background: #53ffa1;
+    bottom: 60px;
+    left: 50px;
+}
+
+
+.brand-badge {
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.15);
+    margin-bottom: 20px;
+}
+
+.left-title {
+    font-size: 34px;
+    font-weight: 700;
+}
+
+.left-subtitle {
+    margin-top: 12px;
+    max-width: 330px;
+    opacity: 0.9;
+    margin-bottom: 24px;
+}
+
+.left-feature-list {
+    margin-top: 20px;
+    list-style: none;
+    padding: 0;
+}
+.left-feature-list li {
+    margin-bottom: 12px;
+    font-size: 15px;
+}
+
+
+.register-right {
+    padding: 60px 55px;
+}
+
+.auth-title {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.auth-subtitle {
+    color: #64748b;
+    margin-bottom: 30px;
+}
+
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+.input-field {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 14px;
+    margin-top: 22px;
+    border-radius: 12px;
+    background: #3b82f6;
+    color: white;
+    font-size: 17px;
+    border: none;
+    cursor: pointer;
+}
+.btn-primary:hover {
+    background: #2563eb;
+}

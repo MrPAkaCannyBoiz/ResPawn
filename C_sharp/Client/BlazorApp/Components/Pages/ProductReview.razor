@@ -2,6 +2,7 @@
 @attribute [Authorize(Roles = "Reseller")]
 @using ApiContracts.Dtos
 @using BlazorApp.Services.Interface
+@using Microsoft.AspNetCore.Components.Web
 @rendermode InteractiveServer
 @inject IProductInspectionService inspectionService
 @inject NavigationManager Nav
@@ -136,7 +137,7 @@ else
             @onclick="@(() => Nav.NavigateTo("/resellercheck"))">
             Back to list
         </button>
-        </EditForm>
+                </EditForm>
 
         if (!string.IsNullOrEmpty(error))
         {

@@ -7,7 +7,11 @@
 @inject IGetCustomerService GetCustomerService
 @inject NavigationManager Nav
 
-<h3>Customer</h3>
+<link href="css/Customer.css" rel="stylesheet" />
+<div class="profile-page">
+    <div class="profile-card">
+
+        <h2 class="profile-title">Customer Profile</h2>
 
 @if (_loading)
 {
@@ -23,16 +27,31 @@ else if (_customer is null)
 }
 else
 {
-    <dl class="row">
-        <dt class="col-sm-3">Id</dt><dd class="col-sm-9">@_customer.Id</dd>
-        <dt class="col-sm-3">Name</dt><dd class="col-sm-9">@_customer.FirstName @_customer.LastName</dd>
-        <dt class="col-sm-3">Email</dt><dd class="col-sm-9">@_customer.Email</dd>
-        <dt class="col-sm-3">Phone</dt><dd class="col-sm-9">@_customer.PhoneNumber</dd>
-        <dt class="col-sm-3">Address</dt>
-        <dd class="col-sm-9">@_customer.StreetName, @_customer.SecondaryUnit<br/>@_customer.PostalCode @_customer.City</dd>
-    </dl>
-	<button class="btn btn-primary" @onclick="NavigateToUpdateCustomer">Go To Update Customer</button>
+<div class="profile-grid">
+    <div class="label">Id</div>
+    <div class="value">@_customer.Id</div>
+
+    <div class="label">FirstName</div>
+    <div class="value">@_customer.FirstName</div>
+    
+    <div class="label">LastName</div>
+    <div class="value">@_customer.LastName</div>
+
+
+    <div class="label">Email</div>
+    <div class="value">@_customer.Email</div>
+
+    <div class="label">Phone</div>
+    <div class="value">@_customer.PhoneNumber</div>
+
+    <div class="label">Address</div>
+        <div class="value">@_customer.StreetName, @_customer.SecondaryUnit<br/>@_customer.PostalCode @_customer.City</div>
+        
+</div>
+	 <button class="update-btn"  @onclick="NavigateToUpdateCustomer">Go To Update Customer</button>
 }
+    </div>
+</div>
 
 @code {
     private int id { get; set; }
