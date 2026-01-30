@@ -2,7 +2,7 @@
 SEP3 (Heterogeneous System) VIA Uni Horsens project
 
 > [!NOTE]
-> **Project Continuation:** This repository serves as the archive for the SEP3 semester project. 
+> **Project Continuation:** This repository serves as the archive for the third semester, SEP3 project. 
 > I **(Can/Kanku)** personally love this project and can see this project can be further develop is web app into **production level**. 
 Therefore I am continuing active development (update security, improve architectures, migrating to Angular/React, adding Kafka, Docker, etc.) in the **[Re-birth-sPawnMarket](https://github.com/MrPAkaCannyBoiz/Re-birth-sPawnMarket)** repository. Please check it out for the latest updates!
 
