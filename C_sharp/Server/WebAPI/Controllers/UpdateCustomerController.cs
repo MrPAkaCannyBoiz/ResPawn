@@ -27,7 +27,16 @@ public class UpdateCustomerController : ControllerBase
         var claimId = User.FindFirst("CustomerId")?.Value;
 
         // Verify that the claim exists and matches the requested customerId
-        if (!int.TryParse(claimId, out int authId) || authId != customerId)
+
+        if (string.IsNullOrEmpty(claimId))
+        {
+            return StatusCode(StatusCodes.Status401Unauthorized, "Authentication is required to update this profile.");
+        }
+        if (!int.TryParse(claimId, out int authId))
+        {
+            return StatusCode(StatusCodes.Status401Unauthorized, "Authentication information is invalid.");
+        }
+        if (authId != customerId)
         {
             return StatusCode(StatusCodes.Status403Forbidden, "You are not authorized to update this profile.");
         }

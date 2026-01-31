@@ -21,11 +21,12 @@ public class PurchasedServiceController : ControllerBase
         this.purchaseService = purchaseService;
     }
 
-
+    
     [HttpPost]
     public async Task<IActionResult> BuyProductsAsync([FromBody] BuyProductRequestDto dto, CancellationToken ct)
     {
-        if(!ModelState.IsValid) return ValidationProblem(ModelState);
+        int givenCustomerId = int.TryParse(User.FindFirst("CustomerId")?.Value, out var id) ? id : 0;
+        if (!ModelState.IsValid && givenCustomerId == dto.CustomerId) return ValidationProblem(ModelState);
         Console.WriteLine(
             $"[WebAPI] BuyProducts: CustomerId={dto.CustomerId}, " +
             $"ItemsCount={dto.Items?.Count ?? 0}, " +
@@ -72,7 +73,7 @@ public class PurchasedServiceController : ControllerBase
              CustomerId = grpcRes.Transaction.CustomerId
         };
         //grpc shoppincCartDto
-            var CartDto = new ShoppinCartDto
+            var CartDto = new ShoppingCartDto
             {
                 Id =grpcRes.ShoppingCart.Id,
                 TotalPrice = grpcRes.ShoppingCart.TotalPrice

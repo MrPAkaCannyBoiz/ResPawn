@@ -23,6 +23,11 @@ public class UploadProductController : ControllerBase
     public async Task<IActionResult> UploadProductAsync([FromBody] UploadProductDto dto, 
         [FromRoute] int customerId ,CancellationToken ct)
     {
+        var customerClaimId = int.TryParse(User.FindFirst("CustomerId")?.Value, out var id) ? id : 0;
+        if (customerClaimId != customerId)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, "You are not authorized to Upload the product.");
+        }
         var grpcRequest = new UploadProductRequest
         {
             Price = dto.Price,
