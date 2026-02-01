@@ -107,9 +107,6 @@ public class GetProductController: ControllerBase
     }
 
     [HttpGet("pending")]
-    [ProducesResponseType(typeof(IQueryable<ProductWithFirstImageDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(List<ProductWithFirstImageDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetPendingProductsAsync(CancellationToken ct)
     {
         var grpcRequest = new GetPendingProductsRequest
@@ -162,9 +159,6 @@ public class GetProductController: ControllerBase
     }
 
     [HttpGet("available")]
-    [ProducesResponseType(typeof(IQueryable<ProductWithFirstImageDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(List<ProductWithFirstImageDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetAvailableProductsAsync(CancellationToken ct)
     {
         var grpcRequest = new GetAllAvailableProductsRequest
@@ -217,9 +211,6 @@ public class GetProductController: ControllerBase
     }
 
     [HttpGet("reviewing")]
-    [ProducesResponseType(typeof(IQueryable<ProductWithFirstImageDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(List<ProductWithFirstImageDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetAllReviewingProductsAsync(CancellationToken ct)
     {
         var grpcRequest = new GetAllReviewingProductsRequest

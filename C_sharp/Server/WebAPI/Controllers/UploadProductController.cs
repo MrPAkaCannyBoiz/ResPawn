@@ -1,5 +1,6 @@
 ﻿using ApiContracts.Dtos;
 using Com.Respawnmarket;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ReSpawnMarket.SDK.ServiceExceptions;
 using ReSpawnMarket.SDK.ServiceInterfaces;
@@ -17,14 +18,16 @@ public class UploadProductController : ControllerBase
         _uploadProductService = uploadProductService;
     }
 
+    [Authorize]
     [HttpPost("customers/{customerId}")]
-    // handle the exception globally
-    [ProducesResponseType(typeof(UploadProductDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
     public async Task<IActionResult> UploadProductAsync([FromBody] UploadProductDto dto, 
         [FromRoute] int customerId ,CancellationToken ct)
     {
+        var customerClaimId = int.TryParse(User.FindFirst("CustomerId")?.Value, out var id) ? id : 0;
+        if (customerClaimId != customerId)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, "You are not authorized to Upload the product.");
+        }
         var grpcRequest = new UploadProductRequest
         {
             Price = dto.Price,

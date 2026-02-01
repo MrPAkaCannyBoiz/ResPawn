@@ -1,14 +1,14 @@
 ﻿using ApiContracts.Dtos;
 using Com.Respawnmarket;
 using Grpc.Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ReSpawnMarket.SDK.ServiceExceptions;
 using ReSpawnMarket.SDK.ServiceInterfaces;
 
 namespace WebAPI.Controllers;
 
-// TODO : Introduce second address for customer and its dto at some point 
-// TODO : handle exceptions for gRPC calls like the other class does
+[Authorize]
 [Route("/api/customers")]
 [ApiController]
 public class UpdateCustomerController : ControllerBase
@@ -22,13 +22,25 @@ public class UpdateCustomerController : ControllerBase
 
 
     [HttpPatch("{customerId}")] //partial update: use PATCH
-
-    [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(CustomerDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
     public async Task<IActionResult> UpdateCustomerAsync([FromBody] UpdateCustomerDto dto, int customerId, CancellationToken ct)
     {
+        var claimId = User.FindFirst("CustomerId")?.Value;
+
+        // Verify that the claim exists and matches the requested customerId
+
+        if (string.IsNullOrEmpty(claimId))
+        {
+            return StatusCode(StatusCodes.Status401Unauthorized, "Authentication is required to update this profile.");
+        }
+        if (!int.TryParse(claimId, out int authId))
+        {
+            return StatusCode(StatusCodes.Status401Unauthorized, "Authentication information is invalid.");
+        }
+        if (authId != customerId)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, "You are not authorized to update this profile.");
+        }
+
         var grpcReq = new UpdateCustomerRequest
         {
             CustomerId = customerId,
