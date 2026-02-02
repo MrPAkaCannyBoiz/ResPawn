@@ -1,7 +1,7 @@
 # ResPawn
 
 > [!NOTE]
-> **Project Continuation:** This repository serves as personal project continuing for the third semester, SEP3 project. 
+> **Project Continuation:** This repository serves as personal project continuing from the third semester, SEP3 project. 
 > I developed my semester project because I can see the project can be further develop is web app into **production level** and make a good practice to continuing project rather than doing it whole new. 
 Therefore I am continuing active development (update security, improve architectures, migrating to Angular/React, adding Kafka, Docker, etc.).
 
@@ -15,6 +15,7 @@ ResPawn is an online pawn shop clone modeled based on typical e-commerce platfor
 - Blazor
 - Kafka/kRaft
 - Docker
+- Microservices
 
 # Working Process
 - UP (Unified Process)
