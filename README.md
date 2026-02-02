@@ -1,12 +1,11 @@
-# ResPawnMarket
-SEP3 (Heterogeneous System) VIA Uni Horsens project
+# ResPawn
 
 > [!NOTE]
-> **Project Continuation:** This repository serves as the archive for the third semester, SEP3 project. 
-> I **(Can/Kanku)** personally love this project and can see this project can be further develop is web app into **production level**. 
-Therefore I am continuing active development (update security, improve architectures, migrating to Angular/React, adding Kafka, Docker, etc.) in the **[Re-birth-sPawnMarket](https://github.com/MrPAkaCannyBoiz/Re-birth-sPawnMarket)** repository. Please check it out for the latest updates!
+> **Project Continuation:** This repository serves as personal project continuing for the third semester, SEP3 project. 
+> I developed my semester project because I can see the project can be further develop is web app into **production level** and make a good practice to continuing project rather than doing it whole new. 
+Therefore I am continuing active development (update security, improve architectures, migrating to Angular/React, adding Kafka, Docker, etc.).
 
-ResPawnMarket is an online pawn shop clone modeled based on typical e-commerce platforms. We've adapted the standard online shopping experience to create a pawn shop environment where users can sell their items to the store and receive payment if the shop accepts their offer.
+ResPawn is an online pawn shop clone modeled based on typical e-commerce platforms and chat system. We've adapted the standard online shopping experience to create a pawn shop environment where users can sell their items to the store and receive payment if the shop accepts their offer.
 
 # Learning Outcome
 - gRPC (Server in Spring Boot (Java)/ Client in .NET (C#)
@@ -14,6 +13,8 @@ ResPawnMarket is an online pawn shop clone modeled based on typical e-commerce p
 - TLS/SSL via asymmetric keys pairs
 - http to https via asymmetric keys pairs
 - Blazor
+- Kafka/kRaft
+- Docker
 
 # Working Process
 - UP (Unified Process)
