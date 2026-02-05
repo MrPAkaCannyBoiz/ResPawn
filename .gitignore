@@ -18,15 +18,11 @@ out/
 sep3key/
 /self_signed_cert
 
-# self-signed certificates (JKS/p12)
-*.jks
-*.p12
-sep3key/
-/self_signed_cert
-
 # IDE from IntelilJ IDE files
 /.idea
 /java_projects/.idea
 /ResPawnMarket.iml
 .fake
 /C_sharp/.idea/.idea.C_sharp/.idea
+/.idea/dataSources/
+*.idea

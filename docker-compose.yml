@@ -1,0 +1,47 @@
+#version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: portgres
+    environment:
+      # These ${VARIABLES} are read from the .env file in the same directory as docker-compose.yml
+      POSTGRES_DB: respawn_market
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  grpc-server-springboot-service:
+      build:
+        context: .
+        dockerfile: java_project/ReSpawnMarket/Dockerfile
+      container_name: respawn-shichiya-grpc-server
+      ports:
+        - "8080:8080"
+        - "6767:6767"
+
+    # This tell docker to load the .env file and make the variables available to the services
+      env_file:
+        - ./java_project/ReSpawnMarket/.env
+      
+      environment:
+        SPRING_DATASOURCE_URL: ${DOCKER_DB_URL}
+        SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+        SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+        SPRING_JPA_HIBERNATE_DDL_AUTO: update
+        SPRING_GRPC_SERVER_PORT: 6767
+
+        KEYPATH: ${RELATIVE_KEY_PATH}
+        KEYPASSWORD: ${KEY_PASSWORD}
+      
+      volumes:
+        - ./self_signed_certs:/app/self_signed_certs:ro
+      depends_on:
+        postgres:
+          condition: service_healthy
