@@ -1,11 +1,21 @@
-# ResPawn
+# ResPawn-Shichiya
+
+### Table of Contents
+- [Overview](#overview)
+- [Learning Outcome](#learning-outcome)
+- [Working Process](#working-process)
+- [Analyses & Designs](#analyses--designs)
+- [TLS/SSL Certificate Setup Guide](#tlsssl-certificate-setup-guide)
 
 > [!NOTE]
 > **Project Continuation:** This repository serves as personal project continuing from the third semester, SEP3 project. 
 > I developed my semester project because I can see the project can be further develop is web app into **production level** and make a good practice to continuing project rather than doing it whole new. 
 Therefore I am continuing active development (update security, improve architectures, migrating to Angular/React, adding Kafka, Docker, etc.).
 
-ResPawn is an online pawn shop clone modeled based on typical e-commerce platforms and chat system. We've adapted the standard online shopping experience to create a pawn shop environment where users can sell their items to the store and receive payment if the shop accepts their offer.
+# Overview
+ResPawn-Shichiya is an online pawn shop clone modeled based on typical e-commerce platforms and chat system. We've adapted the standard online shopping experience to create a pawn shop environment where users can sell their items to the store and receive payment if the shop accepts their offer.
+
+Demo on Youtube: [Link Here](https://youtu.be/FjboqOlDwV8). Credits to [OliverX04](https://github.com/OliverX04) as voice over.
 
 # Learning Outcome
 - gRPC (Server in Spring Boot (Java)/ Client in .NET (C#)
