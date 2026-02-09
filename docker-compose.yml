@@ -2,7 +2,7 @@
 
 services:
   postgres:
-    image: postgres:15
+    image: postgres:15-trixie
     container_name: portgres
     environment:
       # These ${VARIABLES} are read from the .env file in the same directory as docker-compose.yml
@@ -11,6 +11,9 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5432:5432"
+    volumes:
+      # Format is: host_path : container_path
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
       interval: 5s
@@ -20,27 +23,35 @@ services:
   grpc-server-springboot-service:
       build:
         context: .
-        dockerfile: java_project/ReSpawnMarket/Dockerfile
+        dockerfile: java_projects/ReSpawnMarket/Dockerfile
       container_name: respawn-shichiya-grpc-server
       ports:
         - "8080:8080"
         - "6767:6767"
 
-    # This tell docker to load the .env file and make the variables available to the services
-      env_file:
-        - ./java_project/ReSpawnMarket/.env
-      
+        # copy all application properties that use ${...} 
+        # syntax to read from environment variables, as spring boot in the 
+        # container won't have access to the .env file directly, 
+        # but will read the .env variables passed in through docker-compose    
       environment:
-        SPRING_DATASOURCE_URL: ${DOCKER_DB_URL}
-        SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
-        SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+        # --- Database (Matches application.properties placeholders) ---
+        DB_URL: ${DOCKER_DB_URL}
+        DB_USERNAME: ${DB_USERNAME}
+        DB_PASSWORD: ${DB_PASSWORD}
+        DB_DRIVER: org.postgresql.Driver
         SPRING_JPA_HIBERNATE_DDL_AUTO: update
         SPRING_GRPC_SERVER_PORT: 6767
 
-        KEYPATH: ${RELATIVE_KEY_PATH}
-        KEYPASSWORD: ${KEY_PASSWORD}
+        # gRPC & Server SSL 
+        IS_SSL_ENABLED: "true"
+        KEYSTORE_LOCATION: ${RELATIVE_KEY_PATH}
+        SSL_KEYSTORE_PATH: ${RELATIVE_KEY_PATH}
+        KEYSTORE_PASSWORD: ${KEY_PASSWORD}
+        SSL_KEYSTORE_PASSWORD: ${KEY_PASSWORD}
+        KEY_PASSWORD: ${KEY_PASSWORD}
       
       volumes:
+        # Mapped ./self_signed_cert (host) to /app/self_signed_certs (container)
         - ./self_signed_certs:/app/self_signed_certs:ro
       depends_on:
         postgres:

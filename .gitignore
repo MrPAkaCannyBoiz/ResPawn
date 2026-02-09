@@ -16,7 +16,7 @@ out/
 *.jks
 *.p12
 sep3key/
-/self_signed_cert
+/self_signed_certs
 
 # IDE from IntelilJ IDE files
 /.idea
