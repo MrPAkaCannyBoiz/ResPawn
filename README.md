@@ -15,7 +15,7 @@ Therefore I am continuing active development (update security, improve architect
 # Overview
 ResPawn-Shichiya is an online pawn shop clone modeled based on typical e-commerce platforms and chat system. We've adapted the standard online shopping experience to create a pawn shop environment where users can sell their items to the store and receive payment if the shop accepts their offer.
 
-Demo on Youtube: [Link Here](https://youtu.be/FjboqOlDwV8). Credits to [OliverX04](https://github.com/OliverX04) as voice over.
+Demo on Youtube: https://youtu.be/FjboqOlDwV8. Credits to [OliverX04](https://github.com/OliverX04) as voice over.
 
 # Learning Outcome
 - gRPC (Server in Spring Boot (Java)/ Client in .NET (C#)
