@@ -21,6 +21,23 @@ ResPawn is an online pawn shop clone modeled based on typical e-commerce platfor
 - UP (Unified Process)
 - Kanban **[Link Here (TeamHood)](https://mrpdodaschool.teamhood.com/PHCAWO/Board/SPRNTS?view=KANBAN&token=Ym9hcmRWaWV3OzAxNjZkZTA3NGFlNzQ4M2Y4NGJlZjAzYTg4ZGEwY2Zl)**
 
+# Analyses & Designs
+
+### Activity Diagram
+![Activity Diagram](documents/analyses/activity_diagrams/Log%20in.svg)
+
+### System Sequence Diagram (SSD)
+![SSD Example](documents/analyses/ssds/login/LogIn.svg)
+
+### Domain Model
+![Domain Model](documents/analyses/DomainModel.svg)
+
+### Entity Relationship Diagram (EER)
+![EER](documents/images/EER.png)
+
+### Global Relations Diagram (GR)
+![GR](documents/designs/GR_ResPawnMarket.svg)
+
 # TLS/SSL Certificate Setup Guide
 
 ## Overview
