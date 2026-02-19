@@ -8,11 +8,10 @@ public class ReSpawnMarketApplication
 {
     // load .env file
 
-
-
     public static void main(String[] args)
     {
         SpringApplication.run(ReSpawnMarketApplication.class, args);
+        IO.println("Running Spring Boot on JDK 25 but with JDK 21 syntax");
     }
 
 }
