@@ -1,4 +1,4 @@
-# ResPawn-Shichiya
+# ResPawn
 
 ### Table of Contents
 - [Overview](#overview)
