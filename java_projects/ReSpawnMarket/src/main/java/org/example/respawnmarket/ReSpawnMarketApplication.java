@@ -10,8 +10,8 @@ public class ReSpawnMarketApplication
 
     public static void main(String[] args)
     {
-        SpringApplication.run(ReSpawnMarketApplication.class, args);
-        IO.println("Running Spring Boot on JDK 25 but with JDK 21 syntax");
+        SpringApplication.run(ReSpawnMarketApplication.class);
+        System.out.println("Running Spring Boot on JDK 25!");
     }
 
 }
