@@ -3,6 +3,7 @@
 ### Table of Contents
 - [Overview](#overview)
 - [Learning Outcome](#learning-outcome)
+- [Features](#features)
 - [Working Process](#working-process)
 - [Analyses & Designs](#analyses--designs)
 - [TLS/SSL Certificate Setup Guide](#tlsssl-certificate-setup-guide)
@@ -27,16 +28,29 @@ Demo on Youtube: https://youtu.be/FjboqOlDwV8. Credits to [OliverX04](https://gi
 - Docker
 - Microservices
 
+# Features
+- Customer Inspection
+- Customer Login
+- Get Address
+- Get Customer
+- Get Product
+- Product/Item Inspection
+- Purchase Product/Item
+- Register Customer
+- Reseller Login
+- Update Customer
+- Upload Product
+
 # Working Process
 - UP (Unified Process)
 - Kanban **[Link Here (TeamHood)](https://mrpdodaschool.teamhood.com/PHCAWO/Board/SPRNTS?view=KANBAN&token=Ym9hcmRWaWV3OzAxNjZkZTA3NGFlNzQ4M2Y4NGJlZjAzYTg4ZGEwY2Zl)**
 
 # Analyses & Designs
 
-### Activity Diagram
+### Activity Diagram example (login) [Link for all diagram](documents/analyses/activity_diagrams)
 ![Activity Diagram](documents/analyses/activity_diagrams/Log%20in.svg)
 
-### System Sequence Diagram (SSD)
+### System Sequence Diagram (SSD) example (login) [Link for all diagram](documents/analyses/ssds)
 ![SSD Example](documents/analyses/ssds/login/LogIn.svg)
 
 ### Domain Model

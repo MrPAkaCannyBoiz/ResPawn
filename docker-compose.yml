@@ -30,6 +30,7 @@ services:
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk' 
     volumes:
       - ./kafka_data:/tmp/kraft-combined-logs
+      
 
 
   postgres:
@@ -37,7 +38,7 @@ services:
     container_name: portgres
     environment:
       # These ${VARIABLES} are read from the .env file in the same directory as docker-compose.yml
-      POSTGRES_DB: respawn_market
+      POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
@@ -54,9 +55,9 @@ services:
 
   grpc-server-springboot-service:
       build:
-        context: .
+        context: . # starts from the directory of the docker-compose.yml file
         dockerfile: java_projects/ReSpawnMarket/Dockerfile
-      container_name: respawn-shichiya-grpc-server
+      container_name: respawn-grpc-server
       ports:
         - "8080:8080"
         - "6767:6767"
@@ -88,3 +89,37 @@ services:
       depends_on:
         postgres:
           condition: service_healthy
+
+    
+  grpc-client-dotnet-services:
+    build:
+      context: .
+      dockerfile: C_sharp/Dockerfile
+    container_name: respawn-grpc-client
+    ports:
+      - "6760:6760"
+    environment:
+      # run in development mode to enable hot reload and other dev features
+      ASPNETCORE_ENVIRONMENT: Development # remove it for production
+      # Key and certificate properties for gRPC client TLS configuration + JWT properties for authentication
+      PFX_FILE_PATH: ${PFX_FILE_PATH}
+      PFX_PASSWORD: ${PFX_PASSWORD}
+      JWT__KEY: ${JWT__KEY}
+      JWT__ISSUER: ${JWT__ISSUER}
+      JWT__AUDIENCE: ${JWT__AUDIENCE}
+      JWT__SUBJECT: ${JWT__SUBJECT}
+      
+    volumes:
+      # Mapped ./self_signed_cert (host) to /app/self_signed_certs (container)
+      - ./self_signed_certs:/app/self_signed_certs:ro # :ro means read-only
+    depends_on:
+      grpc-server-springboot-service:
+        condition: service_started
+
+volumes: # Define named volumes for data persistence
+  kafka_data:
+    name: kafka_data
+  pgdata:
+    name: pgdata
+  self_signed_certs:
+    name: self_signed_certs

@@ -25,3 +25,8 @@ sep3key/
 .fake
 /C_sharp/.idea/.idea.C_sharp/.idea
 
+# PostgreSQL local data
+pgdata/
+
+# Kafka local data
+kafka_data/
