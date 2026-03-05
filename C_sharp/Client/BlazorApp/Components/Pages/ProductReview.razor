@@ -25,7 +25,7 @@ else
     <div class="card mb-3">
         <div class="row g-0">
             <div class="col-md-4">
-                 @if (product.Images != null && product.Images.Any())
+                @if (product.Images != null && product.Images.Any())
                 {
                     @foreach (var img in product.Images)
                     {
@@ -62,6 +62,8 @@ else
             </div>
         </div>
     </div>
+}
+
 
     @if (!string.IsNullOrEmpty(successMessage))
     {
@@ -105,11 +107,9 @@ else
         }
         else
         {
-            <div class="mb-3">
+            <div class="mb-3"> 
                 <p>
-                    @(@$"Pawnshop address:
-{givenPawnshopAddress.StreetName} {givenPawnshopAddress.SecondaryUnit}
-{givenPawnshopAddress.PostalCode} {givenPawnshopAddress.City}")
+                    Pawnshop address: @givenPawnshopAddress.StreetName @givenPawnshopAddress.SecondaryUnit, @givenPawnshopAddress.PostalCode @givenPawnshopAddress.City
                 </p>
             </div>
         }
@@ -144,6 +144,7 @@ else
             <div class="alert alert-danger">@error</div>
         }
 }
+
 @code {
     [Parameter] public int ProductId { get; set; }
     private int ResellerId { get; set; }

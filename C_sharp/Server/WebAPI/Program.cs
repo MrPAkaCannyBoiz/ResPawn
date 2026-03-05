@@ -24,7 +24,7 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// registering grpc services (real implementations)
+// registering grpc services (real implementations) (Dependency Injection)
 builder.Services.AddScoped<IRegisterCustomerService, CustomerRegisterGrpcService>();
 builder.Services.AddScoped<IGetCustomerService, GetCustomerGrpcService>();
 builder.Services.AddScoped<IUploadProductService, UploadProductGrpcService>();
@@ -94,7 +94,8 @@ var pfxPassword = Environment.GetEnvironmentVariable("PFX_PASSWORD")
 
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.ListenLocalhost(6760, lo =>
+    // change from ListenAnyIP to ListenLocalhost if you want to restrict access to localhost only
+    options.ListenAnyIP(6760, lo =>
     {
         lo.UseHttps(pfxFilePath, pfxPassword); // key pair and its password
     });
