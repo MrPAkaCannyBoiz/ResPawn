@@ -37,7 +37,10 @@ public class GetCustomerServiceImpl extends GetCustomerServiceGrpc.GetCustomerSe
     {
         CustomerEntity givenCustomer = customerRepository.findById(request.getCustomerId())
                 .orElse(null);
-        throwGrpcNotFoundIfNull(givenCustomer, responseObserver);
+        if (givenCustomer == null) {
+            throwGrpcNotFoundIfNull(givenCustomer, responseObserver);
+            return;
+        }
         assert givenCustomer != null;
 
         List<Address> addresses = getAddressesForCustomer(request.getCustomerId());
