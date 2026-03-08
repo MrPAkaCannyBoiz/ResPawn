@@ -27,6 +27,7 @@ sep3key/
 
 # PostgreSQL local data
 pgdata/
+db_data/
 
 # Kafka local data
 kafka_data/
