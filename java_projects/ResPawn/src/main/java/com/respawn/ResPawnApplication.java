@@ -4,13 +4,13 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ReSpawnMarketApplication
+public class ResPawnApplication
 {
     // load .env file
 
-    void main()
+    static void main(String[] args)
     {
-        SpringApplication.run(ReSpawnMarketApplication.class);
+        SpringApplication.run(ResPawnApplication.class, args);
         IO.println("Running Spring Boot on JDK 25!");
     }
 

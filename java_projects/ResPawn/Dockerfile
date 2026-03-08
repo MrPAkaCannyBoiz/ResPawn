@@ -3,11 +3,11 @@ FROM maven:3.9.11-eclipse-temurin-25 AS build
 WORKDIR /src
 
 COPY Shared_proto /src/Shared_proto/
-COPY java_projects/ReSpawnMarket/pom.xml /src/java_projects/ReSpawnMarket/
-COPY java_projects/ReSpawnMarket/src /src/java_projects/ReSpawnMarket/src
+COPY java_projects/ResPawn/pom.xml /src/java_projects/ResPawn/
+COPY java_projects/ResPawn/src /src/java_projects/ResPawn/src/
 
 # Set working directory to the service project
-WORKDIR /src/java_projects/ReSpawnMarket
+WORKDIR /src/java_projects/ResPawn
 # skipping tests to avoid database connection issues during build time
 RUN mvn clean package -DskipTests
 
@@ -16,9 +16,9 @@ FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 
 # Copy the built artifact from the build stage
-COPY --from=build /src/java_projects/ReSpawnMarket/target/ReSpawnMarket-0.0.1-SNAPSHOT.jar /app/ReSpawnMarket.jar
+COPY --from=build /src/java_projects/ResPawn/target/ResPawn-0.0.1-SNAPSHOT.jar /app/ResPawn.jar
 # expose ports
 # 8080 for the main application
 # 6767 for the gRPC server
 EXPOSE 8080 6767
-ENTRYPOINT ["java", "-jar", "ReSpawnMarket.jar"]
+ENTRYPOINT ["java", "-jar", "ResPawn.jar"]

@@ -56,7 +56,7 @@ services:
   grpc-server-springboot-service:
       build:
         context: . # starts from the directory of the docker-compose.yml file
-        dockerfile: java_projects/ReSpawnMarket/Dockerfile
+        dockerfile: java_projects/ResPawn/Dockerfile
       container_name: respawn-grpc-server
       ports:
         - "8080:8080"

@@ -6,7 +6,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
 @Disabled("Disabled because we are running unit tests without a real database connection")
-class ReSpawnMarketApplicationTests
+class ResPawnApplicationTests
 {
 
     @Test
