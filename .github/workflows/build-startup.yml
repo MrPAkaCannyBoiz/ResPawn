@@ -15,7 +15,7 @@ jobs:
      # Add default working directory for all run steps in this job
     defaults:
       run:
-        working-directory: ./java_projects/ReSpawnMarket
+        working-directory: ./java_projects/ResPawn
 
     steps:
       - name: Checkout repository

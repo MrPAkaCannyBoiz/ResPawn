@@ -28,8 +28,8 @@
     </scm>
     <properties>
         <java.version>25</java.version>
-        <grpc.version>1.76.0</grpc.version>
-        <protobuf-java.version>4.32.1</protobuf-java.version>
+        <grpc.version>1.77.1</grpc.version>
+        <protobuf-java.version>4.34.0</protobuf-java.version>
         <spring-grpc.version>1.0.2</spring-grpc.version>
         <netty.version>4.2.8.Final</netty.version>
     </properties>
@@ -87,6 +87,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>${protobuf-java.version}</version>
         </dependency>
     </dependencies>
     <dependencyManagement>
