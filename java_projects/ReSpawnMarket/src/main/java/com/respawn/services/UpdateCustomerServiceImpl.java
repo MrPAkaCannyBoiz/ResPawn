@@ -1,0 +1,173 @@
+package com.respawn.services;
+
+import com.respawnmarket.*;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
+import io.grpc.stub.StreamObserver;
+import jakarta.transaction.Transactional;
+import com.respawn.entities.PostalEntity;
+import com.respawn.repositories.AddressRepository;
+import com.respawn.repositories.CustomerAddressRepository;
+import com.respawn.repositories.CustomerRepository;
+import com.respawn.repositories.PostalRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+import static com.respawn.services.extensions.CustomerExceptionExtension.mapDataIntegrityViolation;
+
+// TODO: add validation for each database constraint, so web api can catch errors properly
+// TODO: handle two addresses per customer
+@Service
+public class UpdateCustomerServiceImpl extends UpdateCustomerServiceGrpc.UpdateCustomerServiceImplBase
+{
+    private AddressRepository addressRepository;
+    private CustomerRepository customerRepository;
+    private PostalRepository postalRepository;
+    private CustomerAddressRepository customerAddressRepository;
+
+    @Autowired
+    public UpdateCustomerServiceImpl(AddressRepository addressRepository, CustomerRepository customerRepository
+            , PostalRepository postalRepository, CustomerAddressRepository customerAddressRepository)
+    {
+        this.addressRepository = addressRepository;
+        this.customerRepository = customerRepository;
+        this.postalRepository = postalRepository;
+        this.customerAddressRepository = customerAddressRepository;
+    }
+
+    @Override
+    @Transactional
+    public void updateCustomer(UpdateCustomerRequest request,
+                               StreamObserver<UpdateCustomerResponse> responseObserver)
+    {
+        // find customer id to update
+        var updatedCustomer = customerRepository.findById(request.getCustomerId()).orElse(null);
+        if (updatedCustomer == null)
+        {
+            responseObserver.onError(Status.NOT_FOUND
+                    .withDescription("Customer not found with ID: " + request.getCustomerId())
+                    .asRuntimeException());
+            return;
+        }
+        assert updatedCustomer != null;
+        // update fields of customer while checking for nulls or white spaces
+        request.getFirstName();
+        if (!request.getFirstName().isBlank())
+        {
+            updatedCustomer.setFirstName(request.getFirstName());
+        }
+        if (!request.getLastName().isBlank())
+        {
+            updatedCustomer.setLastName(request.getLastName());
+        }
+        if (!request.getEmail().isBlank())
+        {
+            updatedCustomer.setEmail(request.getEmail());
+        }
+        if (!request.getPhoneNumber().isBlank())
+        {
+            updatedCustomer.setPhoneNumber(request.getPhoneNumber());
+        }
+        // find address to update (for now only one address per customer)
+        var updatedAddress = addressRepository.findAddressByCustomerId(request.getCustomerId()).getFirst();
+        assert updatedAddress != null;
+        if (!request.getStreetName().isBlank())
+        {
+            updatedAddress.setStreetName(request.getStreetName());
+        }
+        if (!request.getSecondaryUnit().isBlank())
+        {
+            updatedAddress.setSecondaryUnit(request.getSecondaryUnit());
+        }
+        else if (request.getStreetName().isBlank())
+        {
+            updatedAddress.setSecondaryUnit("");
+        }
+        // find postal to update (for now only one postal per customer)
+        var updatedPostal = postalRepository.findByCustomerId(request.getCustomerId()).getFirst();
+        assert updatedPostal != null;
+        // if postal code changed, need to check if new postal exists in DB
+        var updatedPostalCode = request.getPostalCode();
+        var existingPostal = postalRepository.findById(updatedPostalCode).orElse(null);
+        if (existingPostal != null)
+        {
+            // postal exists, just update address to point to existing postal
+            updatedAddress.setPostal(existingPostal);
+        }
+        else
+        {
+            // postal does not exist, create new postal and save to DB
+            var newPostal = postalRepository
+                    .save(new PostalEntity(updatedPostalCode, request.getCity()));
+            updatedAddress.setPostal(newPostal);
+        }
+        // check if constraints is violated before saving for customer
+        try
+        {
+            customerRepository.save(updatedCustomer);
+            customerRepository.flush();
+        }
+        catch (DataIntegrityViolationException ex)
+        {
+            StatusRuntimeException statusEx = mapDataIntegrityViolation(ex);
+            responseObserver.onError(statusEx);
+        }
+        catch (Exception ex)
+        {
+            responseObserver.onError(
+                    Status.INTERNAL
+                            .withDescription("Unexpected error while registering customer")
+                            .withCause(ex)
+                            .asRuntimeException()
+            );
+        }
+        // the rest ain't have unique constraints, just save
+        addressRepository.save(updatedAddress);
+        postalRepository.save(updatedPostal);
+        addressRepository.flush();
+        postalRepository.flush();
+        // make response dto
+        Customer customerDto = Customer.newBuilder()
+                .setId(updatedCustomer.getId())
+                .setFirstName(updatedCustomer.getFirstName())
+                .setLastName(updatedCustomer.getLastName())
+                .setEmail(updatedCustomer.getEmail())
+                .setPhoneNumber(updatedCustomer.getPhoneNumber())
+                .build();
+
+        List<Address> addresses = addressRepository.findAddressByCustomerId(request.getCustomerId())
+                .stream()
+                .map(addressEntity -> Address.newBuilder()
+                        .setId(addressEntity.getId())
+                        .setStreetName(addressEntity.getStreetName())
+                        .setSecondaryUnit(addressEntity.getSecondaryUnit())
+                        .setPostalCode(addressEntity.getPostal().getPostalCode())
+                        .build())
+                .toList();
+
+        List<Postal> postals = postalRepository.findByCustomerId(request.getCustomerId())
+                .stream()
+                .map(postalEntity -> Postal.newBuilder()
+                        .setPostalCode(postalEntity.getPostalCode())
+                        .setCity(postalEntity.getCity())
+                        .build())
+                .toList();
+
+        UpdateCustomerResponse response = UpdateCustomerResponse.newBuilder()
+                .setId(customerDto.getId())
+                .setFirstName(customerDto.getFirstName())
+                .setLastName(customerDto.getLastName())
+                .setEmail(customerDto.getEmail())
+                .setPhoneNumber(customerDto.getPhoneNumber())
+                .addAllAddresses(addresses)
+                .addAllPostals(postals)
+                .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+
+}
