@@ -38,12 +38,12 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
         LEFT JOIN InspectionEntity i
           ON i.product = p
           AND i.inspectionDate = (
-              SELECT MAX(i2.inspectionDate) 
-              FROM InspectionEntity i2 
+              SELECT MAX(i2.inspectionDate)
+              FROM InspectionEntity i2
               WHERE i2.product = p
           )
         WHERE p.seller.id = :customerId
-          AND ((upper(p.approvalStatus) = "PENDING") 
+          AND ((upper(p.approvalStatus) = "PENDING")
               OR (upper(p.approvalStatus) = "REVIEWING"))
         ORDER BY p.id
     """)

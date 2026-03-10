@@ -50,20 +50,20 @@ public class GetAddressServiceImpl extends GetAddressServiceGrpc.GetAddressServi
     private PawnshopAddressWithPostal toPawnshopAddressWithPostalProto(PawnshopAddressPostalDto dto)
     {
         Address addressProto = Address.newBuilder()
-                .setId(dto.getAddressId())
-                .setStreetName(dto.getStreetName())
-                .setSecondaryUnit(dto.getSecondaryUnit())
-                .setPostalCode(dto.getPostalCode())
+                .setId(dto.addressId())
+                .setStreetName(dto.streetName())
+                .setSecondaryUnit(dto.secondaryUnit())
+                .setPostalCode(dto.postalCode())
                 .build();
         Postal postalProto = Postal.newBuilder()
-                .setPostalCode(dto.getPostalCode())
-                .setCity(dto.getCity())
+                .setPostalCode(dto.postalCode())
+                .setCity(dto.city())
                 .build();
 
         return PawnshopAddressWithPostal.newBuilder()
                 .setAddress(addressProto)
                 .setPostal(postalProto)
-                .setPawnshopId(dto.getPawnshopId())
+                .setPawnshopId(dto.pawnshopId())
                 .build();
     }
 }
