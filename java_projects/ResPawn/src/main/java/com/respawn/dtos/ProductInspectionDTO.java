@@ -2,33 +2,18 @@ package com.respawn.dtos;
 
 import com.respawn.entities.ProductEntity;
 
-public class ProductInspectionDTO
+public record ProductInspectionDTO(ProductEntity product, String latestComment)
 {
-  private ProductEntity product;
-  private String latestComment;
-
   public ProductInspectionDTO(ProductEntity product, String latestComment)
   {
+    String latestComment1;
     this.product = product;
-    this.latestComment = latestComment;
+    latestComment1 = latestComment;
+    if (latestComment == null)
+    {
+      latestComment1 = "";
+    }
+    this.latestComment = latestComment1;
   }
 
-  public ProductEntity getProduct() {
-    return product;
-  }
-
-  public String getLatestComment()
-  {
-    return latestComment;
-  }
-
-  public void setLatestComment(String latestComment)
-  {
-    this.latestComment = latestComment;
-  }
-
-  public void setProduct(ProductEntity product)
-  {
-    this.product = product;
-  }
 }

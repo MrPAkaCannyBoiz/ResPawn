@@ -28,10 +28,10 @@ import static com.respawn.services.extensions.CategoryExtension.toProtoCategory;
 @Service
 public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServiceImplBase
 {
-  private ProductRepository productRepository;
-  private CustomerRepository customerRepository;
-  private PawnshopRepository pawnshopRepository;
-  private ImageRepository imageRepository;
+  private final ProductRepository productRepository;
+  private final CustomerRepository customerRepository;
+  private final PawnshopRepository pawnshopRepository;
+  private final ImageRepository imageRepository;
 
   @Autowired public GetProductServiceImpl(ProductRepository productRepository,
       CustomerRepository customerRepository,
@@ -216,15 +216,10 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
         }
         for (ProductInspectionDTO inspectionDTO : inspectionDTOs)
         {
-          if (inspectionDTO.getLatestComment() == null)
-          {
-            // set it to empty string if no inspection found
-            inspectionDTO.setLatestComment("");
-          }
-          if (inspectionDTO.getProduct() == null)
+          if (inspectionDTO.product() == null)
           {
             responseObserver.onError(Status.NOT_FOUND.withDescription(
-                    "Product not found with ID: " + inspectionDTO.getProduct().getId())
+                    "Product not found with customer ID: " + request.getCustomerId())
                 .asRuntimeException());
             return;
           }
@@ -237,8 +232,6 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
             .build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
-
-
       }
 
 
@@ -363,30 +356,30 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
 
   private LatestProductFromInspection toProtoProductViaDto(ProductInspectionDTO dto)
   {
-    ApprovalStatus approvalStatus = toProtoApprovalStatus(dto.getProduct().getApprovalStatus());
-    Category category = toProtoCategory(dto.getProduct().getCategory());
-    Instant instant = dto.getProduct().getRegisterDate().toInstant(java.time.ZoneOffset.UTC);
+    ApprovalStatus approvalStatus = toProtoApprovalStatus(dto.product().getApprovalStatus());
+    Category category = toProtoCategory(dto.product().getCategory());
+    Instant instant = dto.product().getRegisterDate().toInstant(java.time.ZoneOffset.UTC);
     Timestamp registerDateTimestamp = Timestamp.newBuilder()
         .setSeconds(instant.getEpochSecond())
         .setNanos(0)
         .build();
 
     Product productDto = Product.newBuilder()
-        .setId(dto.getProduct().getId())
-        .setName(dto.getProduct().getName())
-        .setPrice(dto.getProduct().getPrice())
-        .setCondition(dto.getProduct().getCondition())
-        .setDescription(dto.getProduct().getDescription())
-        .setSoldByCustomerId(dto.getProduct().getSeller().getId())
+        .setId(dto.product().getId())
+        .setName(dto.product().getName())
+        .setPrice(dto.product().getPrice())
+        .setCondition(dto.product().getCondition())
+        .setDescription(dto.product().getDescription())
+        .setSoldByCustomerId(dto.product().getSeller().getId())
         .setCategory(category)
-        .setSold(dto.getProduct().isSold())
+        .setSold(dto.product().isSold())
         .setApprovalStatus(approvalStatus)
         .setRegisterDate(registerDateTimestamp)
-        .setOtherCategory(dto.getProduct().getOtherCategory() == null ? "" : dto.getProduct().getOtherCategory())
-        .setPawnshopId(dto.getProduct().getPawnshop() != null ? dto.getProduct().getPawnshop().getId() : 0)
+        .setOtherCategory(dto.product().getOtherCategory() == null ? "" : dto.product().getOtherCategory())
+        .setPawnshopId(dto.product().getPawnshop() != null ? dto.product().getPawnshop().getId() : 0)
         .build();
     Image firstImageDto = null;
-    List<ImageEntity> images = imageRepository.findAllByProductId(dto.getProduct().getId());
+    List<ImageEntity> images = imageRepository.findAllByProductId(dto.product().getId());
     firstImageDto = ImageExtension.toProtoImageList(images).getFirst();
     ProductWithFirstImage productWithImageDto = ProductWithFirstImage.newBuilder()
         .setProduct(productDto)
@@ -394,7 +387,7 @@ public class GetProductServiceImpl extends GetProductServiceGrpc.GetProductServi
         .build();
     LatestProductFromInspection latestProductDto = LatestProductFromInspection.newBuilder()
         .setProduct(productWithImageDto)
-        .setInspectionComments(dto.getLatestComment())
+        .setInspectionComments(dto.latestComment())
         .build();
     return latestProductDto;
   }
