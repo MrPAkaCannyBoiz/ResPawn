@@ -15,6 +15,7 @@ services:
       KAFKA_PROCESS_ROLES: 'broker,controller'
       KAFKA_CONTROLLER_QUORUM_VOTERS: '1@respawn_kafka:29093'
       KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      # Those are the listeners that Kafka will advertise to clients, put those value in configuration placeholders
       KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://respawn_kafka:29092,PLAINTEXT_HOST://localhost:9092'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
@@ -25,11 +26,11 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      KAFKA_LOG_DIRS: '/var/lib/kafka/data'
       # Required for KRaft to initialize storage automatically
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk' 
     volumes:
-      - ./kafka_data:/tmp/kraft-combined-logs
+      - kafka_data:/var/lib/kafka/data
       
 
 
@@ -46,7 +47,7 @@ services:
     volumes:
       # Format is: host_path : container_path
       - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./db_data:/var/lib/postgresql # Persist data on host machine
+      - db_data:/var/lib/postgresql # Persist data on host machine
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
       interval: 5s
@@ -83,6 +84,23 @@ services:
         SSL_KEYSTORE_PASSWORD: ${KEY_PASSWORD}
         KEY_PASSWORD: ${KEY_PASSWORD}
       
+        # Kafka (Matches application.properties placeholders)
+        # Pointing to the Kafka container's internal hostname and port, 
+        # not localhost, since this is from the perspective of the Spring Boot container
+        SPRING_KAFKA_BOOTSTRAP_SERVERS: respawn_kafka:29092
+        # Consumer 
+        SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS: respawn_kafka:29092
+        SPRING_KAFKA_CONSUMER_GROUP_ID: respawn-group
+        SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: earliest
+        SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: org.apache.kafka.common.serialization.StringDeserializer
+        SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER: org.apache.kafka.common.serialization.StringDeserializer
+        SPRING_KAFKA_CONSUMER_PROPERTIES_SPRING_JSON_TRUSTED_PACKAGES: com.respawn
+        # Producer
+        SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS: respawn_kafka:29092
+        SPRING_KAFKA_PRODUCER_ACKS: -1
+        SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: org.apache.kafka.common.serialization.StringSerializer
+        SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: org.apache.kafka.common.serialization.StringSerializer
+
       volumes:
         # Mapped ./self_signed_cert (host) to /app/self_signed_certs (container)
         - ./self_signed_certs:/app/self_signed_certs:ro
@@ -119,7 +137,7 @@ services:
 volumes: # Define named volumes for data persistence
   kafka_data:
     name: kafka_data
-  pgdata:
-    name: pgdata
+  db_data:
+    name: db_data
   self_signed_certs:
     name: self_signed_certs
