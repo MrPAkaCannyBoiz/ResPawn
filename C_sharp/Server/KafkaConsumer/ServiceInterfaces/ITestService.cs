@@ -1,6 +1,6 @@
 ﻿namespace KafkaConsumer.ServiceInterfaces;
 
-public class ITestService
+public interface ITestService
 {
-    
+    Task ExecuteAsync(CancellationToken ct);
 }
