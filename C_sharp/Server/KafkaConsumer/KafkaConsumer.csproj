@@ -9,6 +9,9 @@
 
     <ItemGroup>
       <PackageReference Include="Confluent.Kafka" Version="2.13.2" />
+      <PackageReference Include="Microsoft.Extensions.Configuration" Version="11.0.0-preview.2.26159.112" />
+      <PackageReference Include="Microsoft.Extensions.Hosting" Version="11.0.0-preview.2.26159.112" />
+      <PackageReference Include="Microsoft.Extensions.Logging" Version="11.0.0-preview.2.26159.112" />
     </ItemGroup>
 
 </Project>

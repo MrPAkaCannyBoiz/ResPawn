@@ -1,6 +1,6 @@
 ﻿namespace KafkaConsumer.ServiceInterfaces;
 
-public interface IEmailConsumer
+public interface IEmailConsumerService
 {
     Task ExecuteAsync(CancellationToken ct);
 }
