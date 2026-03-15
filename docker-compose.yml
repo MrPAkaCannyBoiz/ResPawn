@@ -126,6 +126,7 @@ services:
       JWT__ISSUER: ${JWT__ISSUER}
       JWT__AUDIENCE: ${JWT__AUDIENCE}
       JWT__SUBJECT: ${JWT__SUBJECT}
+      KAFKA__BOOTSTRAPSERVERS: ${KAFKA__BOOTSTRAPSERVERS}
       
     volumes:
       # Mapped ./self_signed_cert (host) to /app/self_signed_certs (container)
@@ -133,6 +134,7 @@ services:
     depends_on:
       grpc-server-springboot-service:
         condition: service_started
+  
 
 volumes: # Define named volumes for data persistence
   kafka_data:
