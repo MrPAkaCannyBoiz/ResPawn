@@ -1,5 +1,6 @@
 package com.respawn.services;
-import com.respawn.services.kafka.producer.EmailProducer;
+import com.respawn.services.kafka.producer.interfaces.EmailProducer;
+import com.respawn.services.kafka.producer.services.EmailProducerImpl;
 import com.respawnmarket.CustomerRegisterServiceGrpc;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -32,10 +33,10 @@ import static com.respawn.services.extensions.CustomerExceptionExtension.mapData
 @Service // Spring Boot will auto-detect this class as a service component
 public class RegisterCustomerServiceImpl extends CustomerRegisterServiceGrpc.CustomerRegisterServiceImplBase
 {
-    private AddressRepository addressRepository;
-    private CustomerRepository customerRepository;
-    private PostalRepository postalRepository;
-    private CustomerAddressRepository customerAddressRepository;
+    private final AddressRepository addressRepository;
+    private final CustomerRepository customerRepository;
+    private final PostalRepository postalRepository;
+    private final CustomerAddressRepository customerAddressRepository;
     private final EmailProducer emailProducer;
 
     @Autowired
@@ -43,7 +44,7 @@ public class RegisterCustomerServiceImpl extends CustomerRegisterServiceGrpc.Cus
                                        CustomerRepository customerRepository,
                                        PostalRepository postalRepository,
                                        CustomerAddressRepository customerAddressRepository,
-                                       EmailProducer emailProducer)
+                                       EmailProducerImpl emailProducer)
     {
         this.addressRepository = addressRepository;
         this.customerRepository = customerRepository;

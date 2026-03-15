@@ -1,16 +1,18 @@
 package com.respawn.services.kafka.producer.services;
 
+import com.respawn.services.kafka.producer.interfaces.EmailProducer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
-public class EmailProducer {
+public class EmailProducerImpl implements EmailProducer
+{
 
     private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Autowired
-    public EmailProducer(KafkaTemplate<String, String> kafkaTemplate) {
+    public EmailProducerImpl(KafkaTemplate<String, String> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
 
