@@ -22,8 +22,8 @@ public class EmailConsumerService : IEmailConsumerService
         // we can also use appsettings.json to store these configurations and read them in the constructor using IConfiguration
         _config = new ConsumerConfig
         {
-            BootstrapServers = "localhost:9092",
-            GroupId = "dotnet-email-workers-v2", // A unique name for your .NET consumers
+            BootstrapServers = config["Kafka:BootstrapServers"] ?? "localhost:9092",
+            GroupId = config["Kafka:GroupId:Email"], // A unique name for your .NET consumers
             AutoOffsetReset = AutoOffsetReset.Earliest
         };
     }
