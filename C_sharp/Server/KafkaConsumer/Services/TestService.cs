@@ -19,8 +19,8 @@ public class TestService : ITestService
         _logger = logger;
         _config = new ConsumerConfig
         {
-            BootstrapServers = "localhost:9092",
-            GroupId = "dotnet-test-workers-v2", // A unique name for your .NET consumers
+            BootstrapServers = config["Kafka:BootstrapServers"],
+            GroupId = config["Kafka:GroupId:Test"], // A unique name for your .NET consumers
             AutoOffsetReset = AutoOffsetReset.Earliest
         };
     }

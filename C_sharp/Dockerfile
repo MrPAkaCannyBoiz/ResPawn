@@ -9,6 +9,7 @@ COPY C_sharp/Server/RepositoryContracts/RepositoryContracts.csproj ./dotnet_proj
 COPY C_sharp/Server/WebAPI/WebAPI.csproj ./dotnet_projects/Server/WebAPI/
 COPY C_sharp/ReSpawnMarket.SDK/ReSpawnMarket.SDK.csproj ./dotnet_projects/ReSpawnMarket.SDK/
 COPY C_sharp/Shared/ApiContracts/ApiContracts.csproj ./dotnet_projects/Shared/ApiContracts/
+COPY C_sharp/Server/KafkaConsumer/KafkaConsumer.csproj ./dotnet_projects/Server/KafkaConsumer/
 
 # restore the dependencies
 RUN dotnet restore ./dotnet_projects/Server/Entities/
@@ -16,6 +17,7 @@ RUN dotnet restore ./dotnet_projects/Server/RepositoryContracts/
 RUN dotnet restore ./dotnet_projects/Server/WebAPI/
 RUN dotnet restore ./dotnet_projects/Shared/ApiContracts/
 RUN dotnet restore ./dotnet_projects/ReSpawnMarket.SDK/
+RUN dotnet restore ./dotnet_projects/Server/KafkaConsumer/
 
 # then copy the rest of the source code
 COPY C_sharp/Server ./dotnet_projects/Server/
@@ -31,12 +33,23 @@ RUN dotnet publish -c Release -o /app/publish
 WORKDIR /src/dotnet_projects/Shared/ApiContracts
 RUN dotnet publish -c Release -o /app/publish
 WORKDIR /src/dotnet_projects/Server/WebAPI
-RUN dotnet publish -c Release -o /app/publish
-
+RUN dotnet publish -c Release -o /app/publish/webapi
+WORKDIR /src/dotnet_projects/Server/KafkaConsumer
+RUN dotnet publish -c Release -o /app/publish/worker
 
 # Stage 2: Run the application
-FROM mcr.microsoft.com/dotnet/aspnet:10.0
+# Web API
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS webapi
 WORKDIR /app
-COPY --from=build /app/publish/ ./
+# Only copy the API files
+COPY --from=build /app/publish/webapi ./
 EXPOSE 7111
 ENTRYPOINT ["dotnet", "WebAPI.dll"]
+
+# Kafka Consumer
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS worker
+WORKDIR /app
+# Only copy the Worker files
+COPY --from=build /app/publish/worker ./
+ENTRYPOINT ["dotnet", "KafkaConsumer.dll"]
+

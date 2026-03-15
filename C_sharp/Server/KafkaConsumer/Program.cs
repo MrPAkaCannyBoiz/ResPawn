@@ -8,6 +8,9 @@ using Microsoft.Extensions.Hosting;
 
 var builder = Host.CreateApplicationBuilder(args);
 
+// include env variables from .env file
+DotNetEnv.Env.Load();
+
 builder.Services.AddHostedService<EmailWorker>();
 builder.Services.AddHostedService<TestWorker>();
 builder.Services.AddSingleton<IEmailConsumerService, EmailConsumerService>();
