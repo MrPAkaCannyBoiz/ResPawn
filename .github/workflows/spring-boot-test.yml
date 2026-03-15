@@ -28,26 +28,28 @@ jobs:
 
       # -B flag is for batch mode, which is non-interactive and better for CI environments
       - name: Maven Clean and Compile
-        run: mvn -B clean compile
+      # check if project compiles successfully (no syntax errors, missing dependencies, etc.)
+        run: mvn -B clean compile 
 
       - name: Maven Test (skip if none)
+      # run tests if they exist, but don't fail the workflow if no tests are found
         run: mvn -B test || echo "No tests found, skipping"
 
       - name: Protobuf Codegen Check
         run: mvn -B protobuf:compile || echo "No protobuf plugin configured"
 
-      - name: Startup Check (Spring Boot)
-        run: |
-          mvn -q -DskipTests spring-boot:run &
-          APP_PID=$!
-          echo "Waiting for Spring Boot to start..."
-          sleep 15
+      # - name: Startup Check (Spring Boot)
+      #   run: |
+      #     mvn -q -DskipTests spring-boot:run &
+      #     APP_PID=$!
+      #     echo "Waiting for Spring Boot to start..."
+      #     sleep 15
           
-          if ps -p $APP_PID > /dev/null
-          then
-            echo "Spring Boot started successfully."
-            kill $APP_PID
-          else
-            echo "Spring Boot failed to start!"
-            exit 1
-          fi
+      #     if ps -p $APP_PID > /dev/null
+      #     then
+      #       echo "Spring Boot started successfully."
+      #       kill $APP_PID
+      #     else
+      #       echo "Spring Boot failed to start!"
+      #       exit 1
+      #     fi

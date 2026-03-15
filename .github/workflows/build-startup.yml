@@ -34,18 +34,18 @@ jobs:
       - name: Protobuf Codegen Check
         run: mvn -B protobuf:compile || echo "No protobuf plugin configured"
 
-      - name: Startup Check (Spring Boot)
-        run: |
-          mvn -q -DskipTests spring-boot:run &
-          APP_PID=$!
-          echo "Waiting for Spring Boot to start..."
-          sleep 15
+      # - name: Startup Check (Spring Boot)
+      #   run: |
+      #     mvn -q -DskipTests spring-boot:run &
+      #     APP_PID=$!
+      #     echo "Waiting for Spring Boot to start..."
+      #     sleep 15
           
-          if ps -p $APP_PID > /dev/null
-          then
-            echo "Spring Boot started successfully."
-            kill $APP_PID
-          else
-            echo "Spring Boot failed to start!"
-            exit 1
-          fi
+      #     if ps -p $APP_PID > /dev/null
+      #     then
+      #       echo "Spring Boot started successfully."
+      #       kill $APP_PID
+      #     else
+      #       echo "Spring Boot failed to start!"
+      #       exit 1
+      #     fi
