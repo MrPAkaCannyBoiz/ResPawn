@@ -1,4 +1,4 @@
-package com.respawn.services.kafka.producer;
+package com.respawn.services.kafka.producer.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -22,7 +22,7 @@ public class EmailProducer {
     }
 
     public void sendTestEvent() {
-        kafkaTemplate.send("test","Kafka is work!!!!");
+        kafkaTemplate.send("test","respawn@test.com");
         IO.println("Send test event");
     }
 }
