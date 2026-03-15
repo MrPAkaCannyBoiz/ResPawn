@@ -1,10 +1,10 @@
 package com.respawn.services;
 
+import com.respawn.services.kafka.producer.services.EmailProducerImpl;
 import com.respawnmarket.*;
 import io.grpc.stub.StreamObserver;
 import com.respawn.entities.CustomerEntity;
 import com.respawn.repositories.AddressRepository;
-import com.respawn.repositories.CustomerAddressRepository;
 import com.respawn.repositories.CustomerRepository;
 import com.respawn.repositories.PostalRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,18 +16,21 @@ import java.util.List;
 @Service
 public class GetCustomerServiceImpl extends GetCustomerServiceGrpc.GetCustomerServiceImplBase
 {
-  private CustomerRepository customerRepository;
-  private AddressRepository addressRepository;
-  private PostalRepository postalRepository;
-  private CustomerAddressRepository customerAddressRepository;
+  private final CustomerRepository customerRepository;
+  private final AddressRepository addressRepository;
+  private final PostalRepository postalRepository;
+  private final EmailProducerImpl emailProducer;
 
   @Autowired public GetCustomerServiceImpl(
       CustomerRepository customerRepository,
-      AddressRepository addressRepository, PostalRepository postalRepository)
+      AddressRepository addressRepository,
+      PostalRepository postalRepository,
+      EmailProducerImpl emailProducer)
   {
     this.customerRepository = customerRepository;
     this.addressRepository = addressRepository;
     this.postalRepository = postalRepository;
+    this.emailProducer = emailProducer;
   }
 
     // use case for getting customer info (admin only)
@@ -93,6 +96,8 @@ public class GetCustomerServiceImpl extends GetCustomerServiceGrpc.GetCustomerSe
                 .build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
+        // delete this later
+        emailProducer.sendTestEvent();
     }
 
     private List<Address> getAddressesForCustomer(int customerId)

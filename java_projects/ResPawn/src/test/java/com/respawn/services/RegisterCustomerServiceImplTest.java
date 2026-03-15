@@ -8,7 +8,7 @@ import com.respawn.repositories.AddressRepository;
 import com.respawn.repositories.CustomerAddressRepository;
 import com.respawn.repositories.CustomerRepository;
 import com.respawn.repositories.PostalRepository;
-import com.respawn.services.kafka.producer.EmailProducer;
+import com.respawn.services.kafka.producer.services.EmailProducerImpl;
 import com.respawnmarket.RegisterCustomerRequest;
 import com.respawnmarket.RegisterCustomerResponse;
 import io.grpc.Status;
@@ -17,8 +17,6 @@ import io.grpc.stub.StreamObserver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,7 +28,7 @@ class RegisterCustomerServiceImplTest {
     private CustomerRepository customerRepository;
     private PostalRepository postalRepository;
     private CustomerAddressRepository customerAddressRepository;
-    private EmailProducer emailProducer;
+    private EmailProducerImpl emailProducer;
     private RegisterCustomerServiceImpl service;
 
     @BeforeEach
@@ -39,7 +37,7 @@ class RegisterCustomerServiceImplTest {
         customerRepository = mock(CustomerRepository.class);
         postalRepository = mock(PostalRepository.class);
         customerAddressRepository = mock(CustomerAddressRepository.class);
-        emailProducer = mock(EmailProducer.class);
+        emailProducer = mock(EmailProducerImpl.class);
 
         service = new RegisterCustomerServiceImpl(
                 addressRepository,
