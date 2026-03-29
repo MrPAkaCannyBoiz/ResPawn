@@ -94,6 +94,7 @@ var pfxPassword = Environment.GetEnvironmentVariable("PFX_PASSWORD")
 
 builder.WebHost.ConfigureKestrel(options =>
 {
+    options.ListenAnyIP(6761); // HTTP — internal container traffic
     // change from ListenAnyIP to ListenLocalhost if you want to restrict access to localhost only
     options.ListenAnyIP(6760, lo =>
     {
