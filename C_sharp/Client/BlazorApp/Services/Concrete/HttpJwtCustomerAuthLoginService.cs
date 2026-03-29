@@ -4,7 +4,7 @@ using Microsoft.JSInterop;
 using System.Net;
 using System.Security.Claims;
 using System.Text.Json;
-using WebAPI.ClaimFactoriesExtension;
+using ApiContracts.ClaimFactories;
 
 namespace BlazorApp.Services.Concrete;
 

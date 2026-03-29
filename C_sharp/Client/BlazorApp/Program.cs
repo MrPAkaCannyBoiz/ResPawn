@@ -12,11 +12,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+var webApiBaseUrl = builder.Configuration["WebApiBaseUrl"]!;
 builder.Services.AddScoped(sp => new HttpClient
 {
-    BaseAddress = new Uri("https://localhost:6760/")
-}
-);
+    BaseAddress = new Uri(webApiBaseUrl)
+});
 
 builder.Services.AddScoped<IRegisterCustomerService, HttpRegisterCustomerService>();
 builder.Services.AddScoped<IUploadProductService, HttpUploadProductService>();
@@ -44,7 +44,7 @@ builder.Services.AddServerSideBlazor()
 builder.Services.AddAuthorizationCore(); // add authorization core for blazor wasm
 builder.Services.AddAuthentication();
 
-builder.Services.AddHttpService();
+builder.Services.AddHttpService(builder.Configuration);
 
 var app = builder.Build();
 

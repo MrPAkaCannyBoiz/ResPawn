@@ -1,13 +1,14 @@
 ﻿using BlazorApp.Services.Concrete;
+using Microsoft.Extensions.Configuration;
 
 namespace BlazorApp.Services;
 
 public static class HttpsServiceExtensions
 {
-    
-    public static void AddHttpService(this IServiceCollection services)
+
+    public static void AddHttpService(this IServiceCollection services, IConfiguration configuration)
     {
-        var address = new Uri("https://localhost:6760/");
+        var address = new Uri(configuration["WebApiBaseUrl"]!);
         services.AddHttpClient<HttpRegisterCustomerService>(c =>
         {
             c.BaseAddress = address;
