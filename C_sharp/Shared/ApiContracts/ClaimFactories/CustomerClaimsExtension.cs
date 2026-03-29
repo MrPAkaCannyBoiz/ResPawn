@@ -1,8 +1,8 @@
-﻿using ApiContracts.Dtos;
-using System.IdentityModel.Tokens.Jwt;
+using ApiContracts.Dtos;
+using Microsoft.IdentityModel.JsonWebTokens;
 using System.Security.Claims;
 
-namespace WebAPI.ClaimFactoriesExtension;
+namespace ApiContracts.ClaimFactories;
 
 public static class CustomerClaimsExtension
 {
