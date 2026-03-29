@@ -112,10 +112,11 @@ services:
   grpc-client-dotnet-services:
     build:
       context: .
-      dockerfile: C_sharp/Dockerfile
+      dockerfile: C_sharp/Server/WebAPI/Dockerfile
     container_name: respawn-grpc-client
     ports:
       - "6760:6760"
+      - "6761:6761"
     environment:
       # run in development mode to enable hot reload and other dev features
       ASPNETCORE_ENVIRONMENT: Development # remove it for production
@@ -135,6 +136,32 @@ services:
       grpc-server-springboot-service:
         condition: service_started
   
+
+  kafka-worker:
+    build:
+      context: .
+      dockerfile: C_sharp/Server/KafkaConsumer/Dockerfile
+    container_name: respawn-kafka-worker
+    environment:
+      Kafka__BootstrapServers: respawn_kafka:29092
+    depends_on:
+      - kafka
+
+
+  blazor-frontend:
+    build:
+      context: .
+      dockerfile: C_sharp/Client/BlazorApp/Dockerfile
+    container_name: respawn-blazor-frontend
+    ports:
+      - "5195:5195"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      WebApiBaseUrl: http://grpc-client-dotnet-services:6761
+    depends_on:
+      grpc-client-dotnet-services:
+        condition: service_started
+
 
 volumes: # Define named volumes for data persistence
   kafka_data:
