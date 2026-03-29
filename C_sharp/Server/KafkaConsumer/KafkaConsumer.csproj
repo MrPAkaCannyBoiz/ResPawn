@@ -23,6 +23,7 @@
         <None Include=".env" Condition="Exists('.env')">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <PackageReference Include="Polly" Version="8.6.6" />
     </ItemGroup>
 
 </Project>
