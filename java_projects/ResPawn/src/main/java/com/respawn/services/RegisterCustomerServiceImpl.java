@@ -1,4 +1,5 @@
 package com.respawn.services;
+import com.respawn.dtos.WelcomeEmailDto;
 import com.respawn.services.kafka.producer.interfaces.EmailProducer;
 import com.respawn.services.kafka.producer.services.EmailProducerImpl;
 import com.respawnmarket.CustomerRegisterServiceGrpc;
@@ -142,7 +143,10 @@ public class RegisterCustomerServiceImpl extends CustomerRegisterServiceGrpc.Cus
             responseObserver.onNext(response);
             responseObserver.onCompleted();
             // producer send the event with this customer email to trigger welcome email
-            emailProducer.sendWelcomeEmailEvent(customerDto.getEmail());
+            var emailDto = new WelcomeEmailDto(savedCustomer.getEmail(),
+                    savedCustomer.getFirstName(),
+                    savedCustomer.getLastName());
+            emailProducer.sendWelcomeEmailEvent(emailDto);
         }
         catch (DataIntegrityViolationException ex) // handle unique constraint violations
         {

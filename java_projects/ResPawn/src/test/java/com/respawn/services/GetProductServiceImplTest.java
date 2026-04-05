@@ -1,12 +1,15 @@
 // java
 package com.respawn.services;
 
+import com.respawn.dtos.ProductInspectionDTO;
 import com.respawn.entities.*;
 import com.respawn.repositories.CustomerRepository;
 import com.respawn.repositories.ImageRepository;
 import com.respawn.repositories.PawnshopRepository;
 import com.respawn.repositories.ProductRepository;
 import com.respawnmarket.*;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import com.respawn.entities.*;
 import com.respawn.entities.enums.ApprovalStatusEnum;
@@ -18,6 +21,7 @@ import org.mockito.ArgumentCaptor;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -120,6 +124,195 @@ class GetProductServiceImplTest {
         assertTrue(pfi.hasFirstImage());
         assertEquals(image.getId(), pfi.getFirstImage().getId());
         assertEquals(image.getImageUrl(), pfi.getFirstImage().getUrl());
+    }
+
+    // ── Helper ────────────────────────────────────────────────────────────
+
+    private CustomerEntity buildSeller(int id) {
+        CustomerEntity seller = new CustomerEntity();
+        seller.setId(id);
+        seller.setFirstName("John");
+        seller.setLastName("Doe");
+        seller.setEmail("john@example.com");
+        seller.setPhoneNumber("123456");
+        return seller;
+    }
+
+    private ProductEntity buildProduct(int id, CustomerEntity seller,
+                                       ApprovalStatusEnum status, PawnshopEntity pawnshop) {
+        ProductEntity p = new ProductEntity();
+        p.setId(id);
+        p.setName("Widget");
+        p.setPrice(99.0);
+        p.setCondition("GOOD");
+        p.setDescription("A widget");
+        p.setSeller(seller);
+        p.setCategory(CategoryEnum.ELECTRONICS);
+        p.setSold(false);
+        p.setApprovalStatus(status);
+        p.setRegisterDate(LocalDateTime.now());
+        p.setPawnshop(pawnshop);
+        return p;
+    }
+
+    private ImageEntity buildImage(int id, ProductEntity product) {
+        ImageEntity img = new ImageEntity();
+        img.setId(id);
+        img.setImageUrl("http://img.example.com/" + id + ".jpg");
+        img.setProduct(product);
+        return img;
+    }
+
+    // ── getPendingProducts ────────────────────────────────────────────────
+
+    @Test
+    void getPendingProducts_returnsPendingProducts() {
+        CustomerEntity seller = buildSeller(1);
+        // PENDING products don't require a pawnshop
+        ProductEntity product = buildProduct(10, seller, ApprovalStatusEnum.PENDING, null);
+        ImageEntity image = buildImage(99, product);
+
+        when(productRepository.findPendingProduct()).thenReturn(List.of(product));
+        when(customerRepository.findById(seller.getId())).thenReturn(Optional.of(seller));
+        when(imageRepository.findAllByProductId(product.getId())).thenReturn(List.of(image));
+
+        StreamObserver<GetPendingProductsResponse> responseObserver = mock(StreamObserver.class);
+        service.getPendingProducts(GetPendingProductsRequest.getDefaultInstance(), responseObserver);
+
+        ArgumentCaptor<GetPendingProductsResponse> captor =
+                ArgumentCaptor.forClass(GetPendingProductsResponse.class);
+        verify(responseObserver).onNext(captor.capture());
+        verify(responseObserver).onCompleted();
+        assertEquals(1, captor.getValue().getProductsCount());
+    }
+
+    // ── getAllAvailableProducts ────────────────────────────────────────────
+
+    @Test
+    void getAllAvailableProducts_returnsProducts() {
+        CustomerEntity seller = buildSeller(2);
+        ProductEntity product = buildProduct(20, seller, ApprovalStatusEnum.PENDING, null);
+        ImageEntity image = buildImage(200, product);
+
+        when(productRepository.findAllAvailableProducts()).thenReturn(List.of(product));
+        when(customerRepository.findById(seller.getId())).thenReturn(Optional.of(seller));
+        when(imageRepository.findAllByProductId(product.getId())).thenReturn(List.of(image));
+
+        StreamObserver<GetAllAvailableProductsResponse> responseObserver = mock(StreamObserver.class);
+        service.getAllAvailableProducts(GetAllAvailableProductsRequest.getDefaultInstance(), responseObserver);
+
+        verify(responseObserver).onNext(any());
+        verify(responseObserver).onCompleted();
+    }
+
+    // ── getAllReviewingProducts ────────────────────────────────────────────
+
+    @Test
+    void getAllReviewingProducts_returnsProducts() {
+        CustomerEntity seller = buildSeller(3);
+        ProductEntity product = buildProduct(30, seller, ApprovalStatusEnum.REVIEWING, null);
+        ImageEntity image = buildImage(300, product);
+
+        when(productRepository.findAllReviewingProducts()).thenReturn(List.of(product));
+        when(customerRepository.findById(seller.getId())).thenReturn(Optional.of(seller));
+        when(imageRepository.findAllByProductId(product.getId())).thenReturn(List.of(image));
+
+        StreamObserver<GetAllReviewingProductsResponse> responseObserver = mock(StreamObserver.class);
+        service.getAllReviewingProducts(GetAllReviewingProductsRequest.getDefaultInstance(), responseObserver);
+
+        verify(responseObserver).onNext(any());
+        verify(responseObserver).onCompleted();
+    }
+
+    // ── getLatestInspection ───────────────────────────────────────────────
+
+    @Test
+    void getLatestInspection_emptyList_returnsNotFound() {
+        when(productRepository.findProductsWithLatestInspection(anyInt())).thenReturn(List.of());
+
+        StreamObserver<GetLatestProductInspectionResponse> responseObserver = mock(StreamObserver.class);
+        service.getLatestInspection(
+                GetLatestProductInspectionRequest.newBuilder().setCustomerId(1).build(),
+                responseObserver);
+
+        ArgumentCaptor<Throwable> errorCaptor = ArgumentCaptor.forClass(Throwable.class);
+        verify(responseObserver).onError(errorCaptor.capture());
+        assertEquals(Status.NOT_FOUND.getCode(),
+                ((StatusRuntimeException) errorCaptor.getValue()).getStatus().getCode());
+    }
+
+    @Test
+    void getLatestInspection_validDtos_returnsResponse() {
+        CustomerEntity seller = buildSeller(5);
+        ProductEntity product = buildProduct(50, seller, ApprovalStatusEnum.APPROVED, null);
+        ImageEntity image = buildImage(500, product);
+
+        ProductInspectionDTO dto = new ProductInspectionDTO(product, "Looks good");
+
+        when(productRepository.findProductsWithLatestInspection(5)).thenReturn(List.of(dto));
+        when(imageRepository.findAllByProductId(product.getId())).thenReturn(List.of(image));
+
+        StreamObserver<GetLatestProductInspectionResponse> responseObserver = mock(StreamObserver.class);
+        service.getLatestInspection(
+                GetLatestProductInspectionRequest.newBuilder().setCustomerId(5).build(),
+                responseObserver);
+
+        ArgumentCaptor<GetLatestProductInspectionResponse> captor =
+                ArgumentCaptor.forClass(GetLatestProductInspectionResponse.class);
+        verify(responseObserver).onNext(captor.capture());
+        verify(responseObserver).onCompleted();
+        assertEquals(1, captor.getValue().getProductsCount());
+        assertEquals("Looks good", captor.getValue().getProducts(0).getInspectionComments());
+    }
+
+    // ── getProduct branches ───────────────────────────────────────────────
+
+    @Test
+    void getProduct_productNotFound_sendsError() {
+        when(productRepository.findById(99)).thenReturn(Optional.empty());
+
+        StreamObserver<GetProductResponse> responseObserver = mock(StreamObserver.class);
+        service.getProduct(GetProductRequest.newBuilder().setProductId(99).build(), responseObserver);
+
+        verify(responseObserver, atLeastOnce()).onError(any());
+        verify(responseObserver, never()).onCompleted();
+    }
+
+    @Test
+    void getProduct_sellerNotFound_sendsNotFoundError() {
+        CustomerEntity seller = buildSeller(2);
+        ProductEntity product = buildProduct(20, seller, ApprovalStatusEnum.PENDING, null);
+
+        when(productRepository.findById(20)).thenReturn(Optional.of(product));
+        // checkNullAndRelations calls findById(seller), getProduct also calls it — both return empty
+        when(customerRepository.findById(seller.getId())).thenReturn(Optional.empty());
+        when(imageRepository.findAllByProductId(20)).thenReturn(List.of());
+
+        StreamObserver<GetProductResponse> responseObserver = mock(StreamObserver.class);
+        service.getProduct(GetProductRequest.newBuilder().setProductId(20).build(), responseObserver);
+
+        verify(responseObserver, atLeastOnce()).onError(any());
+        verify(responseObserver, never()).onCompleted();
+    }
+
+    @Test
+    void getProduct_noPawnshop_returnsPendingProductWithoutPawnshop() {
+        CustomerEntity seller = buildSeller(2);
+        // PENDING product with no pawnshop — should succeed
+        ProductEntity product = buildProduct(21, seller, ApprovalStatusEnum.PENDING, null);
+        ImageEntity image = buildImage(210, product);
+
+        when(productRepository.findById(21)).thenReturn(Optional.of(product));
+        when(customerRepository.findById(seller.getId())).thenReturn(Optional.of(seller));
+        when(imageRepository.findAllByProductId(21)).thenReturn(List.of(image));
+
+        StreamObserver<GetProductResponse> responseObserver = mock(StreamObserver.class);
+        service.getProduct(GetProductRequest.newBuilder().setProductId(21).build(), responseObserver);
+
+        ArgumentCaptor<GetProductResponse> captor = ArgumentCaptor.forClass(GetProductResponse.class);
+        verify(responseObserver).onNext(captor.capture());
+        verify(responseObserver).onCompleted();
+        assertFalse(captor.getValue().hasPawnshop());
     }
 
     @Test
