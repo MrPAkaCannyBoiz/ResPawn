@@ -1,5 +1,6 @@
 package com.respawn.services;
 
+import com.respawn.dtos.WelcomeEmailDto;
 import com.respawn.entities.AddressEntity;
 import com.respawn.entities.CustomerAddressEntity;
 import com.respawn.entities.CustomerEntity;
@@ -104,7 +105,7 @@ class RegisterCustomerServiceImplTest {
         assertEquals(10, response.getAddress().getId());
         assertEquals(postalCode, response.getPostal().getPostalCode());
 
-        verify(emailProducer).sendWelcomeEmailEvent(email);
+        verify(emailProducer).sendWelcomeEmailEvent(new WelcomeEmailDto(email, firstName, lastName));
         verify(customerAddressRepository).save(any(CustomerAddressEntity.class));
     }
 
