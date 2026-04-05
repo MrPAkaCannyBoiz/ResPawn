@@ -1,0 +1,66 @@
+name: dotnet-test
+
+on:
+  push:
+    branches:
+      - '**'
+    paths:
+      - 'C_sharp/**'
+  pull_request:
+    branches:
+      - '**'
+    paths:
+      - 'C_sharp/**'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./C_sharp/Server
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore KafkaConsumer dependencies
+        run: dotnet restore KafkaConsumer/KafkaConsumer.csproj
+
+      - name: Build KafkaConsumer
+        run: dotnet build KafkaConsumer/KafkaConsumer.csproj --no-restore -c Release
+
+      - name: Restore test project
+        run: dotnet restore KafkaConsumer.Tests/KafkaConsumer.Tests.csproj
+
+      - name: Run tests with coverage
+        run: |
+          dotnet test KafkaConsumer.Tests/KafkaConsumer.Tests.csproj \
+            --no-restore \
+            --settings KafkaConsumer.Tests/coverlet.runsettings \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ../../coverage
+
+      - name: Install reportgenerator
+        run: dotnet tool install -g dotnet-reportgenerator-globaltool
+
+      - name: Generate coverage report and check 80% threshold
+        run: |
+          reportgenerator \
+            -reports:"../../coverage/**/coverage.cobertura.xml" \
+            -targetdir:"../../coverage/report" \
+            -reporttypes:"TextSummary;Html" \
+            -minimumcoverage:80
+          cat ../../coverage/report/Summary.txt
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-coverage-report
+          path: coverage/report/
