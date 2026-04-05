@@ -27,16 +27,19 @@ jobs:
           java-version: '25'
 
       # -B flag is for batch mode, which is non-interactive and better for CI environments
-      - name: Maven Clean and Compile
-      # check if project compiles successfully (no syntax errors, missing dependencies, etc.)
-        run: mvn -B clean compile 
-
-      - name: Maven Test (skip if none)
-      # run tests if they exist, but don't fail the workflow if no tests are found
-        run: mvn -B test || echo "No tests found, skipping"
+      # clean verify: compiles, runs tests, and enforces 80% instruction coverage via Jacoco
+      - name: Maven Clean Verify with Coverage Check
+        run: mvn -B clean verify
 
       - name: Protobuf Codegen Check
         run: mvn -B protobuf:compile || echo "No protobuf plugin configured"
+
+      - name: Upload Jacoco Coverage Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: java_projects/ResPawn/target/site/jacoco/
 
       # - name: Startup Check (Spring Boot)
       #   run: |

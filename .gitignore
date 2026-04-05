@@ -31,3 +31,9 @@ db_data/
 
 # Kafka local data
 kafka_data/
+
+# prompts
+prompts/
+
+# dotnet unit test results
+TestResults/
