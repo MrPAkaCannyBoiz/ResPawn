@@ -1,7 +1,5 @@
-﻿using System.Data.SqlTypes;
-using System.Text.Json;
+using System.Diagnostics.CodeAnalysis;
 using Confluent.Kafka;
-using KafkaConsumer.Events;
 using KafkaConsumer.ServiceInterfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -20,34 +18,34 @@ public class TestService : ITestService
         _config = new ConsumerConfig
         {
             BootstrapServers = config["Kafka:BootstrapServers"],
-            GroupId = config["Kafka:GroupId:Test"], // A unique name for your .NET consumers
+            GroupId = config["Kafka:GroupId:Test"],
             AutoOffsetReset = AutoOffsetReset.Earliest
         };
     }
 
+    [ExcludeFromCodeCoverage]
     public async Task ExecuteAsync(CancellationToken ct)
     {
-        // Add this to yield the background thread back to the runtime host initially
-        await Task.Yield(); 
-        
+        await Task.Yield();
+
         using var consumer = new ConsumerBuilder<string, string>(_config).Build();
-        
+
         consumer.Subscribe(_topic);
         _logger.LogInformation($"Starting listening to kafka consumer for topic {_topic}");
-        
+
         while (!ct.IsCancellationRequested)
         {
-            // Wait for a message. This is non-blocking for the rest of your app.
             var consumeResult = consumer.Consume(ct);
-            var message = consumeResult.Message.Value;
-            
-            _logger.LogInformation($"Received JSON {message}");
-
-            consumer.Commit(consumeResult);
-            _logger.LogInformation($"Test event is consumed!");
-            Console.WriteLine("Test event is consumed!");
-            await Task.Delay(1000); // Simulate time taken to send an email   
-            
+            HandleTestMessage(consumeResult.Message.Value, () => consumer.Commit(consumeResult));
+            await Task.Delay(1000);
         }
+    }
+
+    internal void HandleTestMessage(string message, Action commitOffset)
+    {
+        _logger.LogInformation($"Received JSON {message}");
+        commitOffset();
+        _logger.LogInformation($"Test event is consumed!");
+        Console.WriteLine("Test event is consumed!");
     }
 }
