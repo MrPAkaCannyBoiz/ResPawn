@@ -114,7 +114,12 @@ The gRPC channel between the .NET WebAPI (client) and Spring Boot (server) is en
 - The Kafka email consumer uses **Polly** with 3-attempt exponential backoff.
 - Permanently failing messages are forwarded to `welcomeEmail-dlt` to prevent data loss without blocking the consumer.
 
-### 7. Docker Security Hygiene
+### 7. BCrypt — One-Way Password Hashing
+Passwords are **never stored in plain text**. Before persisting to PostgreSQL:
+- **Registration:** `BCryptPasswordEncoder.encode()` hashes the password with a random salt (`RegisterCustomerServiceImpl.java`).
+- **Login:** `BCrypt.checkpw()` verifies the submitted password against the stored hash — the original password is never recoverable (`CustomerLoginServiceImpl.java`, `ResellerLoginServiceImpl.java`).
+
+### 8. Docker Security Hygiene
 - Self-signed cert volumes are mounted **read-only** (`:ro`) in containers.
 - Secrets are passed only as container environment variables — never baked into images.
 
