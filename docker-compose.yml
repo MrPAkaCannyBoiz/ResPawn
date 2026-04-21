@@ -120,6 +120,11 @@ services:
     environment:
       # run in development mode to enable hot reload and other dev features
       ASPNETCORE_ENVIRONMENT: Development # remove it for production
+      # gRPC target — must be the compose service name, not localhost, so the client
+      # container can reach the Java gRPC server. TrustSelfSigned bypasses cert
+      # validation because the server presents the project's self-signed cert.
+      GrpcServer__Address: https://grpc-server-springboot-service:6767
+      GrpcServer__TrustSelfSigned: "true"
       # Key and certificate properties for gRPC client TLS configuration + JWT properties for authentication
       PFX_FILE_PATH: ${PFX_FILE_PATH}
       PFX_PASSWORD: ${PFX_PASSWORD}
@@ -143,7 +148,11 @@ services:
       dockerfile: C_sharp/Server/KafkaConsumer/Dockerfile
     container_name: respawn-kafka-worker
     environment:
-      Kafka__BootstrapServers: respawn_kafka:29092
+      # For local Kafka (KRaft): keep KAFKA__BOOTSTRAPSERVERS=respawn_kafka:29092 in root .env
+      # For Azure Event Hubs: set KAFKA__BOOTSTRAPSERVERS=<ns>.servicebus.windows.net:9093
+      #                       and KAFKA__SASLPASSWORD=Endpoint=sb://... in root .env
+      Kafka__BootstrapServers: ${KAFKA__BOOTSTRAPSERVERS:-respawn_kafka:29092}
+      Kafka__SaslPassword: ${KAFKA__SASLPASSWORD:-}
     depends_on:
       - kafka
 
@@ -157,7 +166,10 @@ services:
       - "5195:5195"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      WebApiBaseUrl: http://grpc-client-dotnet-services:6761
+      # Must be HTTPS: the WebAPI login sets JwtCookie with Secure=true, which the
+      # server-side Blazor HttpClient cookie jar rejects on non-TLS responses.
+      WebApiBaseUrl: https://grpc-client-dotnet-services:6760
+      WebApi__TrustSelfSigned: "true"
     depends_on:
       grpc-client-dotnet-services:
         condition: service_started

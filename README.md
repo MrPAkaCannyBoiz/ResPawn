@@ -1,7 +1,7 @@
 # ResPawn
 
 > [!NOTE]
-> **Project Continuation:** This repository is a personal project continuing from a third-semester university project (SEP3). The original was a multi-tier school assignment; this continuation evolves it into **production-grade infrastructure** — adding Kafka, Docker, Kubernetes, Azure PaaS, CI/CD with coverage gates, and enterprise security patterns.
+> **Project Continuation:** This repository is a personal project continuing from a third-semester university project (SEP3). The original was a multi-tier school assignment; this continuation evolves it into **production-grade infrastructure** — adding Kafka (Confluent Cloud), Docker, CI/CD with coverage gates, and enterprise security patterns. Production runs on a Hetzner VPS with `docker-compose`.
 
 ---
 
@@ -12,7 +12,8 @@
 - [Security Implemented](#security-implemented)
 - [Testing & CI/CD](#testing--cicd)
 - [Running Locally](#running-locally)
-- [Currently Working On](#currently-working-on--azure-paas--kubernetes)
+- [Production Deployment](#production-deployment--hetzner-vps)
+- [Previously Planned (Azure — Cancelled)](#previously-planned--azure-paas--kubernetes--cancelled)
 - [Features](#features)
 - [Analyses & Designs](#analyses--designs)
 - [TLS/SSL Certificate Setup Guide](#tlsssl-certificate-setup-guide)
@@ -69,15 +70,16 @@ The system is decomposed into **four containerized microservices** that communic
 ### Infrastructure & Deployment
 | Technology | Purpose |
 |---|---|
-| Docker / Docker Compose | Local multi-service orchestration |
-| Kubernetes | Production container orchestration (manifests in `/k8s`) |
+| Docker / Docker Compose | Local development & production deployment |
+| Hetzner VPS | Production hosting (docker-compose with prod override) |
+| Confluent Cloud Kafka | Managed Kafka cluster (SASL_SSL, Austria East) |
+| Kubernetes (minikube) | Local k8s demo/learning only (manifests in `/k8s`) |
 | GitHub Actions | CI/CD: automated build, test, coverage check, artifact upload |
 
-### Security & Cloud
+### Security
 | Technology | Purpose |
 |---|---|
-| Azure Key Vault | Secrets & certificate management (no `.env` in production) |
-| Azure Identity / `DefaultAzureCredential` | Passwordless auth to Azure services via Managed Identity |
+| Environment variables (`.env.prod`) | Production secrets management (DB, JWT, Kafka SASL, SMTP) |
 | JWT Bearer (`Microsoft.AspNetCore.Authentication.JwtBearer`) | Stateless API authentication |
 | TLS/SSL (PKCS12 / `.p12`) | Encrypted gRPC channel between .NET and Spring Boot |
 | Spring Security | Java-layer HTTP and gRPC security |
@@ -91,24 +93,24 @@ The system is decomposed into **four containerized microservices** that communic
 The gRPC channel between the .NET WebAPI (client) and Spring Boot (server) is encrypted end-to-end using **one-way TLS** with a PKCS12 certificate:
 - **Spring Boot** loads the keystore via `spring.ssl.bundle.jks.sep3` bound to environment variables.
 - **.NET WebAPI** configures Kestrel with the same `.p12` certificate via `PFX_FILE_PATH` / `PFX_PASSWORD`.
-- In production: certificates are sourced from **Azure Key Vault** (`azure-spring-boot-starter-keyvault-certificates`) — no cert files on disk.
+- In production: certificates are passed via environment variables and volume mounts on the VPS.
 
 ### 2. JWT Bearer Authentication
 - All protected API endpoints require a valid JWT token.
-- Tokens are validated against issuer, audience, signing key — all loaded from environment variables / Key Vault.
+- Tokens are validated against issuer, audience, signing key — all loaded from environment variables.
 - Token can also be read from a cookie (custom `JwtBearerEvents` on the .NET side).
 
 ### 3. Spring Security (Java)
 - HTTP Basic auth guards the Spring Boot management layer (`sep3admin` user, password from env).
 - `spring-boot-starter-security` applied to REST and gRPC layers.
 
-### 4. Azure Key Vault — Secrets Management
-- **Java (Spring Boot):** `spring-cloud-azure-starter-keyvault` + `azure-spring-boot-starter-keyvault-certificates` inject secrets and certificates at startup via Azure Managed Identity — zero hardcoded credentials.
-- **.NET (KafkaConsumer & WebAPI):** `Azure.Extensions.AspNetCore.Configuration.Secrets` + `Azure.Identity` (`DefaultAzureCredential`) pull secrets at runtime.
-- Sensitive values (DB passwords, JWT keys, Kafka SASL passwords) **never appear in code or committed files**.
+### 4. Environment-Based Secrets Management
+- All sensitive values (DB passwords, JWT keys, Kafka SASL credentials, SMTP passwords) are passed via environment variables using `.env.prod` on the VPS — **never hardcoded in code or committed files**.
+- Dev uses a local `.env` with placeholder credentials; production uses `.env.prod` (gitignored).
 
-### 5. SASL/TLS for Azure Event Hubs (Kafka)
-- When deployed to Azure, the Kafka worker switches from plaintext local Kafka to **SASL_SSL** against Azure Event Hubs — toggled purely via environment variables (`Kafka__SaslPassword`, `Kafka__SecurityProtocol`, `Kafka__SaslMechanism`).
+### 5. SASL/TLS for Confluent Cloud Kafka
+- In production, the Kafka worker and Spring Boot connect to **Confluent Cloud** over **SASL_SSL** — toggled purely via environment variables (`Kafka__SaslPassword`, `Kafka__SecurityProtocol`, `Kafka__SaslMechanism`).
+- Locally, the services connect to a self-hosted KRaft Kafka container over plaintext.
 
 ### 6. Resilience — Dead Letter Topic
 - The Kafka email consumer uses **Polly** with 3-attempt exponential backoff.
@@ -164,38 +166,67 @@ docker compose up --build
 
 ---
 
-## Currently Working On — Azure PaaS & Kubernetes
+## Production Deployment — Hetzner VPS
 
-The local `docker-compose` stack is being migrated to a fully managed Azure cloud environment. The plan is documented in [`documents/my-note/production-deployment-plan.md`](documents/my-note/production-deployment-plan.md).
+Production runs on a **Hetzner VPS** using `docker-compose` with a production override file. This replaces the earlier Azure PaaS plan (see [below](#previously-planned--azure-paas--kubernetes--cancelled)).
 
-### Phase 1 — Managed Services (in progress)
-- **Azure Database for PostgreSQL Flexible Server** — PaaS replacement for the local Postgres container; 100% wire-compatible with existing JPA/EF code.
-- **Azure Event Hubs** (Kafka-compatible endpoint, port 9093) — PaaS replacement for the local KRaft container; consumer switches protocol via env vars only.
-- **Azure Key Vault (`respawn-prod-kv`)** — already partially integrated in both Java and .NET; stores DB credentials, JWT keys, Kafka SASL passwords, and TLS certificates.
+### How It Works
+The same `docker-compose.yml` used for local development is extended by `docker-compose.prod.yml`, which:
+- Disables the local Kafka container (Confluent Cloud is used instead)
+- Sets `ASPNETCORE_ENVIRONMENT=Production` and `SPRING_PROFILES_ACTIVE=prod`
+- Binds all ports to `127.0.0.1` (behind a reverse proxy for public HTTPS)
+- Reads all secrets from `.env.prod` (gitignored, never committed)
 
-### Phase 2 — Code Refactoring for Key Vault Auth (in progress)
-- Java: `spring-cloud-azure-starter-keyvault` + `azure-spring-boot-starter-keyvault-certificates` already added to `pom.xml`; Key Vault endpoint wired in `application.properties`.
-- .NET: `Azure.Extensions.AspNetCore.Configuration.Secrets` + `Azure.Identity` already added to `KafkaConsumer.csproj`.
+### Deploying
+```bash
+# On the VPS:
+cp .env.prod.example .env.prod   # fill in real credentials
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d --build
+```
 
-### Phase 3 — TLS Offloading
-- Remove self-signed cert volume mounts from containers.
-- Services communicate over plain HTTP **internally** within the Azure virtual network.
-- Azure Ingress Controller (or Azure Container Apps built-in ingress) handles HTTPS termination at the edge using a managed certificate.
+### Production Stack
+| Component | Solution |
+|---|---|
+| Hosting | Hetzner VPS |
+| Kafka | Confluent Cloud (SASL_SSL, Austria East) |
+| PostgreSQL | Self-hosted in Docker on the VPS |
+| Secrets | `.env.prod` environment file |
+| HTTPS | Reverse proxy (Caddy/nginx) with Let's Encrypt |
 
-### Phase 4 — Container Registry & Deployment
-- **Azure Container Registry (ACR)** — GitHub Actions will build all four Dockerfiles and push images on merge to `main`.
-- **Azure Container Apps (ACA)** — Serverless equivalent of `docker-compose` in the cloud:
-  - System-Assigned Managed Identity on each Container App.
-  - RBAC: `Key Vault Secrets User` role granted to each identity.
-  - Internal DNS routing between services (no public IPs between microservices).
-
-### Kubernetes (k8s/)
-Kubernetes manifests are drafted in `/k8s` for cases where AKS is preferred over Container Apps:
-- `java-t3-deployment.yaml` + `java-t3-service.yaml` — Spring Boot (2 replicas)
+### Kubernetes (k8s/ — Local Only)
+Kubernetes manifests in `/k8s` are kept for **local development with minikube** to demonstrate how services would run in a k8s environment:
+- `java-t3-deployment.yaml` + `java-t3-service.yaml` — Spring Boot
 - `csharp-t2-deployment.yaml` + `csharp-t2-service.yaml` — .NET WebAPI
 - `kafka-statefulset.yaml` — Kafka StatefulSet
 - `postgres-statefulset.yaml` — PostgreSQL StatefulSet
 - `kustomization.yaml` — Kustomize overlay pulling config/secrets from `.env`
+
+---
+
+## Previously Planned — Azure PaaS & Kubernetes (Cancelled)
+
+> **Cancelled (April 2026):** The Azure cloud migration was abandoned due to cost. Running AKS, ACR, Key Vault, and Event Hubs/Confluent Cloud together was not cost-effective for this project. All Azure resources have been deleted. Production now uses a Hetzner VPS with docker-compose (see above).
+
+<details>
+<summary>Original Azure migration plan (for reference)</summary>
+
+~~The local `docker-compose` stack was being migrated to a fully managed Azure cloud environment.~~
+
+~~**Phase 1 — Managed Services:**
+Azure Database for PostgreSQL Flexible Server, Azure Event Hubs (Kafka-compatible), Azure Key Vault for secrets & certificates.~~
+
+~~**Phase 2 — Code Refactoring for Key Vault Auth:**
+Java `spring-cloud-azure-starter-keyvault` and .NET `Azure.Extensions.AspNetCore.Configuration.Secrets` + `Azure.Identity` for passwordless auth via Managed Identity.~~
+
+~~**Phase 3 — TLS Offloading:**
+Remove self-signed certs from containers; Azure Ingress Controller handles HTTPS termination.~~
+
+~~**Phase 4 — Container Registry & Deployment:**
+Azure Container Registry (ACR) for images, Azure Container Apps (ACA) or AKS for orchestration with Managed Identity RBAC.~~
+
+~~**AKS-specific manifests** (Workload Identity, SecretProviderClass for Key Vault CSI driver) were drafted in `k8s/aks/` but have been deleted.~~
+
+</details>
 
 ---
 
@@ -313,11 +344,13 @@ JWT__Subject=your_custom_jwt_subject
 
 ---
 
-### Production (Azure Key Vault)
+### Production (Hetzner VPS)
 
-Certificates and secrets are sourced from **Azure Key Vault** — no `.env` files or cert files are deployed to production containers.
+Secrets are managed via a `.env.prod` file on the VPS (gitignored). The production override `docker-compose.prod.yml` sets all services to Production mode and connects to Confluent Cloud Kafka via SASL_SSL.
 
-- **Java:** `spring.cloud.azure.keyvault.secret.endpoint=https://respawn-prod-kv.vault.azure.net/`
-- **.NET:** `Azure.Extensions.AspNetCore.Configuration.Secrets` + `DefaultAzureCredential` (Managed Identity)
+```bash
+# Deploy:
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d --build
+```
 
-> See [`documents/my-note/production-deployment-plan.md`](documents/my-note/production-deployment-plan.md) for the full migration plan.
+> See `.env.prod.example` for the full list of required environment variables.

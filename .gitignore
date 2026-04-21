@@ -11,6 +11,7 @@ out/
 .env
 .env.local
 .env.*.local
+.env.prod
 
 #self-signed certificates (JKS/p12)
 *.jks
