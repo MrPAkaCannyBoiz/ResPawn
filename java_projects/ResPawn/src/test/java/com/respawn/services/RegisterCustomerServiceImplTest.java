@@ -105,7 +105,7 @@ class RegisterCustomerServiceImplTest {
         assertEquals(10, response.getAddress().getId());
         assertEquals(postalCode, response.getPostal().getPostalCode());
 
-        verify(emailProducer).sendWelcomeEmailEvent(new WelcomeEmailDto(email, firstName, lastName));
+        verify(emailProducer).sendWelcomeEmailEvent(new WelcomeEmailDto(firstName, lastName, email));
         verify(customerAddressRepository).save(any(CustomerAddressEntity.class));
     }
 
