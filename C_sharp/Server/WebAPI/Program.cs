@@ -89,8 +89,7 @@ builder.Services.AddAuthorization(); // this is needed for jwt auth, remove if j
 // use .env
 var pfxFilePath = Environment.GetEnvironmentVariable("PFX_FILE_PATH") 
     ?? throw new InvalidOperationException("PFX_FILE_PATH environment variable is not set.");
-var pfxPassword = Environment.GetEnvironmentVariable("PFX_PASSWORD") 
-    ?? throw new InvalidOperationException("PFX_PASSWORD environment variable is not set.");
+var pfxPassword = Environment.GetEnvironmentVariable("PFX_PASSWORD");
 
 builder.WebHost.ConfigureKestrel(options =>
 {
@@ -98,7 +97,14 @@ builder.WebHost.ConfigureKestrel(options =>
     // change from ListenAnyIP to ListenLocalhost if you want to restrict access to localhost only
     options.ListenAnyIP(6760, lo =>
     {
-        lo.UseHttps(pfxFilePath, pfxPassword); // key pair and its password
+        if (string.IsNullOrEmpty(pfxPassword))
+        {
+            lo.UseHttps(pfxFilePath); // Load without password
+        }
+        else
+        {
+            lo.UseHttps(pfxFilePath, pfxPassword); // Load with password
+        }
     });
 });
 

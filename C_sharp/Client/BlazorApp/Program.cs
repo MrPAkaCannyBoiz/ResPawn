@@ -13,9 +13,28 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 var webApiBaseUrl = builder.Configuration["WebApiBaseUrl"]!;
-builder.Services.AddScoped(sp => new HttpClient
+var trustSelfSigned = string.Equals(
+    builder.Configuration["WebApi:TrustSelfSigned"]
+        ?? Environment.GetEnvironmentVariable("WebApi__TrustSelfSigned"),
+    "true",
+    StringComparison.OrdinalIgnoreCase);
+
+builder.Services.AddScoped(sp =>
 {
-    BaseAddress = new Uri(webApiBaseUrl)
+    var handler = new HttpClientHandler
+    {
+        UseCookies = true,
+        CookieContainer = new System.Net.CookieContainer()
+    };
+    if (trustSelfSigned)
+    {
+        handler.ServerCertificateCustomValidationCallback =
+            HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+    }
+    return new HttpClient(handler)
+    {
+        BaseAddress = new Uri(webApiBaseUrl)
+    };
 });
 
 builder.Services.AddScoped<IRegisterCustomerService, HttpRegisterCustomerService>();
