@@ -143,9 +143,9 @@ public class RegisterCustomerServiceImpl extends CustomerRegisterServiceGrpc.Cus
             responseObserver.onNext(response);
             responseObserver.onCompleted();
             // producer send the event with this customer email to trigger welcome email
-            var emailDto = new WelcomeEmailDto(savedCustomer.getEmail(),
-                    savedCustomer.getFirstName(),
-                    savedCustomer.getLastName());
+            var emailDto = new WelcomeEmailDto(savedCustomer.getFirstName(),
+                    savedCustomer.getLastName(),
+                    savedCustomer.getEmail());
             emailProducer.sendWelcomeEmailEvent(emailDto);
         }
         catch (DataIntegrityViolationException ex) // handle unique constraint violations
