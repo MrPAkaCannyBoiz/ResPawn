@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: java-t3-service 
+  labels:
+    app: java-t3-deployment # must match the label in the deployment
+spec:
+  selector:
+    app: java-t3-deployment # must match the label in the deployment
+  ports:
+    - protocol: TCP
+      port: 8080 # spring boot server port
+      targetPort: 8080
+    - protocol: TCP
+      port: 6767 # gRPC server port
+      targetPort: 6767

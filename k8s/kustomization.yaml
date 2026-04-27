@@ -1,0 +1,13 @@
+resources:
+  - java-t3-deployment.yaml
+  - java-t3-service.yaml
+
+configMapGenerator:
+  - name: java-t3-config
+    env:
+      - ../.env
+
+secretGenerator:
+  - name: java-t3-secrets
+    envs:
+      - ../.env
