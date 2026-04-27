@@ -12,7 +12,7 @@ public class KafkaTopicConfig
     public NewTopic welcomeEmailTopic() {
         return TopicBuilder.name("welcomeEmail")
                 .partitions(3)
-                .replicas(1)
+                .replicas(3)
                 .build();
     }
 
@@ -20,7 +20,7 @@ public class KafkaTopicConfig
     public NewTopic testTopic(){
         return TopicBuilder.name("test")
                 .partitions(3)
-                .replicas(1)
+                .replicas(3)
                 .build();
     }
 
