@@ -1,6 +1,6 @@
 package com.respawn.services;
 
-import com.respawn.services.kafka.producer.services.EmailProducerImpl;
+import com.respawn.services.interfaces.EmailProducer;
 import com.respawnmarket.*;
 import io.grpc.stub.StreamObserver;
 import com.respawn.entities.CustomerEntity;
@@ -19,18 +19,15 @@ public class GetCustomerServiceImpl extends GetCustomerServiceGrpc.GetCustomerSe
   private final CustomerRepository customerRepository;
   private final AddressRepository addressRepository;
   private final PostalRepository postalRepository;
-  private final EmailProducerImpl emailProducer;
 
   @Autowired public GetCustomerServiceImpl(
       CustomerRepository customerRepository,
       AddressRepository addressRepository,
-      PostalRepository postalRepository,
-      EmailProducerImpl emailProducer)
+      PostalRepository postalRepository)
   {
     this.customerRepository = customerRepository;
     this.addressRepository = addressRepository;
     this.postalRepository = postalRepository;
-    this.emailProducer = emailProducer;
   }
 
     // use case for getting customer info (admin only)
@@ -96,8 +93,6 @@ public class GetCustomerServiceImpl extends GetCustomerServiceGrpc.GetCustomerSe
                 .build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
-        // delete this later
-        emailProducer.sendTestEvent();
     }
 
     private List<Address> getAddressesForCustomer(int customerId)

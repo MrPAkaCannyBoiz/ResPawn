@@ -1,7 +1,6 @@
 package com.respawn.services;
 import com.respawn.dtos.WelcomeEmailDto;
-import com.respawn.services.kafka.producer.interfaces.EmailProducer;
-import com.respawn.services.kafka.producer.services.EmailProducerImpl;
+import com.respawn.services.interfaces.EmailProducer;
 import com.respawnmarket.CustomerRegisterServiceGrpc;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -45,7 +44,7 @@ public class RegisterCustomerServiceImpl extends CustomerRegisterServiceGrpc.Cus
                                        CustomerRepository customerRepository,
                                        PostalRepository postalRepository,
                                        CustomerAddressRepository customerAddressRepository,
-                                       EmailProducerImpl emailProducer)
+                                       EmailProducer emailProducer)
     {
         this.addressRepository = addressRepository;
         this.customerRepository = customerRepository;

@@ -4,9 +4,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.14.36717.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{DAD03CFC-D5FA-AC94-41C7-9ABAB326F09E}"
-	ProjectSection(SolutionItems) = preProject
-		Dockerfile = Dockerfile
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{4F52FD11-658E-A102-6CD3-7D7C16FFA15B}"
 EndProject
@@ -20,7 +17,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorApp", "Client\BlazorA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReSpawnMarket.SDK", "ReSpawnMarket.SDK\ReSpawnMarket.SDK.csproj", "{F6339289-23B3-4760-8D51-1BC05E1F8FAD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KafkaConsumer", "Server\KafkaConsumer\KafkaConsumer.csproj", "{7A49F049-8A29-4D5F-B2A8-B8924EFB9515}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessageConsumer", "Server\MessageConsumer\MessageConsumer.csproj", "{7A49F049-8A29-4D5F-B2A8-B8924EFB9515}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -445,3 +445,16 @@ service GetAddressService
 {
   rpc GetAllPawnshopAddresses(GetAllPawnshopAddressesRequest) returns (GetAllPawnshopAddressesResponse);
 }
+
+message RabbitMQTestRequest
+{
+  Empty empty = 1;
+}
+message RabbitMQTestResponse
+{
+  string response = 1;
+}
+service RabbitMQTestService
+{
+  rpc ExecuteTest(RabbitMQTestRequest) returns (RabbitMQTestResponse);
+}

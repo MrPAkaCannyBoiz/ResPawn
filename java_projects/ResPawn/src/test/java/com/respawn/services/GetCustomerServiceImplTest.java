@@ -1,12 +1,10 @@
 package com.respawn.services;
 
-import com.respawn.entities.AddressEntity;
 import com.respawn.entities.CustomerEntity;
-import com.respawn.entities.PostalEntity;
 import com.respawn.repositories.AddressRepository;
 import com.respawn.repositories.CustomerRepository;
 import com.respawn.repositories.PostalRepository;
-import com.respawn.services.kafka.producer.services.EmailProducerImpl;
+import com.respawn.services.interfaces.EmailProducer;
 import com.respawnmarket.GetAllCustomersRequest;
 import com.respawnmarket.GetAllCustomersResponse;
 import com.respawnmarket.GetCustomerRequest;
@@ -31,7 +29,6 @@ class GetCustomerServiceImplTest {
     private CustomerRepository customerRepository;
     private AddressRepository addressRepository;
     private PostalRepository postalRepository;
-    private EmailProducerImpl emailProducer;
     private GetCustomerServiceImpl service;
 
     @BeforeEach
@@ -39,8 +36,7 @@ class GetCustomerServiceImplTest {
         customerRepository = mock(CustomerRepository.class);
         addressRepository = mock(AddressRepository.class);
         postalRepository = mock(PostalRepository.class);
-        emailProducer = mock(EmailProducerImpl.class);
-        service = new GetCustomerServiceImpl(customerRepository, addressRepository, postalRepository, emailProducer);
+        service = new GetCustomerServiceImpl(customerRepository, addressRepository, postalRepository);
     }
 
     @Test

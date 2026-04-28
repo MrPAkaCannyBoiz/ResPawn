@@ -9,7 +9,7 @@ import com.respawn.repositories.AddressRepository;
 import com.respawn.repositories.CustomerAddressRepository;
 import com.respawn.repositories.CustomerRepository;
 import com.respawn.repositories.PostalRepository;
-import com.respawn.services.kafka.producer.services.EmailProducerImpl;
+import com.respawn.services.interfaces.EmailProducer;
 import com.respawnmarket.RegisterCustomerRequest;
 import com.respawnmarket.RegisterCustomerResponse;
 import io.grpc.Status;
@@ -29,7 +29,7 @@ class RegisterCustomerServiceImplTest {
     private CustomerRepository customerRepository;
     private PostalRepository postalRepository;
     private CustomerAddressRepository customerAddressRepository;
-    private EmailProducerImpl emailProducer;
+    private EmailProducer emailProducer;
     private RegisterCustomerServiceImpl service;
 
     @BeforeEach
@@ -38,7 +38,7 @@ class RegisterCustomerServiceImplTest {
         customerRepository = mock(CustomerRepository.class);
         postalRepository = mock(PostalRepository.class);
         customerAddressRepository = mock(CustomerAddressRepository.class);
-        emailProducer = mock(EmailProducerImpl.class);
+        emailProducer = mock(EmailProducer.class);
 
         service = new RegisterCustomerServiceImpl(
                 addressRepository,

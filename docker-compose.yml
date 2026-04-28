@@ -2,41 +2,29 @@
 
 services:
 
-  kafka:
-    image: confluentinc/cp-kafka:latest
-    hostname: respawn_kafka
-    container_name: respawn_kafka
+  rabbitmq:
+    image: rabbitmq:latest
+    hostname: respawn_rabbitmq
+    container_name: respawn_rabbitmq
     ports:
-      - "9092:9092"
+      - "5672:5672"
+      - "15672:15672"
     environment:
-      # KRaft settings
-      KAFKA_KRAFT_MODE: 'true'
-      KAFKA_NODE_ID: 1
-      KAFKA_PROCESS_ROLES: 'broker,controller'
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@respawn_kafka:29093'
-      KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:9092'
-      # Those are the listeners that Kafka will advertise to clients, put those value in configuration placeholders
-      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://respawn_kafka:29092,PLAINTEXT_HOST://localhost:9092'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
-      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
-      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
-      
-      # Persistence & Logs
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_LOG_DIRS: '/var/lib/kafka/data'
-      # Required for KRaft to initialize storage automatically
-      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk' 
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
     volumes:
-      - kafka_data:/var/lib/kafka/data
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
       
 
 
   postgres:
     image: postgres:latest
-    container_name: portgres_respawn
+    container_name: postgres_respawn
     environment:
       # These ${VARIABLES} are read from the .env file in the same directory as docker-compose.yml
       POSTGRES_DB: ${POSTGRES_DB}
@@ -84,22 +72,12 @@ services:
         SSL_KEYSTORE_PASSWORD: ${KEY_PASSWORD}
         KEY_PASSWORD: ${KEY_PASSWORD}
       
-        # Kafka (Matches application.properties placeholders)
-        # Pointing to the Kafka container's internal hostname and port, 
-        # not localhost, since this is from the perspective of the Spring Boot container
-        SPRING_KAFKA_BOOTSTRAP_SERVERS: respawn_kafka:29092
-        # Consumer 
-        SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS: respawn_kafka:29092
-        SPRING_KAFKA_CONSUMER_GROUP_ID: respawn-group
-        SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: earliest
-        SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: org.apache.kafka.common.serialization.StringDeserializer
-        SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER: org.apache.kafka.common.serialization.StringDeserializer
-        SPRING_KAFKA_CONSUMER_PROPERTIES_SPRING_JSON_TRUSTED_PACKAGES: com.respawn
-        # Producer
-        SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS: respawn_kafka:29092
-        SPRING_KAFKA_PRODUCER_ACKS: -1
-        SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: org.apache.kafka.common.serialization.StringSerializer
-        SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: org.apache.kafka.common.serialization.StringSerializer
+        # RabbitMQ
+        SPRING_PROFILES_ACTIVE: rabbitmq
+        SPRING_RABBITMQ_HOST: respawn_rabbitmq
+        SPRING_RABBITMQ_PORT: 5672
+        SPRING_RABBITMQ_USERNAME: guest
+        SPRING_RABBITMQ_PASSWORD: guest
 
       volumes:
         # Mapped ./self_signed_cert (host) to /app/self_signed_certs (container)
@@ -132,7 +110,7 @@ services:
       JWT__ISSUER: ${JWT__ISSUER}
       JWT__AUDIENCE: ${JWT__AUDIENCE}
       JWT__SUBJECT: ${JWT__SUBJECT}
-      KAFKA__BOOTSTRAPSERVERS: ${KAFKA__BOOTSTRAPSERVERS}
+      # Kafka env var removed — WebAPI has no message producer code
       
     volumes:
       # Mapped ./self_signed_cert (host) to /app/self_signed_certs (container)
@@ -142,19 +120,18 @@ services:
         condition: service_started
   
 
-  kafka-worker:
+  message-worker:
     build:
       context: .
       dockerfile: C_sharp/Server/KafkaConsumer/Dockerfile
-    container_name: respawn-kafka-worker
+    container_name: respawn-message-worker
     environment:
-      # For local Kafka (KRaft): keep KAFKA__BOOTSTRAPSERVERS=respawn_kafka:29092 in root .env
-      # For Azure Event Hubs: set KAFKA__BOOTSTRAPSERVERS=<ns>.servicebus.windows.net:9093
-      #                       and KAFKA__SASLPASSWORD=Endpoint=sb://... in root .env
-      Kafka__BootstrapServers: ${KAFKA__BOOTSTRAPSERVERS:-respawn_kafka:29092}
-      Kafka__SaslPassword: ${KAFKA__SASLPASSWORD:-}
+      RabbitMQ__Host: respawn_rabbitmq
+      RabbitMQ__Username: guest
+      RabbitMQ__Password: guest
     depends_on:
-      - kafka
+      rabbitmq:
+        condition: service_healthy
 
 
   blazor-frontend:
@@ -176,8 +153,8 @@ services:
 
 
 volumes: # Define named volumes for data persistence
-  kafka_data:
-    name: kafka_data
+  rabbitmq_data:
+    name: rabbitmq_data
   db_data:
     name: db_data
   self_signed_certs:

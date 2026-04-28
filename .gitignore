@@ -38,3 +38,6 @@ prompts/
 
 # dotnet unit test results
 TestResults/
+
+# claude
+.claude/
