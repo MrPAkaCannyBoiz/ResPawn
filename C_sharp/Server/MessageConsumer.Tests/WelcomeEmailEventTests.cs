@@ -1,8 +1,8 @@
 using Xunit;
 using System.Text.Json;
-using KafkaConsumer.Events;
+using MessageConsumer.Events;
 
-namespace KafkaConsumer.Tests;
+namespace MessageConsumer.Tests;
 
 public class WelcomeEmailEventTests
 {

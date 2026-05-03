@@ -4,7 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
-    <RootNamespace>KafkaConsumer.Tests</RootNamespace>
+    <RootNamespace>MessageConsumer.Tests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,11 +19,12 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="MassTransit.TestFramework" Version="8.4.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="11.0.0-preview.2.26159.112" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="11.0.0-preview.2.26159.112" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\KafkaConsumer\KafkaConsumer.csproj" />
+    <ProjectReference Include="..\MessageConsumer\MessageConsumer.csproj" />
   </ItemGroup>
 </Project>

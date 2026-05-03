@@ -6,11 +6,13 @@ on:
       - '**'
     paths:
       - 'C_sharp/**'
+      - 'Shared_proto/**'
   pull_request:
     branches:
       - '**'
     paths:
       - 'C_sharp/**'
+      - 'Shared_proto/**'
 
 jobs:
   build-and-test:
@@ -29,20 +31,20 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Restore KafkaConsumer dependencies
-        run: dotnet restore KafkaConsumer/KafkaConsumer.csproj
+      - name: Restore MessageConsumer dependencies
+        run: dotnet restore MessageConsumer/MessageConsumer.csproj
 
-      - name: Build KafkaConsumer
-        run: dotnet build KafkaConsumer/KafkaConsumer.csproj --no-restore -c Release
+      - name: Build MessageConsumer
+        run: dotnet build MessageConsumer/MessageConsumer.csproj --no-restore -c Release
 
       - name: Restore test project
-        run: dotnet restore KafkaConsumer.Tests/KafkaConsumer.Tests.csproj
+        run: dotnet restore MessageConsumer.Tests/MessageConsumer.Tests.csproj
 
       - name: Run tests with coverage
         run: |
-          dotnet test KafkaConsumer.Tests/KafkaConsumer.Tests.csproj \
+          dotnet test MessageConsumer.Tests/MessageConsumer.Tests.csproj \
             --no-restore \
-            --settings KafkaConsumer.Tests/coverlet.runsettings \
+            --settings MessageConsumer.Tests/coverlet.runsettings \
             --collect:"XPlat Code Coverage" \
             --results-directory ../../coverage
 
@@ -64,3 +66,33 @@ jobs:
         with:
           name: dotnet-coverage-report
           path: coverage/report/
+
+  build-webapi:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore and build WebAPI
+        run: dotnet build C_sharp/Server/WebAPI/WebAPI.csproj -c Release
+
+  build-blazor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore and build BlazorApp
+        run: dotnet build C_sharp/Client/BlazorApp/BlazorApp.csproj -c Release

@@ -1,5 +1,5 @@
 using FluentEmail.Mailgun;
-using KafkaConsumer.Consumers;
+using MessageConsumer.Consumers;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

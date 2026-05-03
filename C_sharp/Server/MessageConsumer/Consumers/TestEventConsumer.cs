@@ -1,10 +1,10 @@
 using FluentEmail.Core;
-using KafkaConsumer.Events;
+using MessageConsumer.Events;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace KafkaConsumer.Consumers;
+namespace MessageConsumer.Consumers;
 
 public class TestEventConsumer : IConsumer<TestEvent>
 {

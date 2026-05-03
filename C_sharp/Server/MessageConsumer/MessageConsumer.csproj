@@ -5,7 +5,7 @@
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <RootNamespace>KafkaConsumer</RootNamespace>
+        <RootNamespace>MessageConsumer</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace KafkaConsumer.Events;
+namespace MessageConsumer.Events;
 
 public record WelcomeEmailEvent(
     // the property name in C# can be different from the JSON property name
