@@ -123,7 +123,7 @@ services:
   message-worker:
     build:
       context: .
-      dockerfile: C_sharp/Server/KafkaConsumer/Dockerfile
+      dockerfile: C_sharp/Server/MessageConsumer/Dockerfile
     container_name: respawn-message-worker
     environment:
       RabbitMQ__Host: respawn_rabbitmq
@@ -147,6 +147,18 @@ services:
       # server-side Blazor HttpClient cookie jar rejects on non-TLS responses.
       WebApiBaseUrl: https://grpc-client-dotnet-services:6760
       WebApi__TrustSelfSigned: "true"
+    depends_on:
+      grpc-client-dotnet-services:
+        condition: service_started
+
+
+  react-frontend:
+    build:
+      context: ./react-frontend
+      dockerfile: Dockerfile
+    container_name: respawn-react-frontend
+    ports:
+      - "3000:3000"
     depends_on:
       grpc-client-dotnet-services:
         condition: service_started
