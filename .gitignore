@@ -41,3 +41,17 @@ TestResults/
 
 # claude
 .claude/
+
+# React frontend
+react-frontend/node_modules/
+react-frontend/dist/
+# Added by code-review-graph
+.code-review-graph/
+.mcp.json
+.opencode.json
+.windsurfrules
+AGENTS.md
+CLAUDE.md
+.cursorrules
+GEMINI.md
+.kiro
