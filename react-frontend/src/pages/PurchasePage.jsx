@@ -6,7 +6,7 @@ import '../styles/product.css'
 
 export default function PurchasePage() {
   const { user } = useAuth()
-  const { items, removeItem, setQuantity, clear, totalPrice } = useCart()
+  const { items, removeItem, setQuantity, clear } = useCart()
   const [creditCard, setCreditCard] = useState({ cardNumber: '', cardholderName: '', expiration: '', cvv: '' })
   const [result, setResult] = useState(null)
   const [message, setMessage] = useState(null)

@@ -4,7 +4,7 @@ import { useAuth } from '../../hooks/useAuth'
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
-  const { user, isAuthenticated, isCustomer, isReseller, canSell, logout } = useAuth()
+  const { isAuthenticated, isCustomer, isReseller, canSell, logout } = useAuth()
   const navigate = useNavigate()
 
   const handleLogout = async () => {
