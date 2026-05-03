@@ -1,18 +1,23 @@
-name: Build, Startup Check
+name: spring-boot-test
 
 on:
   push:
     branches:
-      - '**' # all branches
+      - '**'
+    paths:
+      - 'java_projects/**'
+      - 'Shared_proto/**'
   pull_request:
     branches:
-      - '**' # all branches
+      - '**'
+    paths:
+      - 'java_projects/**'
+      - 'Shared_proto/**'
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
-     # Add default working directory for all run steps in this job
     defaults:
       run:
         working-directory: ./java_projects/ResPawn
@@ -26,8 +31,8 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '25'
+          cache: 'maven'
 
-      # -B flag is for batch mode, which is non-interactive and better for CI environments
       - name: Maven Clean Verify with Coverage Check
         run: mvn -B clean verify
 
@@ -40,19 +45,3 @@ jobs:
         with:
           name: jacoco-report
           path: java_projects/ResPawn/target/site/jacoco/
-
-      # - name: Startup Check (Spring Boot)
-      #   run: |
-      #     mvn -q -DskipTests spring-boot:run &
-      #     APP_PID=$!
-      #     echo "Waiting for Spring Boot to start..."
-      #     sleep 15
-          
-      #     if ps -p $APP_PID > /dev/null
-      #     then
-      #       echo "Spring Boot started successfully."
-      #       kill $APP_PID
-      #     else
-      #       echo "Spring Boot failed to start!"
-      #       exit 1
-      #     fi
