@@ -1,7 +1,7 @@
 # ResPawn
 
 > [!NOTE]
-> **Project Continuation:** This repository is a personal project continuing from a third-semester university project (SEP3). The original was a multi-tier school assignment; this continuation evolves it into **production-grade infrastructure** — adding Kafka (Confluent Cloud), Docker, CI/CD with coverage gates, and enterprise security patterns. Production runs on a Hetzner VPS with `docker-compose`.
+> **Project Continuation:** This repository is a personal project continuing from a third-semester university project (SEP3). The original was a multi-tier school assignment; this continuation evolves it into **production-grade infrastructure** — adding RabbitMQ, MassTransit, Docker, CI/CD with coverage gates, and enterprise security patterns. Production runs on a Hetzner VPS with `docker-compose`.
 
 ---
 
@@ -30,28 +30,29 @@ Demo on YouTube: https://youtu.be/FjboqOlDwV8 — Credits to [OliverX04](https:/
 
 ## Architecture
 
-The system is decomposed into **four containerized microservices** that communicate over gRPC and an event bus:
+The system is decomposed into **five containerized services** that communicate over gRPC and RabbitMQ:
 
 ```
 [Blazor Frontend]
       |  HTTP (REST)
 [.NET WebAPI]  ──── gRPC (TLS) ────  [Spring Boot gRPC Server]
-      |                                        |
-      |  Kafka Produce                  Kafka Produce/Consume
-      |                                        |
-[.NET Kafka Worker] ◄────────────────── [Apache Kafka / KRaft]
+                                              |
+                                       RabbitMQ Produce
+                                              |
+[.NET Message Worker] ◄──────────────── [RabbitMQ]
       |                                        |
     Email                              [PostgreSQL]
 ```
 
 | Service | Tech | Role |
 |---|---|---|
-| `grpc-server-springboot-service` | Java 25 / Spring Boot 4 | gRPC server, JPA/Hibernate, Kafka producer |
-| `grpc-client-dotnet-services` | .NET 10 / C# | REST API, gRPC client, JWT auth, Kafka producer |
+| `grpc-server-springboot-service` | Java 25 / Spring Boot 4 | gRPC server, JPA/Hibernate, RabbitMQ producer (Spring AMQP) |
+| `grpc-client-dotnet-services` | .NET 10 / C# | REST API, gRPC client, JWT auth |
 | `blazor-frontend` | .NET 10 / Blazor | Web UI |
-| `kafka-worker` | .NET 10 / C# | Background Kafka consumer — sends welcome emails via FluentEmail |
+| `message-worker` | .NET 10 / C# | MassTransit RabbitMQ consumer — sends welcome emails via FluentEmail |
+| `rabbitmq` | RabbitMQ | Message broker with fanout exchanges |
 
-**Message flow example (registration):** WebAPI receives REST call → produces `welcomeEmail` Kafka event → Kafka Worker consumes → sends email via SMTP/Mailgun → commits offset. On failure: exponential backoff (Polly) → Dead Letter Topic (`welcomeEmail-dlt`).
+**Message flow example (registration):** WebAPI receives REST call → gRPC to Spring Boot → publishes `WelcomeEmailDto` as JSON to RabbitMQ `welcomeEmail` fanout exchange → MassTransit consumer picks up → sends email via SMTP/Mailgun. On failure: MassTransit exponential backoff (5 retries) → message moved to `welcomeEmail_error` queue.
 
 ---
 
@@ -61,9 +62,11 @@ The system is decomposed into **four containerized microservices** that communic
 | Technology | Version | Purpose |
 |---|---|---|
 | Java / Spring Boot | 4.0.3 | gRPC server, REST endpoints, Spring Security, JPA |
-| .NET / C# | 10.0 | WebAPI (gRPC client), Blazor frontend, Kafka worker |
+| .NET / C# | 10.0 | WebAPI (gRPC client), Blazor frontend, message worker |
 | gRPC + Protocol Buffers | — | High-performance typed inter-service RPC |
-| Apache Kafka (KRaft) | Confluent latest | Async event-driven messaging (no ZooKeeper) |
+| RabbitMQ | latest | Async event-driven messaging with fanout exchanges |
+| Spring AMQP | — | RabbitMQ producer on the Java side (Jackson JSON serialization) |
+| MassTransit | 8.4 | RabbitMQ consumer transport abstraction on the C# side |
 | PostgreSQL | latest | Relational database |
 | Spring Data JPA / Hibernate | — | ORM for PostgreSQL |
 
@@ -72,18 +75,17 @@ The system is decomposed into **four containerized microservices** that communic
 |---|---|
 | Docker / Docker Compose | Local development & production deployment |
 | Hetzner VPS | Production hosting (docker-compose with prod override) |
-| Confluent Cloud Kafka | Managed Kafka cluster (SASL_SSL, Austria East) |
 | Kubernetes (minikube) | Local k8s demo/learning only (manifests in `/k8s`) |
 | GitHub Actions | CI/CD: automated build, test, coverage check, artifact upload |
 
 ### Security
 | Technology | Purpose |
 |---|---|
-| Environment variables (`.env.prod`) | Production secrets management (DB, JWT, Kafka SASL, SMTP) |
+| Environment variables (`.env.prod`) | Production secrets management (DB, JWT, RabbitMQ, SMTP) |
 | JWT Bearer (`Microsoft.AspNetCore.Authentication.JwtBearer`) | Stateless API authentication |
 | TLS/SSL (PKCS12 / `.p12`) | Encrypted gRPC channel between .NET and Spring Boot |
 | Spring Security | Java-layer HTTP and gRPC security |
-| Polly | Resilience: retry with exponential backoff + Dead Letter Topic |
+| MassTransit retry + error queues | Resilience: exponential backoff with automatic error queue routing |
 
 ---
 
@@ -105,16 +107,16 @@ The gRPC channel between the .NET WebAPI (client) and Spring Boot (server) is en
 - `spring-boot-starter-security` applied to REST and gRPC layers.
 
 ### 4. Environment-Based Secrets Management
-- All sensitive values (DB passwords, JWT keys, Kafka SASL credentials, SMTP passwords) are passed via environment variables using `.env.prod` on the VPS — **never hardcoded in code or committed files**.
+- All sensitive values (DB passwords, JWT keys, RabbitMQ credentials, SMTP passwords) are passed via environment variables using `.env.prod` on the VPS — **never hardcoded in code or committed files**.
 - Dev uses a local `.env` with placeholder credentials; production uses `.env.prod` (gitignored).
 
-### 5. SASL/TLS for Confluent Cloud Kafka
-- In production, the Kafka worker and Spring Boot connect to **Confluent Cloud** over **SASL_SSL** — toggled purely via environment variables (`Kafka__SaslPassword`, `Kafka__SecurityProtocol`, `Kafka__SaslMechanism`).
-- Locally, the services connect to a self-hosted KRaft Kafka container over plaintext.
+### 5. RabbitMQ Credentials
+- In production, RabbitMQ credentials are passed via environment variables (`RABBITMQ_USERNAME`, `RABBITMQ_PASSWORD`) in `.env.prod`.
+- Locally, the default `guest`/`guest` credentials are used for the self-hosted RabbitMQ container.
 
-### 6. Resilience — Dead Letter Topic
-- The Kafka email consumer uses **Polly** with 3-attempt exponential backoff.
-- Permanently failing messages are forwarded to `welcomeEmail-dlt` to prevent data loss without blocking the consumer.
+### 6. Resilience — MassTransit Error Queues
+- The MassTransit email consumer uses **exponential backoff** (5 retries, 2s–5min intervals).
+- Permanently failing messages are automatically routed to `welcomeEmail_error` queue to prevent data loss without blocking the consumer.
 
 ### 7. BCrypt — One-Way Password Hashing
 Passwords are **never stored in plain text**. Before persisting to PostgreSQL:
@@ -161,7 +163,8 @@ docker compose up --build
 | .NET WebAPI (HTTPS) | https://localhost:6760 |
 | Spring Boot REST | https://localhost:8080 |
 | gRPC Server | https://localhost:6767 |
-| Kafka broker | localhost:9092 |
+| RabbitMQ broker | localhost:5672 |
+| RabbitMQ Management UI | http://localhost:15672 |
 | PostgreSQL | localhost:5432 |
 
 ---
@@ -172,9 +175,9 @@ Production runs on a **Hetzner VPS** using `docker-compose` with a production ov
 
 ### How It Works
 The same `docker-compose.yml` used for local development is extended by `docker-compose.prod.yml`, which:
-- Disables the local Kafka container (Confluent Cloud is used instead)
-- Sets `ASPNETCORE_ENVIRONMENT=Production` and `SPRING_PROFILES_ACTIVE=prod`
+- Sets `ASPNETCORE_ENVIRONMENT=Production` and `SPRING_PROFILES_ACTIVE=rabbitmq,prod`
 - Binds all ports to `127.0.0.1` (behind a reverse proxy for public HTTPS)
+- Uses production RabbitMQ credentials from `.env.prod`
 - Reads all secrets from `.env.prod` (gitignored, never committed)
 
 ### Deploying
@@ -188,7 +191,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.
 | Component | Solution |
 |---|---|
 | Hosting | Hetzner VPS |
-| Kafka | Confluent Cloud (SASL_SSL, Austria East) |
+| Message Broker | RabbitMQ (self-hosted in Docker on the VPS) |
 | PostgreSQL | Self-hosted in Docker on the VPS |
 | Secrets | `.env.prod` environment file |
 | HTTPS | Reverse proxy (Caddy/nginx) with Let's Encrypt |
@@ -197,7 +200,6 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.
 Kubernetes manifests in `/k8s` are kept for **local development with minikube** to demonstrate how services would run in a k8s environment:
 - `java-t3-deployment.yaml` + `java-t3-service.yaml` — Spring Boot
 - `csharp-t2-deployment.yaml` + `csharp-t2-service.yaml` — .NET WebAPI
-- `kafka-statefulset.yaml` — Kafka StatefulSet
 - `postgres-statefulset.yaml` — PostgreSQL StatefulSet
 - `kustomization.yaml` — Kustomize overlay pulling config/secrets from `.env`
 
@@ -238,7 +240,7 @@ Azure Container Registry (ACR) for images, Azure Container Apps (ACA) or AKS for
 - Product/Item Inspection & Purchase
 - Customer Profile (Get / Update)
 - Address Lookup
-- Welcome Email on Registration (async, event-driven via Kafka)
+- Welcome Email on Registration (async, event-driven via RabbitMQ + MassTransit)
 
 ---
 
@@ -317,7 +319,10 @@ JWT__KEY=your_long_jwt_signing_key
 JWT__ISSUER=your_issuer
 JWT__AUDIENCE=your_audience
 JWT__SUBJECT=your_subject
-KAFKA__BOOTSTRAPSERVERS=respawn_kafka:29092
+SPRING_RABBITMQ_HOST=respawn_rabbitmq
+SPRING_RABBITMQ_PORT=5672
+SPRING_RABBITMQ_USERNAME=guest
+SPRING_RABBITMQ_PASSWORD=guest
 ```
 
 **Java local `.env`** (`java_projects/ResPawnMarket/.env`):
@@ -346,7 +351,7 @@ JWT__Subject=your_custom_jwt_subject
 
 ### Production (Hetzner VPS)
 
-Secrets are managed via a `.env.prod` file on the VPS (gitignored). The production override `docker-compose.prod.yml` sets all services to Production mode and connects to Confluent Cloud Kafka via SASL_SSL.
+Secrets are managed via a `.env.prod` file on the VPS (gitignored). The production override `docker-compose.prod.yml` sets all services to Production mode with production RabbitMQ credentials.
 
 ```bash
 # Deploy:
