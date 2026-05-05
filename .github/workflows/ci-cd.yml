@@ -223,53 +223,111 @@ jobs:
         if: always()
         run: docker compose down -v
 
-  # # ---------------------------------------------------------
-  # # Stage 3: Deploy (only on main, after ALL jobs pass)
-  # # ---------------------------------------------------------
-  # deploy:
-  #   needs: [spring-boot-test, dotnet-test, dotnet-build-webapi, dotnet-build-blazor, react-build, react-integration-test]
-  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-  #   runs-on: ubuntu-latest
+  # ---------------------------------------------------------
+  # Stage 3: Build & push Docker images to GHCR
+  # ---------------------------------------------------------
+  build-and-push-images:
+    needs: [spring-boot-test, dotnet-test, dotnet-build-webapi, dotnet-build-blazor, react-build, react-integration-test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
-  #   steps:
-  #     - name: Deploy to VPS
-  #       uses: appleboy/ssh-action@v1.0.3
-  #       env:
-  #         POSTGRES_DB:        ${{ secrets.POSTGRES_DB }}
-  #         DB_USERNAME:        ${{ secrets.DB_USERNAME }}
-  #         DB_PASSWORD:        ${{ secrets.DB_PASSWORD }}
-  #         RABBITMQ_USERNAME:  ${{ secrets.RABBITMQ_USERNAME }}
-  #         RABBITMQ_PASSWORD:  ${{ secrets.RABBITMQ_PASSWORD }}
-  #         JWT__KEY:           ${{ secrets.JWT__KEY }}
-  #         JWT__ISSUER:        ${{ secrets.JWT__ISSUER }}
-  #         JWT__AUDIENCE:      ${{ secrets.JWT__AUDIENCE }}
-  #         JWT__SUBJECT:       ${{ secrets.JWT__SUBJECT }}
-  #       with:
-  #         host:     ${{ secrets.SERVER_IP }}
-  #         username: root
-  #         key:      ${{ secrets.SSH_PRIVATE_KEY }}
-  #         envs:     POSTGRES_DB,DB_USERNAME,DB_PASSWORD,RABBITMQ_USERNAME,RABBITMQ_PASSWORD,JWT__KEY,JWT__ISSUER,JWT__AUDIENCE,JWT__SUBJECT,SMTP__USERNAME,SMTP__PASSWORD
-  #         script: |
-  #           set -e
-  #           cd /opt/ResPawn
-  #           git pull origin main
+    strategy:
+      matrix:
+        include:
+          - image: respawn-grpc-server
+            dockerfile: java_projects/ResPawn/Dockerfile
+          - image: respawn-grpc-client
+            dockerfile: C_sharp/Server/WebAPI/Dockerfile
+          - image: respawn-message-worker
+            dockerfile: C_sharp/Server/MessageConsumer/Dockerfile
 
-  #           # Write .env.prod — printf avoids heredoc issues with special characters
-  #           {
-  #             printf 'POSTGRES_DB=%s\n'       "$POSTGRES_DB"
-  #             printf 'DB_USERNAME=%s\n'       "$DB_USERNAME"
-  #             printf 'DB_PASSWORD=%s\n'       "$DB_PASSWORD"
-  #             printf 'DB_DRIVER=%s\n'         "org.postgresql.Driver"
-  #             printf 'DOCKER_DB_URL=%s\n'     "jdbc:postgresql://postgres:5432/$POSTGRES_DB"
-  #             printf 'RABBITMQ_USERNAME=%s\n' "$RABBITMQ_USERNAME"
-  #             printf 'RABBITMQ_PASSWORD=%s\n' "$RABBITMQ_PASSWORD"
-  #             printf 'JWT__KEY=%s\n'          "$JWT__KEY"
-  #             printf 'JWT__ISSUER=%s\n'       "$JWT__ISSUER"
-  #             printf 'JWT__AUDIENCE=%s\n'     "$JWT__AUDIENCE"
-  #             printf 'JWT__SUBJECT=%s\n'      "$JWT__SUBJECT"
-  #           } > .env.prod
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  #           docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d --build
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }} # this token is automatically provided by GitHub Actions and has permissions to push to GHCR in the same repo
 
-  #           # Remove dangling images left by the rebuild
-  #           docker image prune -f
+      - name: Build and push ${{ matrix.image }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: |
+            ghcr.io/mrpakacannyboiz/${{ matrix.image }}:latest
+            ghcr.io/mrpakacannyboiz/${{ matrix.image }}:${{ github.sha }}
+
+  # ---------------------------------------------------------
+  # Stage 4: Deploy to VPS (pull pre-built images)
+  # ---------------------------------------------------------
+  deploy:
+    needs: [build-and-push-images]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to VPS 
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          GHCR_TOKEN:             ${{ secrets.GHCR_PAT }}
+          POSTGRES_DB:            ${{ secrets.POSTGRES_DB }}
+          DB_USERNAME:            ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD:            ${{ secrets.DB_PASSWORD }}
+          RABBITMQ_USERNAME:      ${{ secrets.RABBITMQ_USERNAME }}
+          RABBITMQ_PASSWORD:      ${{ secrets.RABBITMQ_PASSWORD }}
+          JWT__KEY:               ${{ secrets.JWT__KEY }}
+          JWT__ISSUER:            ${{ secrets.JWT__ISSUER }}
+          JWT__AUDIENCE:          ${{ secrets.JWT__AUDIENCE }}
+          JWT__SUBJECT:           ${{ secrets.JWT__SUBJECT }}
+          SEED_RESELLER_NAME:     ${{ secrets.SEED_RESELLER_NAME }}
+          SEED_RESELLER_USERNAME: ${{ secrets.SEED_RESELLER_USERNAME }}
+          SEED_RESELLER_PASSWORD: ${{ secrets.SEED_RESELLER_PASSWORD }}
+        with:
+          host:     ${{ secrets.SERVER_IP }}
+          username: root
+          key:      ${{ secrets.SSH_PRIVATE_KEY }}
+          envs:     GHCR_TOKEN,POSTGRES_DB,DB_USERNAME,DB_PASSWORD,RABBITMQ_USERNAME,RABBITMQ_PASSWORD,JWT__KEY,JWT__ISSUER,JWT__AUDIENCE,JWT__SUBJECT,SMTP__USERNAME,SMTP__PASSWORD,SEED_RESELLER_NAME,SEED_RESELLER_USERNAME,SEED_RESELLER_PASSWORD
+          script: |
+            set -e
+            cd /opt/ResPawn
+            git pull origin main
+
+            # Login to GHCR to pull private images
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u mrpakacannyboiz --password-stdin
+
+            # Write .env.prod
+            {
+              printf 'POSTGRES_DB=%s\n'       "$POSTGRES_DB"
+              printf 'DB_USERNAME=%s\n'       "$DB_USERNAME"
+              printf 'DB_PASSWORD=%s\n'       "$DB_PASSWORD"
+              printf 'DB_DRIVER=%s\n'         "org.postgresql.Driver"
+              printf 'DOCKER_DB_URL=%s\n'     "jdbc:postgresql://postgres:5432/$POSTGRES_DB"
+              printf 'RABBITMQ_USERNAME=%s\n' "$RABBITMQ_USERNAME"
+              printf 'RABBITMQ_PASSWORD=%s\n' "$RABBITMQ_PASSWORD"
+              printf 'RABBITMQ_HOST=%s\n'       "respawn_rabbitmq"
+              printf 'RABBITMQ_PORT=%s\n'       "5672"
+              printf 'RABBITMQ__HOST=%s\n'      "respawn_rabbitmq"
+              printf 'GrpcServer__Address=%s\n' "http://grpc-server-springboot-service:6767"
+              printf 'CORS_ORIGIN=%s\n'         "https://respawn.cannyboiz.com"
+              printf 'JWT__KEY=%s\n'          "$JWT__KEY"
+              printf 'JWT__ISSUER=%s\n'       "$JWT__ISSUER"
+              printf 'JWT__AUDIENCE=%s\n'     "$JWT__AUDIENCE"
+              printf 'JWT__SUBJECT=%s\n'      "$JWT__SUBJECT"
+              printf 'SEED_RESELLER_NAME=%s\n'     "$SEED_RESELLER_NAME"
+              printf 'SEED_RESELLER_USERNAME=%s\n' "$SEED_RESELLER_USERNAME"
+              printf 'SEED_RESELLER_PASSWORD=%s\n' "$SEED_RESELLER_PASSWORD"
+            } > .env.prod
+
+            # Pull latest images from GHCR then start
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod pull
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d
+
+            # Remove old images
+            docker image prune -f

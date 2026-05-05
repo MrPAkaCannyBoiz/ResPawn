@@ -13,6 +13,7 @@
 - [Testing & CI/CD](#testing--cicd)
 - [Running Locally](#running-locally)
 - [Production Deployment](#production-deployment--hetzner-vps)
+- [Admin Setup — Reseller Accounts](#admin-setup--reseller-accounts)
 - [Previously Planned (Azure — Cancelled)](#previously-planned--azure-paas--kubernetes--cancelled)
 - [Features](#features)
 - [Analyses & Designs](#analyses--designs)
@@ -202,6 +203,36 @@ Kubernetes manifests in `/k8s` are kept for **local development with minikube** 
 - `csharp-t2-deployment.yaml` + `csharp-t2-service.yaml` — .NET WebAPI
 - `postgres-statefulset.yaml` — PostgreSQL StatefulSet
 - `kustomization.yaml` — Kustomize overlay pulling config/secrets from `.env`
+
+---
+
+## Admin Setup — Reseller Accounts
+
+Reseller accounts have no public registration endpoint (by design — only customers can self-register). Resellers are created administratively.
+
+### First Reseller (Automatic Seed)
+
+On first startup, if the `reseller` table is empty, the Spring Boot server automatically creates one reseller from environment variables:
+
+| Variable | Purpose |
+|---|---|
+| `SEED_RESELLER_NAME` | Display name for the reseller |
+| `SEED_RESELLER_USERNAME` | Login username |
+| `SEED_RESELLER_PASSWORD` | Plain-text password (hashed with BCrypt at runtime) |
+
+Set these in your `.env` (local) or as GitHub Secrets (production). The seeder is **idempotent** — it skips if any reseller already exists, so container restarts are safe.
+
+### Additional Resellers
+
+To create more resellers on a running instance, use the provided script from the VPS (requires SSH access):
+
+```bash
+./scripts/create-reseller.sh "Reseller Name" "username" "password"
+```
+
+**Prerequisites:** `python3` with `bcrypt` installed on the machine running the script (`pip install bcrypt`).
+
+The script hashes the password with BCrypt and inserts via `docker exec` into PostgreSQL. No ports are exposed — this only works with direct access to the Docker host.
 
 ---
 

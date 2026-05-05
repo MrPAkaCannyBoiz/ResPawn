@@ -55,3 +55,6 @@ CLAUDE.md
 .cursorrules
 GEMINI.md
 .kiro
+
+# copied infrastructure (Caddy, Terraform, Ansible) folders
+copied_infrastructure_other_repo/
