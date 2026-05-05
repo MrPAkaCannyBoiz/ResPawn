@@ -6,7 +6,7 @@ export default function HomePage() {
     <div className="home-background">
       <div className="hero-container">
         <div className="hero-content">
-          <h1>Welcome to <span>ReSpawnMarket</span></h1>
+          <h1>Welcome to <span>ResPawn</span></h1>
           <p>Buy & sell second-hand items safely and easily.</p>
 
           <p className="explore-text">
@@ -34,7 +34,7 @@ export default function HomePage() {
         <img
           className="hero-image"
           src="https://cdn-icons-png.flaticon.com/512/5046/5046845.png"
-          alt="ReSpawnMarket"
+          alt="ResPawn"
         />
       </div>
     </div>

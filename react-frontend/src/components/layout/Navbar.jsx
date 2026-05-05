@@ -16,12 +16,13 @@ export default function Navbar() {
     <>
       <nav className="top-navbar">
         <div className="nav-left">
-          <span className="brand-title">ResPawnMarket</span>
+          <span className="brand-title">ResPawn</span>
         </div>
 
         <div className="nav-center desktop-menu">
           <NavLink to="/" className="nav-link">Home</NavLink>
           <NavLink to="/available-product" className="nav-link">Products</NavLink>
+          <NavLink to="/about" className="nav-link">About</NavLink>
           <NavLink to="/register" className="nav-link">Sign up</NavLink>
 
           {isCustomer && (
@@ -56,6 +57,7 @@ export default function Navbar() {
         <div className="mobile-menu">
           <NavLink to="/" className="mobile-link" onClick={() => setMenuOpen(false)}>Home</NavLink>
           <NavLink to="/available-product" className="mobile-link" onClick={() => setMenuOpen(false)}>Products</NavLink>
+          <NavLink to="/about" className="mobile-link" onClick={() => setMenuOpen(false)}>About</NavLink>
           <NavLink to="/register" className="mobile-link" onClick={() => setMenuOpen(false)}>Sign up</NavLink>
 
           {isCustomer && (

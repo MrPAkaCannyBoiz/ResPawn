@@ -18,6 +18,7 @@ const UpdateProfilePage = lazy(() => import('./pages/UpdateProfilePage'))
 const ResellerCheckerPage = lazy(() => import('./pages/ResellerCheckerPage'))
 const ProductReviewPage = lazy(() => import('./pages/ProductReviewPage'))
 const CustomerInspectionPage = lazy(() => import('./pages/CustomerInspectionPage'))
+const AboutPage = lazy(() => import('./pages/AboutPage'))
 
 function SuspenseWrap({ children }) {
   return <Suspense fallback={<LoadingSpinner />}>{children}</Suspense>
@@ -28,6 +29,7 @@ const router = createBrowserRouter([
     element: <MainLayout />,
     children: [
       { path: '/', element: <SuspenseWrap><HomePage /></SuspenseWrap> },
+      { path: '/about', element: <SuspenseWrap><AboutPage /></SuspenseWrap> },
       { path: '/available-product', element: <SuspenseWrap><AvailableProductsPage /></SuspenseWrap> },
       { path: '/products/:id', element: <SuspenseWrap><ProductDetailsPage /></SuspenseWrap> },
       { path: '/customer-login', element: <SuspenseWrap><CustomerLoginPage /></SuspenseWrap> },

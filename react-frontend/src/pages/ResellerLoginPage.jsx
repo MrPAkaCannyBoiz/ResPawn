@@ -60,7 +60,7 @@ export default function ResellerLoginPage() {
             <button className="login-btn-primary" onClick={handleLogin}>Login</button>
 
             <div className="feature-box">
-              &#128272; Secure login protected by ReSpawnMarket reseller authentication
+              &#128272; Secure login protected by ResPawn reseller authentication
             </div>
           </div>
         ) : (

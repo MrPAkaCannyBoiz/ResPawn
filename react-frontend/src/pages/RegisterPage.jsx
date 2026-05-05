@@ -58,7 +58,7 @@ export default function RegisterPage() {
     <div className="register-shell">
       <div className="register-card-2col">
         <div className="register-left">
-          <div className="brand-badge">ReSpawnMarket</div>
+          <div className="brand-badge">ResPawn</div>
           <h2 className="left-title">Buy safer. Sell smarter.</h2>
           <p className="left-subtitle">
             Join a trusted second-hand marketplace where safety, transparency
@@ -75,7 +75,7 @@ export default function RegisterPage() {
 
         <div className="register-right">
           <form onSubmit={handleSubmit}>
-            <h2 className="auth-title">Create your ReSpawnMarket account</h2>
+            <h2 className="auth-title">Create your ResPawn account</h2>
             <p className="auth-subtitle">Start buying & selling safely today.</p>
 
             <div className="register-form-grid">

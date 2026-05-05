@@ -38,7 +38,7 @@ export default function CustomerLoginPage() {
     <div className="login-shell">
       <div className="login-card-2col">
         <div className="login-left">
-          <div className="brand-badge">ReSpawnMarket</div>
+          <div className="brand-badge">ResPawn</div>
           <h2 className="left-title">Buy & sell second-hand smarter.</h2>
           <p className="left-subtitle">
             Join a trusted community marketplace where every deal is safer and easier to manage.
@@ -82,7 +82,7 @@ export default function CustomerLoginPage() {
               <button className="login-btn-primary" onClick={handleLogin}>Login</button>
 
               <div className="feature-box">
-                &#128274; Secure login protected by ReSpawnMarket authentication
+                &#128274; Secure login protected by ResPawn authentication
               </div>
             </div>
           ) : (

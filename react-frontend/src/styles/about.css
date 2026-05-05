@@ -1,0 +1,83 @@
+.about-shell {
+  min-height: 80vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 3rem 1.5rem;
+}
+
+.about-card {
+  max-width: 750px;
+  width: 100%;
+  background: var(--card-bg, #1e1e2e);
+  border-radius: 16px;
+  padding: 2.5rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+}
+
+.about-title {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: var(--accent, #7c3aed);
+}
+
+.about-section {
+  margin-bottom: 2rem;
+}
+
+.about-section h2 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: var(--heading-color, #e0e0e0);
+}
+
+.about-section p {
+  line-height: 1.7;
+  color: var(--text-color, #b0b0b0);
+}
+
+.about-link {
+  display: inline-block;
+  margin-top: 0.5rem;
+  color: var(--accent, #7c3aed);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.about-link:hover {
+  text-decoration: underline;
+}
+
+.about-feature-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 0.75rem;
+}
+
+.about-feature-list li {
+  padding: 0.4rem 0;
+  color: var(--text-color, #b0b0b0);
+}
+
+.about-feature-list li::before {
+  content: "\2713  ";
+  color: var(--accent, #7c3aed);
+  font-weight: bold;
+}
+
+.tech-stack-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.tech-badge {
+  background: var(--badge-bg, #2a2a3e);
+  color: var(--accent, #7c3aed);
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid var(--accent, #7c3aed);
+}
