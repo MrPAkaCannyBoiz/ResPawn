@@ -1,4 +1,12 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+//  When VITE_API_BASE_URL isn't set, it defaults to '' (empty string), 
+//  which means requests go to the same origin. 
+//  The nginx proxy in your local Docker setup (or Vite's dev server proxy) 
+//  then forwards /api/* to the .NET service. 
+//  TLDR: nginx/Vite proxy handles routing on Local, 
+//  and in production it goes directly to the correct backend URL.
+
+// this value will be set to backend URL in production like in Cloudflare Pages
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '' 
 
 async function request(method, url, body) {
   const options = {
