@@ -8,9 +8,6 @@ DotNetEnv.Env.Load();
 
 var builder = Host.CreateApplicationBuilder(args);
 
-string smtpUsername = builder.Configuration["Smtp:Username"]!;
-string smtpPassword = builder.Configuration["Smtp:Password"]!;
-
 builder.Services
     .AddFluentEmail("postmaster@sandboxa847ef46267c4a6b8d8e522f8d0b243c.mailgun.org")
     .AddMailGunSender("sandboxa847ef46267c4a6b8d8e522f8d0b243c.mailgun.org",

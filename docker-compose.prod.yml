@@ -2,58 +2,107 @@
 # Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d --build
 
 services:
-
+  # ---------------------------------------------------------
+  # BACKEND INFRASTRUCTURE (Completely Isolated)
+  # ---------------------------------------------------------
   rabbitmq:
+    image: rabbitmq:management # Use the management tag if you want the UI
+    container_name: respawn_rabbitmq
     restart: unless-stopped
-    ports:
-      - "127.0.0.1:5672:5672"
-      - "127.0.0.1:15672:15672"
+    # NO PORTS! We don't want the internet hitting your message broker.
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      # Change these from 'guest' in your .env file for production!
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - default
 
   postgres:
+    image: postgres:latest
+    container_name: postgres_respawn
     restart: unless-stopped
-    ports:
-      - "127.0.0.1:5432:5432"
-
-  grpc-server-springboot-service:
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:8080:8080"
-      - "127.0.0.1:6767:6767"
+    # NO PORTS! Only your Spring Boot app can talk to this DB.
     environment:
-      SPRING_PROFILES_ACTIVE: rabbitmq,prod
-      SPRING_RABBITMQ_HOST: respawn_rabbitmq
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - db_data:/var/lib/postgresql
+    networks:
+      - default
+
+  # ---------------------------------------------------------
+  # INTERNAL MICROSERVICES (No Public Access)
+  # ---------------------------------------------------------
+  grpc-server-springboot-service:
+    image: ghcr.io/your-username/respawn-grpc-server:latest # Pulled from GHCR
+    container_name: respawn-grpc-server
+    restart: unless-stopped
+    expose:
+      - "6767" # Just documentation.
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB} # Internal routing
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DRIVER: org.postgresql.Driver
+      SPRING_RABBITMQ_HOST: ${RABBITMQ_HOST} # Internal routing
+      SPRING_RABBITMQ_PORT: ${RABBITMQ_PORT}
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
       SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
     depends_on:
-      postgres:
-        condition: service_healthy
-
-  grpc-client-dotnet-services:
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:6760:6760"
-      - "127.0.0.1:6761:6761"
-    environment:
-      ASPNETCORE_ENVIRONMENT: Production
-      GrpcServer__TrustSelfSigned: "false"
+      - postgres
+      - rabbitmq
+    networks:
+      - default
 
   message-worker:
+    image: ghcr.io/mrpakacannyboiz/respawn-message-worker:latest
+    container_name: respawn-message-worker
     restart: unless-stopped
     environment:
-      DOTNET_ENVIRONMENT: Production
-      RabbitMQ__Host: respawn_rabbitmq
+      RabbitMQ__Host: ${RABBITMQ__HOST}
       RabbitMQ__Username: ${RABBITMQ_USERNAME}
       RabbitMQ__Password: ${RABBITMQ_PASSWORD}
-      Smtp__Username: ${SMTP__USERNAME}
-      Smtp__Password: ${SMTP__PASSWORD}
+    depends_on:
+      - rabbitmq
+    networks:
+      - default
 
-  blazor-frontend:
+  # ---------------------------------------------------------
+  # PUBLIC FACING SERVICES (Plugged into Caddy)
+  # ---------------------------------------------------------
+  grpc-client-dotnet-services:
+    image: ghcr.io/mrpakacannyboiz/respawn-grpc-client:latest
+    container_name: respawn-grpc-client
     restart: unless-stopped
-    ports:
-      - "127.0.0.1:5195:5195"
+    expose:
+      - "6760" # This is the port you will put in your Caddyfile!
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      WebApi__TrustSelfSigned: "false"
+      GrpcServer__Address: ${GrpcServer__Address}
+      JWT__KEY: ${JWT__KEY}
+      JWT__ISSUER: ${JWT__ISSUER}
+      JWT__AUDIENCE: ${JWT__AUDIENCE}
+      JWT__SUBJECT: ${JWT__SUBJECT}
+      Cors__AllowedOrigins__0: ${CORS_ORIGIN}
+    depends_on:
+      - grpc-server-springboot-service
+    networks:
+      - default
+      - caddy_net # <--- THE CRITICAL CONNECTION
+
+  # React frontend is deployed separately (Vercel/Netlify/Cloudflare Pages)
+  # It calls the API via: https://api.cannyboiz.com
+  # Set VITE_API_BASE_URL=https://api.cannyboiz.com at build time on the hosting platform
+
+volumes:
+  rabbitmq_data:
+  db_data:
+
+networks:
+  caddy_net:
+    external: true
+    name: caddy_net

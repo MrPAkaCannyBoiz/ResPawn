@@ -60,28 +60,15 @@ services:
         DB_URL: ${DOCKER_DB_URL}
         DB_USERNAME: ${DB_USERNAME}
         DB_PASSWORD: ${DB_PASSWORD}
-        DB_DRIVER: org.postgresql.Driver
-        SPRING_JPA_HIBERNATE_DDL_AUTO: update
-        SPRING_GRPC_SERVER_PORT: 6767
+        SPRING_JPA_HIBERNATE_DDL_AUTO: validate
 
-        # gRPC & Server SSL 
-        IS_SSL_ENABLED: "true"
-        KEYSTORE_LOCATION: ${RELATIVE_KEY_PATH}
-        SSL_KEYSTORE_PATH: ${RELATIVE_KEY_PATH}
-        KEYSTORE_PASSWORD: ${KEY_PASSWORD}
-        SSL_KEYSTORE_PASSWORD: ${KEY_PASSWORD}
-        KEY_PASSWORD: ${KEY_PASSWORD}
-      
         # RabbitMQ
         SPRING_PROFILES_ACTIVE: rabbitmq
-        SPRING_RABBITMQ_HOST: respawn_rabbitmq
-        SPRING_RABBITMQ_PORT: 5672
-        SPRING_RABBITMQ_USERNAME: guest
-        SPRING_RABBITMQ_PASSWORD: guest
+        SPRING_RABBITMQ_HOST: ${RABBITMQ_HOST}
+        SPRING_RABBITMQ_PORT: ${RABBITMQ_PORT}
+        SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
+        SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
 
-      volumes:
-        # Mapped ./self_signed_cert (host) to /app/self_signed_certs (container)
-        - ./self_signed_certs:/app/self_signed_certs:ro
       depends_on:
         postgres:
           condition: service_healthy
@@ -96,25 +83,13 @@ services:
       - "6760:6760"
       - "6761:6761"
     environment:
-      # run in development mode to enable hot reload and other dev features
-      ASPNETCORE_ENVIRONMENT: Development # remove it for production
-      # gRPC target — must be the compose service name, not localhost, so the client
-      # container can reach the Java gRPC server. TrustSelfSigned bypasses cert
-      # validation because the server presents the project's self-signed cert.
-      GrpcServer__Address: https://grpc-server-springboot-service:6767
-      GrpcServer__TrustSelfSigned: "true"
-      # Key and certificate properties for gRPC client TLS configuration + JWT properties for authentication
-      PFX_FILE_PATH: ${PFX_FILE_PATH}
-      PFX_PASSWORD: ${PFX_PASSWORD}
+      ASPNETCORE_ENVIRONMENT: Development
+      # gRPC target — must be the compose service name, not localhost
+      GrpcServer__Address: ${GrpcServer__Address}
       JWT__KEY: ${JWT__KEY}
       JWT__ISSUER: ${JWT__ISSUER}
       JWT__AUDIENCE: ${JWT__AUDIENCE}
       JWT__SUBJECT: ${JWT__SUBJECT}
-      # Kafka env var removed — WebAPI has no message producer code
-      
-    volumes:
-      # Mapped ./self_signed_cert (host) to /app/self_signed_certs (container)
-      - ./self_signed_certs:/app/self_signed_certs:ro # :ro means read-only
     depends_on:
       grpc-server-springboot-service:
         condition: service_started
@@ -126,42 +101,39 @@ services:
       dockerfile: C_sharp/Server/MessageConsumer/Dockerfile
     container_name: respawn-message-worker
     environment:
-      RabbitMQ__Host: respawn_rabbitmq
-      RabbitMQ__Username: guest
-      RabbitMQ__Password: guest
+      RabbitMQ__Host: ${RABBITMQ__HOST}
+      RabbitMQ__Username: ${RABBITMQ__USERNAME}
+      RabbitMQ__Password: ${RABBITMQ__PASSWORD}
     depends_on:
       rabbitmq:
         condition: service_healthy
 
 
-  blazor-frontend:
-    build:
-      context: .
-      dockerfile: C_sharp/Client/BlazorApp/Dockerfile
-    container_name: respawn-blazor-frontend
-    ports:
-      - "5195:5195"
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      # Must be HTTPS: the WebAPI login sets JwtCookie with Secure=true, which the
-      # server-side Blazor HttpClient cookie jar rejects on non-TLS responses.
-      WebApiBaseUrl: https://grpc-client-dotnet-services:6760
-      WebApi__TrustSelfSigned: "true"
-    depends_on:
-      grpc-client-dotnet-services:
-        condition: service_started
+  # blazor-frontend:
+  #   build:
+  #     context: .
+  #     dockerfile: C_sharp/Client/BlazorApp/Dockerfile
+  #   container_name: respawn-blazor-frontend
+  #   ports:
+  #     - "5195:5195"
+  #   environment:
+  #     ASPNETCORE_ENVIRONMENT: Development
+  #     WebApiBaseUrl: http://grpc-client-dotnet-services:6760
+  #   depends_on:
+  #     grpc-client-dotnet-services:
+  #       condition: service_started
 
 
-  react-frontend:
-    build:
-      context: ./react-frontend
-      dockerfile: Dockerfile
-    container_name: respawn-react-frontend
-    ports:
-      - "3000:3000"
-    depends_on:
-      grpc-client-dotnet-services:
-        condition: service_started
+  # react-frontend:
+  #   build:
+  #     context: ./react-frontend
+  #     dockerfile: Dockerfile
+  #   container_name: respawn-react-frontend
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     grpc-client-dotnet-services:
+  #       condition: service_started
 
 
 volumes: # Define named volumes for data persistence
@@ -169,5 +141,3 @@ volumes: # Define named volumes for data persistence
     name: rabbitmq_data
   db_data:
     name: db_data
-  self_signed_certs:
-    name: self_signed_certs

@@ -84,28 +84,25 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization(); // this is needed for jwt auth, remove if jwt is not used/doesn't work
 /*AuthorizationPolicies.AddPolicies(builder.Services); // add custom authorization policies*/
 
-// Configure Kestrel to use HTTPS with the specified .pfx certificate
-// install the certificate to trusted root authorities
-// use .env
-var pfxFilePath = Environment.GetEnvironmentVariable("PFX_FILE_PATH") 
-    ?? throw new InvalidOperationException("PFX_FILE_PATH environment variable is not set.");
-var pfxPassword = Environment.GetEnvironmentVariable("PFX_PASSWORD");
+// CORS — allow the React frontend origin to call this API
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? ["http://localhost:3000"];
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
+// HTTP only — TLS is terminated by Caddy at the edge
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.ListenAnyIP(6761); // HTTP — internal container traffic
-    // change from ListenAnyIP to ListenLocalhost if you want to restrict access to localhost only
-    options.ListenAnyIP(6760, lo =>
-    {
-        if (string.IsNullOrEmpty(pfxPassword))
-        {
-            lo.UseHttps(pfxFilePath); // Load without password
-        }
-        else
-        {
-            lo.UseHttps(pfxFilePath, pfxPassword); // Load with password
-        }
-    });
+    options.ListenAnyIP(6760);
 });
 
 var app = builder.Build();
@@ -116,12 +113,8 @@ if (app.Environment.IsDevelopment())
    app.UseSwagger();
    app.UseSwaggerUI();
 }
-else
-{
-    app.UseHttpsRedirection();
-}
 
-
+app.UseCors();
 app.UseAuthentication(); // this is needed for jwt auth, remove if jwt is not used/doesn't work
 app.UseAuthorization();
 

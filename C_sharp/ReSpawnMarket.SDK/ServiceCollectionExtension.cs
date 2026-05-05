@@ -7,7 +7,7 @@ namespace ReSpawnMarket.SDK;
 
 public static class ServiceCollectionExtension
 {
-    private const string _defaultGrpcServerAddress = "https://localhost:6767";
+    private const string _defaultGrpcServerAddress = "http://localhost:6767";
 
     public static void AddGrpcSdk(this IServiceCollection services)
     {
