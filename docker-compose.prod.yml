@@ -1,5 +1,6 @@
 # Production override — merges with docker-compose.yml
-# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d --build
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod pull
+#        docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d
 
 services:
   # ---------------------------------------------------------
@@ -12,8 +13,8 @@ services:
     # NO PORTS! We don't want the internet hitting your message broker.
     environment:
       # Change these from 'guest' in your .env file for production!
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
@@ -38,11 +39,12 @@ services:
   # INTERNAL MICROSERVICES (No Public Access)
   # ---------------------------------------------------------
   grpc-server-springboot-service:
-    image: ghcr.io/your-username/respawn-grpc-server:latest # Pulled from GHCR
+    image: ghcr.io/mrpakacannyboiz/respawn-grpc-server:latest
+    build: !reset null
     container_name: respawn-grpc-server
     restart: unless-stopped
     expose:
-      - "6767" # Just documentation.
+      - "6767"
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB} # Internal routing
       DB_USERNAME: ${DB_USERNAME}
@@ -52,6 +54,9 @@ services:
       SPRING_RABBITMQ_PORT: ${RABBITMQ_PORT}
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
       SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      SEED_RESELLER_NAME: ${SEED_RESELLER_NAME:-}
+      SEED_RESELLER_USERNAME: ${SEED_RESELLER_USERNAME:-}
+      SEED_RESELLER_PASSWORD: ${SEED_RESELLER_PASSWORD:-}
     depends_on:
       - postgres
       - rabbitmq
@@ -60,6 +65,7 @@ services:
 
   message-worker:
     image: ghcr.io/mrpakacannyboiz/respawn-message-worker:latest
+    build: !reset null
     container_name: respawn-message-worker
     restart: unless-stopped
     environment:
@@ -76,6 +82,7 @@ services:
   # ---------------------------------------------------------
   grpc-client-dotnet-services:
     image: ghcr.io/mrpakacannyboiz/respawn-grpc-client:latest
+    build: !reset null
     container_name: respawn-grpc-client
     restart: unless-stopped
     expose:
