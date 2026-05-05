@@ -29,6 +29,9 @@ jobs:
           java-version: '25'
           cache: 'maven'
 
+      - name: Make mvnw executable
+        run: chmod +x ./mvnw
+
       - name: Maven Clean Verify with Coverage Check
         run: ./mvnw -B clean verify
 
@@ -173,6 +176,14 @@ jobs:
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DOCKER_DB_URL: ${{ secrets.DOCKER_DB_URL }}
+          RABBITMQ_HOST: respawn_rabbitmq
+          RABBITMQ_PORT: 5672
+          RABBITMQ_USERNAME: ${{ secrets.RABBITMQ_USERNAME }}
+          RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
+          RABBITMQ__HOST: respawn_rabbitmq
+          RABBITMQ__USERNAME: ${{ secrets.RABBITMQ_USERNAME }}
+          RABBITMQ__PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
+          GrpcServer__Address: http://grpc-server-springboot-service:6767
           JWT__KEY: ${{ secrets.JWT__KEY }}
           JWT__ISSUER: ${{ secrets.JWT__ISSUER }}
           JWT__AUDIENCE: ${{ secrets.JWT__AUDIENCE }}

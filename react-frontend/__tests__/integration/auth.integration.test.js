@@ -23,7 +23,7 @@ describe('Auth Integration', () => {
     })
 
     it('should login as customer', async () => {
-      const res = await post('/api/auth/customer/login', {
+      const res = await post('/api/customers/login', {
         email: 'test@example.com',
         password: 'Password123',
       })
@@ -37,19 +37,19 @@ describe('Auth Integration', () => {
 
     it('should get customer claims when authenticated', async () => {
       if (!cookie) return
-      const res = await get('/api/auth/customer/claims', cookie)
+      const res = await get('/api/customers/claims', cookie)
       expect(res.status).toBe(200)
       expect(res.data?.customerId).toBeTruthy()
     })
 
     it('should return 401 for unauthenticated claims', async () => {
-      const res = await get('/api/auth/customer/claims')
+      const res = await get('/api/customers/claims')
       expect(res.status).toBe(401)
     })
 
     it('should logout', async () => {
       if (!cookie) return
-      const res = await post('/api/auth/customer/logout', undefined, cookie)
+      const res = await post('/api/customers/logout', undefined, cookie)
       expect([200, 204]).toContain(res.status)
     })
   })
@@ -58,7 +58,7 @@ describe('Auth Integration', () => {
     let cookie = null
 
     it('should login as reseller', async () => {
-      const res = await post('/api/auth/reseller/login', {
+      const res = await post('/api/reseller/login', {
         username: 'reseller',
         password: 'Password123',
       })
@@ -72,14 +72,14 @@ describe('Auth Integration', () => {
 
     it('should get reseller claims when authenticated', async () => {
       if (!cookie) return
-      const res = await get('/api/auth/reseller/claims', cookie)
+      const res = await get('/api/reseller/claims', cookie)
       expect(res.status).toBe(200)
       expect(res.data?.resellerId).toBeTruthy()
     })
 
     it('should logout', async () => {
       if (!cookie) return
-      const res = await post('/api/auth/reseller/logout', undefined, cookie)
+      const res = await post('/api/reseller/logout', undefined, cookie)
       expect([200, 204]).toContain(res.status)
     })
   })
