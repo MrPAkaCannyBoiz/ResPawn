@@ -212,53 +212,53 @@ jobs:
         if: always()
         run: docker compose down -v
 
-  # ---------------------------------------------------------
-  # Stage 3: Deploy (only on main, after ALL jobs pass)
-  # ---------------------------------------------------------
-  deploy:
-    needs: [spring-boot-test, dotnet-test, dotnet-build-webapi, dotnet-build-blazor, react-build, react-integration-test]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
+  # # ---------------------------------------------------------
+  # # Stage 3: Deploy (only on main, after ALL jobs pass)
+  # # ---------------------------------------------------------
+  # deploy:
+  #   needs: [spring-boot-test, dotnet-test, dotnet-build-webapi, dotnet-build-blazor, react-build, react-integration-test]
+  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1.0.3
-        env:
-          POSTGRES_DB:        ${{ secrets.POSTGRES_DB }}
-          DB_USERNAME:        ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD:        ${{ secrets.DB_PASSWORD }}
-          RABBITMQ_USERNAME:  ${{ secrets.RABBITMQ_USERNAME }}
-          RABBITMQ_PASSWORD:  ${{ secrets.RABBITMQ_PASSWORD }}
-          JWT__KEY:           ${{ secrets.JWT__KEY }}
-          JWT__ISSUER:        ${{ secrets.JWT__ISSUER }}
-          JWT__AUDIENCE:      ${{ secrets.JWT__AUDIENCE }}
-          JWT__SUBJECT:       ${{ secrets.JWT__SUBJECT }}
-        with:
-          host:     ${{ secrets.SERVER_IP }}
-          username: root
-          key:      ${{ secrets.SSH_PRIVATE_KEY }}
-          envs:     POSTGRES_DB,DB_USERNAME,DB_PASSWORD,RABBITMQ_USERNAME,RABBITMQ_PASSWORD,JWT__KEY,JWT__ISSUER,JWT__AUDIENCE,JWT__SUBJECT,SMTP__USERNAME,SMTP__PASSWORD
-          script: |
-            set -e
-            cd /opt/ResPawn
-            git pull origin main
+  #   steps:
+  #     - name: Deploy to VPS
+  #       uses: appleboy/ssh-action@v1.0.3
+  #       env:
+  #         POSTGRES_DB:        ${{ secrets.POSTGRES_DB }}
+  #         DB_USERNAME:        ${{ secrets.DB_USERNAME }}
+  #         DB_PASSWORD:        ${{ secrets.DB_PASSWORD }}
+  #         RABBITMQ_USERNAME:  ${{ secrets.RABBITMQ_USERNAME }}
+  #         RABBITMQ_PASSWORD:  ${{ secrets.RABBITMQ_PASSWORD }}
+  #         JWT__KEY:           ${{ secrets.JWT__KEY }}
+  #         JWT__ISSUER:        ${{ secrets.JWT__ISSUER }}
+  #         JWT__AUDIENCE:      ${{ secrets.JWT__AUDIENCE }}
+  #         JWT__SUBJECT:       ${{ secrets.JWT__SUBJECT }}
+  #       with:
+  #         host:     ${{ secrets.SERVER_IP }}
+  #         username: root
+  #         key:      ${{ secrets.SSH_PRIVATE_KEY }}
+  #         envs:     POSTGRES_DB,DB_USERNAME,DB_PASSWORD,RABBITMQ_USERNAME,RABBITMQ_PASSWORD,JWT__KEY,JWT__ISSUER,JWT__AUDIENCE,JWT__SUBJECT,SMTP__USERNAME,SMTP__PASSWORD
+  #         script: |
+  #           set -e
+  #           cd /opt/ResPawn
+  #           git pull origin main
 
-            # Write .env.prod — printf avoids heredoc issues with special characters
-            {
-              printf 'POSTGRES_DB=%s\n'       "$POSTGRES_DB"
-              printf 'DB_USERNAME=%s\n'       "$DB_USERNAME"
-              printf 'DB_PASSWORD=%s\n'       "$DB_PASSWORD"
-              printf 'DB_DRIVER=%s\n'         "org.postgresql.Driver"
-              printf 'DOCKER_DB_URL=%s\n'     "jdbc:postgresql://postgres:5432/$POSTGRES_DB"
-              printf 'RABBITMQ_USERNAME=%s\n' "$RABBITMQ_USERNAME"
-              printf 'RABBITMQ_PASSWORD=%s\n' "$RABBITMQ_PASSWORD"
-              printf 'JWT__KEY=%s\n'          "$JWT__KEY"
-              printf 'JWT__ISSUER=%s\n'       "$JWT__ISSUER"
-              printf 'JWT__AUDIENCE=%s\n'     "$JWT__AUDIENCE"
-              printf 'JWT__SUBJECT=%s\n'      "$JWT__SUBJECT"
-            } > .env.prod
+  #           # Write .env.prod — printf avoids heredoc issues with special characters
+  #           {
+  #             printf 'POSTGRES_DB=%s\n'       "$POSTGRES_DB"
+  #             printf 'DB_USERNAME=%s\n'       "$DB_USERNAME"
+  #             printf 'DB_PASSWORD=%s\n'       "$DB_PASSWORD"
+  #             printf 'DB_DRIVER=%s\n'         "org.postgresql.Driver"
+  #             printf 'DOCKER_DB_URL=%s\n'     "jdbc:postgresql://postgres:5432/$POSTGRES_DB"
+  #             printf 'RABBITMQ_USERNAME=%s\n' "$RABBITMQ_USERNAME"
+  #             printf 'RABBITMQ_PASSWORD=%s\n' "$RABBITMQ_PASSWORD"
+  #             printf 'JWT__KEY=%s\n'          "$JWT__KEY"
+  #             printf 'JWT__ISSUER=%s\n'       "$JWT__ISSUER"
+  #             printf 'JWT__AUDIENCE=%s\n'     "$JWT__AUDIENCE"
+  #             printf 'JWT__SUBJECT=%s\n'      "$JWT__SUBJECT"
+  #           } > .env.prod
 
-            docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d --build
+  #           docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d --build
 
-            # Remove dangling images left by the rebuild
-            docker image prune -f
+  #           # Remove dangling images left by the rebuild
+  #           docker image prune -f
