@@ -1,0 +1,264 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  # ---------------------------------------------------------
+  # Stage 1: Build & Test (run in parallel)
+  # ---------------------------------------------------------
+  spring-boot-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./java_projects/ResPawn
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+          cache: 'maven'
+
+      - name: Maven Clean Verify with Coverage Check
+        run: ./mvnw -B clean verify
+
+      - name: Protobuf Codegen Check
+        run: ./mvnw -B protobuf:compile || echo "No protobuf plugin configured"
+
+      - name: Upload Jacoco Coverage Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: java_projects/ResPawn/target/site/jacoco/
+
+  dotnet-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./C_sharp/Server
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore MessageConsumer dependencies
+        run: dotnet restore MessageConsumer/MessageConsumer.csproj
+
+      - name: Build MessageConsumer
+        run: dotnet build MessageConsumer/MessageConsumer.csproj --no-restore -c Release
+
+      - name: Restore test project
+        run: dotnet restore MessageConsumer.Tests/MessageConsumer.Tests.csproj
+
+      - name: Run tests with coverage
+        run: |
+          dotnet test MessageConsumer.Tests/MessageConsumer.Tests.csproj \
+            --no-restore \
+            --settings MessageConsumer.Tests/coverlet.runsettings \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ../../coverage
+
+      - name: Install reportgenerator
+        run: |
+          dotnet tool install -g dotnet-reportgenerator-globaltool
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: Generate coverage report and check threshold
+        run: |
+          reportgenerator \
+            -reports:"../../coverage/**/coverage.cobertura.xml" \
+            -targetdir:"../../coverage/report" \
+            -reporttypes:"TextSummary;Html" \
+            -minimumcoverage:50
+          cat ../../coverage/report/Summary.txt
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-coverage-report
+          path: coverage/report/
+
+  dotnet-build-webapi:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore and build WebAPI
+        run: dotnet build C_sharp/Server/WebAPI/WebAPI.csproj -c Release
+
+  dotnet-build-blazor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore and build BlazorApp
+        run: dotnet build C_sharp/Client/BlazorApp/BlazorApp.csproj -c Release
+
+  react-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./react-frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: react-frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-frontend-dist
+          path: react-frontend/dist/
+
+  # ---------------------------------------------------------
+  # Stage 2: Integration tests (after build passes)
+  # ---------------------------------------------------------
+  react-integration-test:
+    needs: [react-build]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Start backend services
+        run: docker compose up -d postgres rabbitmq grpc-server-springboot-service grpc-client-dotnet-services
+        env:
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DOCKER_DB_URL: ${{ secrets.DOCKER_DB_URL }}
+          JWT__KEY: ${{ secrets.JWT__KEY }}
+          JWT__ISSUER: ${{ secrets.JWT__ISSUER }}
+          JWT__AUDIENCE: ${{ secrets.JWT__AUDIENCE }}
+          JWT__SUBJECT: ${{ secrets.JWT__SUBJECT }}
+
+      - name: Wait for WebAPI to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:6760/api/products >/dev/null 2>&1; then
+              echo "WebAPI is ready"
+              exit 0
+            fi
+            echo "Waiting for WebAPI... ($i/30)"
+            sleep 5
+          done
+          echo "WebAPI did not become ready"
+          exit 1
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: react-frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./react-frontend
+        run: npm ci
+
+      - name: Run integration tests
+        working-directory: ./react-frontend
+        run: npm run test:integration -- --run
+        env:
+          VITE_API_BASE_URL: http://localhost:6760
+
+      - name: Stop backend services
+        if: always()
+        run: docker compose down -v
+
+  # ---------------------------------------------------------
+  # Stage 3: Deploy (only on main, after ALL jobs pass)
+  # ---------------------------------------------------------
+  deploy:
+    needs: [spring-boot-test, dotnet-test, dotnet-build-webapi, dotnet-build-blazor, react-build, react-integration-test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          POSTGRES_DB:        ${{ secrets.POSTGRES_DB }}
+          DB_USERNAME:        ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD:        ${{ secrets.DB_PASSWORD }}
+          RABBITMQ_USERNAME:  ${{ secrets.RABBITMQ_USERNAME }}
+          RABBITMQ_PASSWORD:  ${{ secrets.RABBITMQ_PASSWORD }}
+          JWT__KEY:           ${{ secrets.JWT__KEY }}
+          JWT__ISSUER:        ${{ secrets.JWT__ISSUER }}
+          JWT__AUDIENCE:      ${{ secrets.JWT__AUDIENCE }}
+          JWT__SUBJECT:       ${{ secrets.JWT__SUBJECT }}
+        with:
+          host:     ${{ secrets.SERVER_IP }}
+          username: root
+          key:      ${{ secrets.SSH_PRIVATE_KEY }}
+          envs:     POSTGRES_DB,DB_USERNAME,DB_PASSWORD,RABBITMQ_USERNAME,RABBITMQ_PASSWORD,JWT__KEY,JWT__ISSUER,JWT__AUDIENCE,JWT__SUBJECT,SMTP__USERNAME,SMTP__PASSWORD
+          script: |
+            set -e
+            cd /opt/ResPawn
+            git pull origin main
+
+            # Write .env.prod — printf avoids heredoc issues with special characters
+            {
+              printf 'POSTGRES_DB=%s\n'       "$POSTGRES_DB"
+              printf 'DB_USERNAME=%s\n'       "$DB_USERNAME"
+              printf 'DB_PASSWORD=%s\n'       "$DB_PASSWORD"
+              printf 'DB_DRIVER=%s\n'         "org.postgresql.Driver"
+              printf 'DOCKER_DB_URL=%s\n'     "jdbc:postgresql://postgres:5432/$POSTGRES_DB"
+              printf 'RABBITMQ_USERNAME=%s\n' "$RABBITMQ_USERNAME"
+              printf 'RABBITMQ_PASSWORD=%s\n' "$RABBITMQ_PASSWORD"
+              printf 'JWT__KEY=%s\n'          "$JWT__KEY"
+              printf 'JWT__ISSUER=%s\n'       "$JWT__ISSUER"
+              printf 'JWT__AUDIENCE=%s\n'     "$JWT__AUDIENCE"
+              printf 'JWT__SUBJECT=%s\n'      "$JWT__SUBJECT"
+            } > .env.prod
+
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d --build
+
+            # Remove dangling images left by the rebuild
+            docker image prune -f
