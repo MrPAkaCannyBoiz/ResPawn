@@ -7,10 +7,10 @@ services:
   # BACKEND INFRASTRUCTURE (Completely Isolated)
   # ---------------------------------------------------------
   rabbitmq:
-    image: rabbitmq:management # Use the management tag if you want the UI
+    image: rabbitmq:management
     container_name: respawn_rabbitmq
     restart: unless-stopped
-    # NO PORTS! We don't want the internet hitting your message broker.
+    ports: !reset []
     environment:
       # Change these from 'guest' in your .env file for production!
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
@@ -24,7 +24,7 @@ services:
     image: postgres:latest
     container_name: postgres_respawn
     restart: unless-stopped
-    # NO PORTS! Only your Spring Boot app can talk to this DB.
+    ports: !reset []
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${DB_USERNAME}
@@ -43,6 +43,7 @@ services:
     build: !reset null
     container_name: respawn-grpc-server
     restart: unless-stopped
+    ports: !reset []
     expose:
       - "6767"
     environment:
@@ -85,8 +86,9 @@ services:
     build: !reset null
     container_name: respawn-grpc-client
     restart: unless-stopped
+    ports: !reset []
     expose:
-      - "6760" # This is the port you will put in your Caddyfile!
+      - "6760"
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       GrpcServer__Address: ${GrpcServer__Address}
