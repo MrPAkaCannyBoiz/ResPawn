@@ -270,10 +270,23 @@ jobs:
   # ---------------------------------------------------------
   deploy:
     needs: [build-and-push-images]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to VPS 
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Copy deployment files to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host:     ${{ secrets.SERVER_IP }}
+          username: root
+          key:      ${{ secrets.SSH_PRIVATE_KEY }}
+          source:   "docker-compose.yml,docker-compose.prod.yml,scripts/init.sql,scripts/create-reseller.sh"
+          target:   "/opt/ResPawn"
+
+      - name: Deploy services via SSH
         uses: appleboy/ssh-action@v1.0.3
         env:
           GHCR_TOKEN:             ${{ secrets.GHCR_PAT }}
@@ -293,11 +306,12 @@ jobs:
           host:     ${{ secrets.SERVER_IP }}
           username: root
           key:      ${{ secrets.SSH_PRIVATE_KEY }}
-          envs:     GHCR_TOKEN,POSTGRES_DB,DB_USERNAME,DB_PASSWORD,RABBITMQ_USERNAME,RABBITMQ_PASSWORD,JWT__KEY,JWT__ISSUER,JWT__AUDIENCE,JWT__SUBJECT,SMTP__USERNAME,SMTP__PASSWORD,SEED_RESELLER_NAME,SEED_RESELLER_USERNAME,SEED_RESELLER_PASSWORD
+          envs:     GHCR_TOKEN,POSTGRES_DB,DB_USERNAME,DB_PASSWORD,RABBITMQ_USERNAME,RABBITMQ_PASSWORD,JWT__KEY,JWT__ISSUER,JWT__AUDIENCE,JWT__SUBJECT,SEED_RESELLER_NAME,SEED_RESELLER_USERNAME,SEED_RESELLER_PASSWORD
           script: |
             set -e
             cd /opt/ResPawn
-            git pull origin main
+
+            chmod +x scripts/create-reseller.sh
 
             # Login to GHCR to pull private images
             echo "$GHCR_TOKEN" | docker login ghcr.io -u mrpakacannyboiz --password-stdin
