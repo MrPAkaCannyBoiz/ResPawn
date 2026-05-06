@@ -328,6 +328,8 @@ jobs:
               printf 'RABBITMQ_HOST=%s\n'       "respawn_rabbitmq"
               printf 'RABBITMQ_PORT=%s\n'       "5672"
               printf 'RABBITMQ__HOST=%s\n'      "respawn_rabbitmq"
+              printf 'RABBITMQ__USERNAME=%s\n'  "$RABBITMQ_USERNAME"
+              printf 'RABBITMQ__PASSWORD=%s\n'  "$RABBITMQ_PASSWORD"
               printf 'GrpcServer__Address=%s\n' "http://grpc-server-springboot-service:6767"
               printf 'CORS_ORIGIN=%s\n'         "https://respawn.cannyboiz.com"
               printf 'JWT__KEY=%s\n'          "$JWT__KEY"
