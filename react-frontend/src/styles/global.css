@@ -24,8 +24,38 @@ a { color: inherit; }
   min-height: 100vh;
 }
 
+.content-area:has(
+  .login-shell,
+  .register-shell,
+  .profile-page,
+  .home-background,
+  .products-page,
+  .upload-page,
+  .review-page,
+  .update-container,
+  .cart-wrapper,
+  .product-details-page
+) {
+  padding: 0;
+}
+
 @media (max-width: 600px) {
   .content-area {
     padding: 20px;
+  }
+
+  .content-area:has(
+    .login-shell,
+    .register-shell,
+    .profile-page,
+    .home-background,
+    .products-page,
+    .upload-page,
+    .review-page,
+    .update-container,
+    .cart-wrapper,
+    .product-details-page
+  ) {
+    padding: 0;
   }
 }

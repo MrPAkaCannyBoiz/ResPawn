@@ -41,6 +41,7 @@ export default function ProductDetailsPage() {
   if (!product) return <p>Product not found.</p>
 
   return (
+    <div className="product-details-page">
     <div className="product-details-container">
       <h4>{product.name} ({Number(product.price).toFixed(2)} DKK)</h4>
       <div className="product-details-info">
@@ -81,6 +82,7 @@ export default function ProductDetailsPage() {
           <div className="alert alert-info" style={{ marginTop: 10 }}>{infoMessage}</div>
         )}
       </div>
+    </div>
     </div>
   )
 }

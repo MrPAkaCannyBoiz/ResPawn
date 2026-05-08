@@ -149,6 +149,7 @@
   padding: 60px 20px;
   min-height: 100vh;
   background: radial-gradient(circle at top left, #eef2ff, #e0e7ff, #dbeafe);
+  color: #1e293b;
 }
 
 .profile-card {
@@ -211,7 +212,10 @@
 .update-container {
   display: flex;
   justify-content: center;
-  padding-top: 40px;
+  padding: 60px 20px;
+  min-height: 100vh;
+  background: radial-gradient(circle at top left, #eef2ff, #e0e7ff, #dbeafe);
+  color: #1e293b;
 }
 
 .update-card {

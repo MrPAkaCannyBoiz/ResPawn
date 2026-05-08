@@ -5,6 +5,7 @@
   align-items: center;
   padding: 0;
   background: radial-gradient(circle at top left, #e0f2fe, #e5e7ff, #eef2ff);
+  color: #1e293b;
 }
 
 .login-card-2col {

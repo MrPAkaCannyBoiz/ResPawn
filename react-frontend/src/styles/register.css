@@ -4,6 +4,7 @@
   justify-content: center;
   align-items: center;
   background: radial-gradient(circle at top left, #e1e9ff, #e7edff, #f2f6ff);
+  color: #1e293b;
 }
 
 .register-card-2col {
