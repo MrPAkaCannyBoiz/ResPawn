@@ -50,7 +50,8 @@ public class ResellerLoginController : ControllerBase
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.None,
+                Domain = ".cannyboiz.com",
                 Expires = DateTimeOffset.UtcNow.AddMinutes(60)
             });
             return Ok(api);
