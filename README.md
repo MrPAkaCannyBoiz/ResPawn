@@ -1,18 +1,22 @@
 # ResPawn
 
-> [!NOTE]
 > **Project Continuation:** This repository is a personal project continuing from a third-semester university project (SEP3). The original was a multi-tier school assignment; this continuation evolves it into **production-grade infrastructure** — adding RabbitMQ, MassTransit, Docker, CI/CD with coverage gates, and enterprise security patterns. Production runs on a Hetzner VPS with `docker-compose`.
+
+![ResPawn Main Page](documents/images/respawn-main-page.png)
+
+Demo on YouTube: https://youtu.be/FjboqOlDwV8 — Credits to [OliverX04](https://github.com/OliverX04) for the voice-over.
 
 ---
 
 ### Table of Contents
 - [Overview](#overview)
 - [Architecture](#architecture)
+- [VPS Infrastructure](#vps-infrastructure)
 - [Tech Stack](#tech-stack)
-- [Security Implemented](#security-implemented)
+- [Security — Local vs Production](#security--local-vs-production)
 - [Testing & CI/CD](#testing--cicd)
 - [Running Locally](#running-locally)
-- [Production Deployment](#production-deployment--hetzner-vps)
+- [Production Deployment — Hetzner VPS](#production-deployment--hetzner-vps)
 - [Admin Setup — Reseller Accounts](#admin-setup--reseller-accounts)
 - [Previously Planned (Azure — Cancelled)](#previously-planned--azure-paas--kubernetes--cancelled)
 - [Features](#features)
@@ -25,8 +29,6 @@
 
 ResPawn-Shichiya is an online pawn shop platform modeled after typical e-commerce and chat systems, adapted so users can submit items for sale and receive a purchase offer from the shop.
 
-Demo on YouTube: https://youtu.be/FjboqOlDwV8 — Credits to [OliverX04](https://github.com/OliverX04) for the voice-over.
-
 ---
 
 ## Architecture
@@ -34,26 +36,51 @@ Demo on YouTube: https://youtu.be/FjboqOlDwV8 — Credits to [OliverX04](https:/
 The system is decomposed into **five containerized services** that communicate over gRPC and RabbitMQ:
 
 ```
-[Blazor Frontend]
-      |  HTTP (REST)
+[React Frontend]  (Cloudflare Pages)
+      |  HTTPS (REST)
 [.NET WebAPI]  ──── gRPC (TLS) ────  [Spring Boot gRPC Server]
                                               |
                                        RabbitMQ Produce
                                               |
 [.NET Message Worker] ◄──────────────── [RabbitMQ]
       |                                        |
-    Email                              [PostgreSQL]
+    Email (SMTP)                       [PostgreSQL]
 ```
 
 | Service | Tech | Role |
 |---|---|---|
 | `grpc-server-springboot-service` | Java 25 / Spring Boot 4 | gRPC server, JPA/Hibernate, RabbitMQ producer (Spring AMQP) |
 | `grpc-client-dotnet-services` | .NET 10 / C# | REST API, gRPC client, JWT auth |
-| `blazor-frontend` | .NET 10 / Blazor | Web UI |
 | `message-worker` | .NET 10 / C# | MassTransit RabbitMQ consumer — sends welcome emails via FluentEmail |
 | `rabbitmq` | RabbitMQ | Message broker with fanout exchanges |
+| `postgres` | PostgreSQL | Relational database |
 
 **Message flow example (registration):** WebAPI receives REST call → gRPC to Spring Boot → publishes `WelcomeEmailDto` as JSON to RabbitMQ `welcomeEmail` fanout exchange → MassTransit consumer picks up → sends email via SMTP/Mailgun. On failure: MassTransit exponential backoff (5 retries) → message moved to `welcomeEmail_error` queue.
+
+---
+
+## VPS Infrastructure
+
+![VPS Diagram](documents/images/vps-diagram.png)
+
+The Hetzner VPS hosts multiple projects behind a shared **Caddy** reverse proxy:
+
+| Component | Role |
+|---|---|
+| **Caddy** | Reverse proxy with automatic Let's Encrypt TLS. Routes subdomains to Docker containers via `caddy_net` network |
+| **ResPawn backend** | 5-service Docker Compose stack (WebAPI, gRPC server, RabbitMQ, PostgreSQL, message worker) |
+| **Cloudflare Pages** | Hosts the React frontend (`respawn.cannyboiz.com`), calls API at `api-respawn.cannyboiz.com` |
+| **GitHub Actions** | Builds Docker images → pushes to GHCR → SCPs compose files to VPS → pulls and restarts |
+
+**Traffic flow:**
+```
+User → respawn.cannyboiz.com (Cloudflare Pages)
+         → HTTPS API calls →
+User → api-respawn.cannyboiz.com (Cloudflare DNS → VPS)
+         → Caddy (TLS termination) →
+         → caddy_net Docker network →
+         → respawn-grpc-client:6760 (WebAPI container)
+```
 
 ---
 
@@ -63,7 +90,7 @@ The system is decomposed into **five containerized services** that communicate o
 | Technology | Version | Purpose |
 |---|---|---|
 | Java / Spring Boot | 4.0.3 | gRPC server, REST endpoints, Spring Security, JPA |
-| .NET / C# | 10.0 | WebAPI (gRPC client), Blazor frontend, message worker |
+| .NET / C# | 10.0 | WebAPI (gRPC client), message worker |
 | gRPC + Protocol Buffers | — | High-performance typed inter-service RPC |
 | RabbitMQ | latest | Async event-driven messaging with fanout exchanges |
 | Spring AMQP | — | RabbitMQ producer on the Java side (Jackson JSON serialization) |
@@ -71,78 +98,132 @@ The system is decomposed into **five containerized services** that communicate o
 | PostgreSQL | latest | Relational database |
 | Spring Data JPA / Hibernate | — | ORM for PostgreSQL |
 
+### Frontend
+| Technology | Version | Purpose |
+|---|---|---|
+| React | 19 | Primary web UI (deployed on Cloudflare Pages) |
+| Vite | 8.0 | Build tooling and dev server |
+| Blazor | .NET 10 | Legacy web UI (inactive, kept for reference) |
+
 ### Infrastructure & Deployment
 | Technology | Purpose |
 |---|---|
 | Docker / Docker Compose | Local development & production deployment |
 | Hetzner VPS | Production hosting (docker-compose with prod override) |
+| Caddy | Reverse proxy with automatic Let's Encrypt TLS |
+| Cloudflare Pages | Frontend hosting with CDN |
+| GitHub Actions | CI/CD: build → test → Docker push → SCP deploy |
+| GHCR | Container image registry (GitHub Container Registry) |
 | Kubernetes (minikube) | Local k8s demo/learning only (manifests in `/k8s`) |
-| GitHub Actions | CI/CD: automated build, test, coverage check, artifact upload |
 
 ### Security
 | Technology | Purpose |
 |---|---|
 | Environment variables (`.env.prod`) | Production secrets management (DB, JWT, RabbitMQ, SMTP) |
-| JWT Bearer (`Microsoft.AspNetCore.Authentication.JwtBearer`) | Stateless API authentication |
+| JWT Bearer (`Microsoft.AspNetCore.Authentication.JwtBearer`) | Stateless API authentication (HTTP-only cookie transport) |
 | TLS/SSL (PKCS12 / `.p12`) | Encrypted gRPC channel between .NET and Spring Boot |
 | Spring Security | Java-layer HTTP and gRPC security |
+| Caddy + Let's Encrypt | Automatic HTTPS for public-facing API |
+| BCrypt | One-way password hashing for customers and resellers |
 | MassTransit retry + error queues | Resilience: exponential backoff with automatic error queue routing |
 
 ---
 
-## Security Implemented
+## Security — Local vs Production
 
-### 1. TLS/SSL — gRPC Transport Encryption
-The gRPC channel between the .NET WebAPI (client) and Spring Boot (server) is encrypted end-to-end using **one-way TLS** with a PKCS12 certificate:
-- **Spring Boot** loads the keystore via `spring.ssl.bundle.jks.sep3` bound to environment variables.
-- **.NET WebAPI** configures Kestrel with the same `.p12` certificate via `PFX_FILE_PATH` / `PFX_PASSWORD`.
-- In production: certificates are passed via environment variables and volume mounts on the VPS.
+Documenting the security posture differences between local development and production deployment. No secrets are revealed — only architectural patterns.
 
-### 2. JWT Bearer Authentication
-- All protected API endpoints require a valid JWT token.
-- Tokens are validated against issuer, audience, signing key — all loaded from environment variables.
-- Token can also be read from a cookie (custom `JwtBearerEvents` on the .NET side).
+### Network Exposure
 
-### 3. Spring Security (Java)
-- HTTP Basic auth guards the Spring Boot management layer (`sep3admin` user, password from env).
-- `spring-boot-starter-security` applied to REST and gRPC layers.
+| Concern | Local Development | Production (VPS) |
+|---|---|---|
+| **Port binding** | All ports on `0.0.0.0` (host-accessible) | `ports: !reset []` — no ports bound to host |
+| **Service discovery** | Direct `localhost:PORT` access | Internal Docker DNS only (`expose:` directive) |
+| **Public access** | All services reachable from host machine | Only WebAPI reachable, via Caddy reverse proxy on `caddy_net` |
+| **TLS (public)** | Self-signed cert or HTTP | Caddy auto-provisions Let's Encrypt certificates |
+| **TLS (gRPC)** | Self-signed `.p12` certificate | Same `.p12` cert (internal traffic, not internet-facing) |
 
-### 4. Environment-Based Secrets Management
-- All sensitive values (DB passwords, JWT keys, RabbitMQ credentials, SMTP passwords) are passed via environment variables using `.env.prod` on the VPS — **never hardcoded in code or committed files**.
-- Dev uses a local `.env` with placeholder credentials; production uses `.env.prod` (gitignored).
+### Credential Management
 
-### 5. RabbitMQ Credentials
-- In production, RabbitMQ credentials are passed via environment variables (`RABBITMQ_USERNAME`, `RABBITMQ_PASSWORD`) in `.env.prod`.
-- Locally, the default `guest`/`guest` credentials are used for the self-hosted RabbitMQ container.
+| Concern | Local Development | Production (VPS) |
+|---|---|---|
+| **RabbitMQ** | `guest` / `guest` (default) | Unique credentials via GitHub Secrets → `.env.prod` |
+| **PostgreSQL** | Simple dev password in `.env` | Strong password via GitHub Secrets → `.env.prod` |
+| **JWT signing key** | Short dev key in `.env` | 32+ char random key via GitHub Secrets |
+| **Secret storage** | `.env` file (gitignored) | `.env.prod` generated at deploy time by CI/CD, never committed |
+| **Secret delivery** | Manual, file-based | GitHub Secrets → SSH action → `printf` to `.env.prod` on VPS |
 
-### 6. Resilience — MassTransit Error Queues
-- The MassTransit email consumer uses **exponential backoff** (5 retries, 2s–5min intervals).
-- Permanently failing messages are automatically routed to `welcomeEmail_error` queue to prevent data loss without blocking the consumer.
+### Docker Compose Override Strategy
 
-### 7. BCrypt — One-Way Password Hashing
-Passwords are **never stored in plain text**. Before persisting to PostgreSQL:
-- **Registration:** `BCryptPasswordEncoder.encode()` hashes the password with a random salt (`RegisterCustomerServiceImpl.java`).
-- **Login:** `BCrypt.checkpw()` verifies the submitted password against the stored hash — the original password is never recoverable (`CustomerLoginServiceImpl.java`, `ResellerLoginServiceImpl.java`).
+The same `docker-compose.yml` is used everywhere. Production differences are applied via `docker-compose.prod.yml`:
 
-### 8. Docker Security Hygiene
-- Self-signed cert volumes are mounted **read-only** (`:ro`) in containers.
-- Secrets are passed only as container environment variables — never baked into images.
+```yaml
+# Production override removes ALL host port bindings
+rabbitmq:
+  ports: !reset []          # Was: 5672:5672, 15672:15672
+
+postgres:
+  ports: !reset []          # Was: 5432:5432
+
+grpc-server-springboot-service:
+  ports: !reset []          # Was: 8080:8080, 6767:6767
+  expose:
+    - "6767"                # Internal only
+
+grpc-client-dotnet-services:
+  ports: !reset []          # Was: 6760:6760, 6761:6761
+  expose:
+    - "6760"                # Reachable only via caddy_net
+  networks:
+    - default
+    - caddy_net             # Connection to Caddy reverse proxy
+```
+
+### Deployment Security
+
+| Concern | Before (Initial Setup) | After (Current) |
+|---|---|---|
+| **Code delivery to VPS** | `git clone` + `git pull` (full repo history on VPS, git credentials needed) | `appleboy/scp-action` copies only 4 files (compose files + scripts). No git on VPS |
+| **Image delivery** | `docker compose build` on VPS (source code on VPS) | Pre-built images pulled from GHCR. No source code on VPS |
+| **VPS footprint** | Full repository clone | Minimal: 2 compose files + 2 scripts + `.env.prod` |
+| **Cookie security** | `SameSite=Strict`, no `Domain` | `SameSite=None`, `Secure=true`, `Domain=.cannyboiz.com` (cross-subdomain auth) |
 
 ---
 
 ## Testing & CI/CD
 
-Three GitHub Actions workflows run on every push and pull request:
+A single GitHub Actions workflow (`ci-cd.yml`) runs a **4-stage pipeline** on every push:
 
-| Workflow | Trigger | What it does |
-|---|---|---|
-| `build-startup.yml` | All branches | Maven clean verify (compile + test + Jacoco coverage check) |
-| `spring-boot-test.yml` | `main` branch | Maven verify + Jacoco HTML report upload |
-| `dotnet-test.yml` | All branches (C# paths) | `dotnet test` with Coverlet + ReportGenerator |
+### Stage 1 — Build & Test (parallel)
+| Job | What it does |
+|---|---|
+| `spring-boot-test` | Maven clean verify + Jacoco coverage check |
+| `dotnet-test` | MessageConsumer tests + Coverlet coverage report |
+| `dotnet-build-webapi` | WebAPI build verification |
+| `dotnet-build-blazor` | BlazorApp build verification |
+| `react-build` | Node 20 lint + Vite build |
+
+### Stage 2 — Integration Tests
+- Spins up full backend stack (PostgreSQL, RabbitMQ, gRPC server, WebAPI) via Docker Compose
+- Waits for WebAPI health check (`/api/products`)
+- Runs React integration tests (`npm run test:integration`)
+
+### Stage 3 — Docker Image Build & Push (main branch only)
+- Builds 3 Docker images and pushes to GHCR:
+  - `respawn-grpc-server` (Java)
+  - `respawn-grpc-client` (.NET WebAPI)
+  - `respawn-message-worker` (.NET MessageConsumer)
+- Tags: `:latest` + `:${GIT_SHA}`
+
+### Stage 4 — Deploy to VPS (main branch only)
+- SCPs compose files and scripts to VPS
+- Generates `.env.prod` from GitHub Secrets
+- Pulls pre-built images from GHCR
+- Runs `docker compose up -d`
 
 **Coverage gates:**
-- Java (Jacoco): **80% instruction coverage** enforced — build fails below threshold.
-- .NET (Coverlet + ReportGenerator): **80% line coverage** enforced — build fails below threshold.
+- Java (Jacoco): **80% instruction coverage** — build fails below threshold.
+- .NET (Coverlet + ReportGenerator): **50% line coverage** — build fails below threshold.
 - Coverage HTML reports are uploaded as GitHub Actions artifacts on every run.
 
 ---
@@ -159,43 +240,57 @@ docker compose up --build
 
 | Service | URL |
 |---|---|
-| Blazor Frontend | http://localhost:5195 |
-| .NET WebAPI (HTTP) | http://localhost:6761 |
 | .NET WebAPI (HTTPS) | https://localhost:6760 |
+| .NET WebAPI (HTTP) | http://localhost:6761 |
 | Spring Boot REST | https://localhost:8080 |
 | gRPC Server | https://localhost:6767 |
 | RabbitMQ broker | localhost:5672 |
 | RabbitMQ Management UI | http://localhost:15672 |
 | PostgreSQL | localhost:5432 |
 
+### React Frontend (separate)
+```bash
+cd react-frontend
+npm install
+npm run dev
+```
+Set `VITE_API_BASE_URL=http://localhost:6760` in `react-frontend/.env` for local API calls.
+
 ---
 
 ## Production Deployment — Hetzner VPS
 
-Production runs on a **Hetzner VPS** using `docker-compose` with a production override file. This replaces the earlier Azure PaaS plan (see [below](#previously-planned--azure-paas--kubernetes--cancelled)).
+Production runs on a **Hetzner VPS** using `docker-compose` with a production override file. Deployment is fully automated via GitHub Actions on push to `main`.
 
 ### How It Works
-The same `docker-compose.yml` used for local development is extended by `docker-compose.prod.yml`, which:
-- Sets `ASPNETCORE_ENVIRONMENT=Production` and `SPRING_PROFILES_ACTIVE=rabbitmq,prod`
-- Binds all ports to `127.0.0.1` (behind a reverse proxy for public HTTPS)
-- Uses production RabbitMQ credentials from `.env.prod`
-- Reads all secrets from `.env.prod` (gitignored, never committed)
 
-### Deploying
+1. **CI/CD builds** Docker images and pushes to GHCR
+2. **SCP** copies `docker-compose.yml`, `docker-compose.prod.yml`, `scripts/init.sql`, and `scripts/create-reseller.sh` to `/opt/ResPawn` on the VPS
+3. **SSH action** generates `.env.prod` from GitHub Secrets, pulls images, and starts services
+
+### VPS One-Time Setup
 ```bash
-# On the VPS:
-cp .env.prod.example .env.prod   # fill in real credentials
-docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d --build
+mkdir -p /opt/ResPawn/scripts
+docker network create caddy_net
+```
+
+### Manual Deploy (if needed)
+```bash
+cd /opt/ResPawn
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod pull
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d
 ```
 
 ### Production Stack
 | Component | Solution |
 |---|---|
 | Hosting | Hetzner VPS |
-| Message Broker | RabbitMQ (self-hosted in Docker on the VPS) |
-| PostgreSQL | Self-hosted in Docker on the VPS |
-| Secrets | `.env.prod` environment file |
-| HTTPS | Reverse proxy (Caddy/nginx) with Let's Encrypt |
+| Reverse Proxy | Caddy (automatic Let's Encrypt TLS) |
+| Frontend | Cloudflare Pages |
+| Message Broker | RabbitMQ (self-hosted in Docker) |
+| Database | PostgreSQL (self-hosted in Docker) |
+| Image Registry | GHCR (GitHub Container Registry) |
+| Secrets | `.env.prod` generated by CI/CD from GitHub Secrets |
 
 ### Kubernetes (k8s/ — Local Only)
 Kubernetes manifests in `/k8s` are kept for **local development with minikube** to demonstrate how services would run in a k8s environment:
@@ -267,8 +362,9 @@ Azure Container Registry (ACR) for images, Azure Container Apps (ACA) or AKS for
 
 - Customer Registration & Login
 - Reseller Login
-- Product/Item Upload
-- Product/Item Inspection & Purchase
+- Product/Item Upload with images (max 5 per product)
+- Product Inspection & Approval workflow (PENDING → REVIEWING → APPROVED/REJECTED)
+- Product Purchase with shopping cart
 - Customer Profile (Get / Update)
 - Address Lookup
 - Welcome Email on Registration (async, event-driven via RabbitMQ + MassTransit)
@@ -382,11 +478,12 @@ JWT__Subject=your_custom_jwt_subject
 
 ### Production (Hetzner VPS)
 
-Secrets are managed via a `.env.prod` file on the VPS (gitignored). The production override `docker-compose.prod.yml` sets all services to Production mode with production RabbitMQ credentials.
+Secrets are managed via a `.env.prod` file on the VPS, generated automatically by CI/CD from GitHub Secrets. The production override `docker-compose.prod.yml` sets all services to Production mode with production credentials.
 
 ```bash
-# Deploy:
-docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d --build
+# Manual deploy (if needed):
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod pull
+docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d
 ```
 
 > See `.env.prod.example` for the full list of required environment variables.
