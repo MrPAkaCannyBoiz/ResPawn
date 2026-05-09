@@ -1,0 +1,6 @@
+# ResPawn API — reverse proxy rules
+# Imported by the main Caddy gateway via: import /etc/caddy/sites/*
+
+api-respawn.cannyboiz.com {
+    reverse_proxy respawn-grpc-client:6760
+}

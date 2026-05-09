@@ -283,7 +283,7 @@ jobs:
           host:     ${{ secrets.SERVER_IP }}
           username: root
           key:      ${{ secrets.SSH_PRIVATE_KEY }}
-          source:   "docker-compose.yml,docker-compose.prod.yml,scripts/init.sql,scripts/create-reseller.sh"
+          source:   "docker-compose.yml,docker-compose.prod.yml,scripts/init.sql,scripts/create-reseller.sh,infrastructure/respawn.Caddyfile"
           target:   "/opt/ResPawn"
 
       - name: Deploy services via SSH
@@ -344,6 +344,11 @@ jobs:
             # Pull latest images from GHCR then start
             docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod pull
             docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d
+
+            # Install Caddy site config and reload
+            mkdir -p /opt/caddy/sites
+            cp /opt/ResPawn/infrastructure/respawn.Caddyfile /opt/caddy/sites/
+            docker exec caddy-gateway caddy reload --config /etc/caddy/Caddyfile
 
             # Remove old images
             docker image prune -f
