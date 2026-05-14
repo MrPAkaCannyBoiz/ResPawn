@@ -189,6 +189,18 @@ jobs:
           JWT__AUDIENCE: ${{ secrets.JWT__AUDIENCE }}
           JWT__SUBJECT: ${{ secrets.JWT__SUBJECT }}
 
+      - name: Verify containers started
+        run: |
+          sleep 5
+          echo "=== Container status ==="
+          docker compose ps -a
+          echo "=== Postgres logs ==="
+          docker compose logs postgres
+          if [ "$(docker inspect -f '{{.State.Running}}' postgres_respawn 2>/dev/null)" != "true" ]; then
+            echo "ERROR: postgres_respawn is not running"
+            exit 1
+          fi
+
       - name: Wait for WebAPI to be ready
         run: |
           for i in $(seq 1 60); do
