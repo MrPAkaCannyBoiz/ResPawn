@@ -1,16 +1,10 @@
 create sequence pawn_shop_id_seq
     as integer;
 
-alter sequence pawn_shop_id_seq owner to postgres;
-
 create sequence product_image_id_seq
     as integer;
 
-alter sequence product_image_id_seq owner to postgres;
-
 create domain string as varchar(300);
-
-alter domain string owner to postgres;
 
 create table postal
 (
@@ -19,8 +13,6 @@ create table postal
     city        varchar(255) not null
 );
 
-alter table postal
-    owner to postgres;
 
 create table address
 (
@@ -32,8 +24,6 @@ create table address
         references postal
 );
 
-alter table address
-    owner to postgres;
 
 create table customer
 (
@@ -59,8 +49,6 @@ create table customer
         check ((char_length((first_name)::text) > 0) AND (char_length((last_name)::text) > 0))
 );
 
-alter table customer
-    owner to postgres;
 
 create table reseller
 (
@@ -74,8 +62,6 @@ create table reseller
             check ((length((password)::text) >= 8) AND ((password)::text ~ '^(?=.*[A-Za-z])(?=.*\d).+$'::text))
 );
 
-alter table reseller
-    owner to postgres;
 
 create table shopping_cart
 (
@@ -84,8 +70,6 @@ create table shopping_cart
     total_price double precision not null
 );
 
-alter table shopping_cart
-    owner to postgres;
 
 create table transaction
 (
@@ -99,8 +83,6 @@ create table transaction
             references customer
 );
 
-alter table transaction
-    owner to postgres;
 
 create table customer_address
 (
@@ -111,8 +93,6 @@ create table customer_address
     primary key (customer_id, address_id)
 );
 
-alter table customer_address
-    owner to postgres;
 
 create table pawnshop
 (
@@ -125,8 +105,6 @@ create table pawnshop
             references address
 );
 
-alter table pawnshop
-    owner to postgres;
 
 alter sequence pawn_shop_id_seq owned by pawnshop.id;
 
@@ -155,8 +133,6 @@ create table product
             references pawnshop
 );
 
-alter table product
-    owner to postgres;
 
 create table inspection
 (
@@ -175,8 +151,6 @@ create table inspection
                    ((ARRAY ['APPROVED'::character varying, 'REVIEWING'::character varying, 'approved'::character varying, 'reviewing'::character varying])::text[]))
 );
 
-alter table inspection
-    owner to postgres;
 
 create table cart_product
 (
@@ -188,8 +162,6 @@ create table cart_product
     primary key (shopping_cart_id, product_id)
 );
 
-alter table cart_product
-    owner to postgres;
 
 create table stock
 (
@@ -203,8 +175,6 @@ create table stock
     primary key (address_id, product_id)
 );
 
-alter table stock
-    owner to postgres;
 
 create table image
 (
@@ -217,8 +187,6 @@ create table image
             references product
 );
 
-alter table image
-    owner to postgres;
 
 alter sequence product_image_id_seq owned by image.id;
 
@@ -236,7 +204,6 @@ $$
     return NEW;
 end; $$;
 
-alter function enforce_max_five_images_per_product() owner to postgres;
 
 create trigger check_max_images_per_product
     before insert

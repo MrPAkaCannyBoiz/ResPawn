@@ -191,15 +191,16 @@ jobs:
 
       - name: Wait for WebAPI to be ready
         run: |
-          for i in $(seq 1 30); do
+          for i in $(seq 1 60); do
             if curl -s http://localhost:6760/api/products >/dev/null 2>&1; then
               echo "WebAPI is ready"
               exit 0
             fi
-            echo "Waiting for WebAPI... ($i/30)"
+            echo "Waiting for WebAPI... ($i/60)"
             sleep 5
           done
-          echo "WebAPI did not become ready"
+          echo "WebAPI did not become ready — dumping container logs"
+          docker compose logs
           exit 1
 
       - name: Setup Node.js 20
@@ -283,8 +284,22 @@ jobs:
           host:     ${{ secrets.SERVER_IP }}
           username: root
           key:      ${{ secrets.SSH_PRIVATE_KEY }}
-          source:   "docker-compose.yml,docker-compose.prod.yml,scripts/init.sql,scripts/create-reseller.sh,infrastructure/respawn.Caddyfile"
+          source:   "docker-compose.yml,docker-compose.prod.yml,scripts/init.sql,scripts/create-reseller.sh"
           target:   "/opt/ResPawn"
+      
+      - name: Copy Caddyfile to Caddy config directory
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host:     ${{ secrets.SERVER_IP }}
+          username: root
+          key:      ${{ secrets.SSH_PRIVATE_KEY }}
+          source:   "infrastructure/respawn.Caddyfile"
+          target:   "/opt/caddy/sites"
+          # Without strip_components:
+          # infrastructure/respawn.Caddyfile → /opt/caddy/sites/infrastructure/respawn.Caddyfile
+          # With strip_components: 1:
+          # infrastructure/respawn.Caddyfile → /opt/caddy/sites/respawn.Caddyfile
+          strip_components: 1
 
       - name: Deploy services via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -342,12 +357,12 @@ jobs:
             } > .env.prod
 
             # Pull latest images from GHCR then start
+            # -f flags are needed to specify both compose files by overriding the base with prod overrides
+            # --env-file is needed to pass in the environment variables for both compose files
             docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod pull
             docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.prod up -d
 
-            # Install Caddy site config and reload
-            mkdir -p /opt/caddy/sites
-            cp /opt/ResPawn/infrastructure/respawn.Caddyfile /opt/caddy/sites/
+            # reload Caddy to apply new config and avoid downtime during container restarts
             docker exec caddy-gateway caddy reload --config /etc/caddy/Caddyfile
 
             # Remove old images

@@ -10,7 +10,7 @@ services:
     image: rabbitmq:management
     container_name: respawn_rabbitmq
     restart: unless-stopped
-    ports: !reset []
+    ports: !reset [] # No external ports exposed for security
     environment:
       # Change these from 'guest' in your .env file for production!
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
@@ -24,7 +24,7 @@ services:
     image: postgres:latest
     container_name: postgres_respawn
     restart: unless-stopped
-    ports: !reset []
+    ports: !reset [] # No external ports exposed for security
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${DB_USERNAME}
@@ -43,7 +43,7 @@ services:
     build: !reset null
     container_name: respawn-grpc-server
     restart: unless-stopped
-    ports: !reset []
+    ports: !reset [] # No external ports exposed for security
     expose:
       - "6767"
     environment:
@@ -86,7 +86,7 @@ services:
     build: !reset null
     container_name: respawn-grpc-client
     restart: unless-stopped
-    ports: !reset []
+    ports: !reset [] # No external ports exposed for security
     expose:
       - "6760"
     environment:
@@ -104,8 +104,8 @@ services:
       - caddy_net # <--- THE CRITICAL CONNECTION
 
   # React frontend is deployed separately (Vercel/Netlify/Cloudflare Pages)
-  # It calls the API via: https://api.cannyboiz.com
-  # Set VITE_API_BASE_URL=https://api.cannyboiz.com at build time on the hosting platform
+  # It calls the API via: https://respawn-api.cannyboiz.com
+  # Set VITE_API_BASE_URL=https://respawn-api.cannyboiz.com at build time on the hosting platform
 
 volumes:
   rabbitmq_data:
